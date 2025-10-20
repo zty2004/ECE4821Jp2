@@ -4,7 +4,7 @@ about: PR template for features, performance improvement or bugs fixed
 ---
 
 
-***NOTE: Developers not assigned to corresponding issues should look detailed into the source code and explanation in issues. Developers assigned to corresponding issues should attach link or the issues in Issue Numbers part and provide additional hints in Hints part if necessarily.***
+***NOTES: Developers not assigned to corresponding issues should look detailed into the source code and explanation in issues. Developers assigned to corresponding issues should attach link or the issues in Issue Numbers part and provide additional hints in Hints part if necessarily.***
 
 
 **Description**
