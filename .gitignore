@@ -1,0 +1,13 @@
+*
+
+!Makefile
+!src/
+!src/**
+!src/**/*.c
+!src/**/*.h
+!README.md
+!CHANGELOG.md
+!.gitignore
+!.gitattributes
+!.gitea/
+!.gitea/**
