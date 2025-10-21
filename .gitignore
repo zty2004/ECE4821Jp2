@@ -9,5 +9,6 @@
 !CHANGELOG.md
 !.gitignore
 !.gitattributes
+!.clang-format
 !.gitea/
 !.gitea/**
