@@ -5,6 +5,8 @@
 !src/**
 !src/**/*.c
 !src/**/*.h
+!tools/
+!tools/**
 !README.md
 !CHANGELOG.md
 !.gitignore
