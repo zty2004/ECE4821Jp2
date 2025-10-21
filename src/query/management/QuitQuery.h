@@ -8,14 +8,14 @@
 #include "../Query.h"
 
 class QuitQuery : public Query {
-  static constexpr const char *qname = "QUIT";
+    static constexpr const char *qname = "QUIT";
 
 public:
-  QuitQuery() = default;
+    QuitQuery() = default;
 
-  QueryResult::Ptr execute() override;
+    QueryResult::Ptr execute() override;
 
-  std::string toString() override;
+    std::string toString() override;
 };
 
 #endif // PROJECT_QUITQUERY_H

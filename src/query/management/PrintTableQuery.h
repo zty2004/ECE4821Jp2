@@ -8,14 +8,14 @@
 #include "../Query.h"
 
 class PrintTableQuery : public Query {
-  static constexpr const char *qname = "SHOWTABLE";
+    static constexpr const char *qname = "SHOWTABLE";
 
 public:
-  using Query::Query;
+    using Query::Query;
 
-  QueryResult::Ptr execute() override;
+    QueryResult::Ptr execute() override;
 
-  std::string toString() override;
+    std::string toString() override;
 };
 
 #endif // PROJECT_PRINTTABLEQUERY_H

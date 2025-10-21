@@ -8,12 +8,12 @@
 #include "../Query.h"
 
 class ListTableQuery : public Query {
-  static constexpr const char *qname = "LIST";
+    static constexpr const char *qname = "LIST";
 
 public:
-  QueryResult::Ptr execute() override;
+    QueryResult::Ptr execute() override;
 
-  std::string toString() override;
+    std::string toString() override;
 };
 
 #endif // PROJECT_LISTTABLEQUERY_H
