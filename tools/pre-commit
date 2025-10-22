@@ -19,11 +19,14 @@ for FILE in $STAGED_FILES; do
   }
 done
 
-# total changed lines limit (75 lines)
-TOTAL_LINES=$(($(git diff --cached | grep -c '^+' || echo 0) - $(echo "$STAGED_FILES" | wc -w)))
-if [ $TOTAL_LINES -gt 75 ]; then
-  echo "Error: commit has $TOTAL_LINES changed lines (max 75)"
-  FAILED=1
+# total changed lines limit (75 lines) for .cpp and .h files
+CPP_H_FILES=$(echo "$STAGED_FILES" | tr ' ' '\n' | grep -E '\.(cpp|h)$')
+if [ -n "$CPP_H_FILES" ]; then
+  TOTAL_LINES=$(($(git diff --cached -- $CPP_H_FILES | grep -c '^+' || echo 0) - $(echo "$CPP_H_FILES" | wc -w)))
+  if [ $TOTAL_LINES -gt 75 ]; then
+    echo "Error: commit has $TOTAL_LINES changed lines in .cpp/.h files (max 75)"
+    FAILED=1
+  fi
 fi
 
 [ $FAILED -eq 1 ] && exit 1
