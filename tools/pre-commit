@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# auto clang-format and re-stage
+tools/cpp-format 2>/dev/null || {
+    echo "Error: clang-format not installed or failed"
+    exit 1
+}
+git add $(git diff --cached --name-only --diff-filter=ACM) 2>/dev/null
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 [ -z "$STAGED_FILES" ] && exit 0
-FAILED=0
 
-# auto clang-format and re-stage
-tools/cpp-format || FAILED=1
-git add $STAGED_FILES
+FAILED=0
 
 # non-ASCII characters
 for FILE in $STAGED_FILES; do
@@ -17,7 +20,7 @@ for FILE in $STAGED_FILES; do
 done
 
 # total changed lines limit (75 lines)
-TOTAL_LINES=$(($(git diff --cached | grep -c '^+' || echo 0) - $(echo "$STAGED_FILES" | wc -l)))
+TOTAL_LINES=$(($(git diff --cached | grep -c '^+' || echo 0) - $(echo "$STAGED_FILES" | wc -w)))
 if [ $TOTAL_LINES -gt 75 ]; then
   echo "Error: commit has $TOTAL_LINES changed lines (max 75)"
   FAILED=1
