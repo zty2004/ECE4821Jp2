@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd "$(dirname "$0")/.."
+for i in $(find src -type f); do
+  linec=$(wc -l < $i)
+  [ $linec -ge 400 ] && echo "$i exceeds maximum filesize (400 lines)" && continue
+  [ $linec -ge 300 ] && echo "$i exceeds recommended filesize (300 lines)"
+done
+exit 0
