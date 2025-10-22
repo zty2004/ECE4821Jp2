@@ -4,6 +4,10 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 [ -z "$STAGED_FILES" ] && exit 0
 FAILED=0
 
+# auto clang-format and re-stage
+tools/cpp-format || FAILED=1
+git add $STAGED_FILES
+
 # non-ASCII characters
 for FILE in $STAGED_FILES; do
   [ -f "$FILE" ] && LC_ALL=C grep -q '[^[:print:][:space:]]' "$FILE" 2>/dev/null && {
@@ -18,9 +22,6 @@ if [ $TOTAL_LINES -gt 75 ]; then
   echo "Error: commit has $TOTAL_LINES changed lines (max 75)"
   FAILED=1
 fi
-
-# auto clang-format
-tools/cpp-format || FAILED=1
 
 [ $FAILED -eq 1 ] && exit 1
 exit 0
