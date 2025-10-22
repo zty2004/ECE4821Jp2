@@ -5,5 +5,5 @@
 #include "QueryResult.h"
 
 std::ostream &operator<<(std::ostream &os, const QueryResult &table) {
-    return table.output(os);
+  return table.output(os);
 }

@@ -8,14 +8,14 @@
 #include "../Query.h"
 
 class DropTableQuery : public Query {
-    static constexpr const char *qname = "DROP";
+  static constexpr const char *qname = "DROP";
 
 public:
-    using Query::Query;
+  using Query::Query;
 
-    QueryResult::Ptr execute() override;
+  QueryResult::Ptr execute() override;
 
-    std::string toString() override;
+  std::string toString() override;
 };
 
 #endif // PROJECT_DROPTABLEQUERY_H
