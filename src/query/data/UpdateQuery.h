@@ -8,18 +8,18 @@
 #include "../Query.h"
 
 class UpdateQuery : public ComplexQuery {
-    static constexpr const char *qname = "UPDATE";
-    Table::ValueType
-        fieldValue; // = (operands[0]=="KEY")? 0 :std::stoi(operands[1]);
-    Table::FieldIndex fieldId;
-    Table::KeyType keyValue;
+  static constexpr const char *qname = "UPDATE";
+  Table::ValueType
+      fieldValue; // = (operands[0]=="KEY")? 0 :std::stoi(operands[1]);
+  Table::FieldIndex fieldId;
+  Table::KeyType keyValue;
 
 public:
-    using ComplexQuery::ComplexQuery;
+  using ComplexQuery::ComplexQuery;
 
-    QueryResult::Ptr execute() override;
+  QueryResult::Ptr execute() override;
 
-    std::string toString() override;
+  std::string toString() override;
 };
 
 #endif // PROJECT_UPDATEQUERY_H

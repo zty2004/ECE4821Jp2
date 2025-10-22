@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# auto clang-format and re-stage
+tools/cpp-format 2>/dev/null || {
+    echo "Error: clang-format not installed or failed"
+    exit 1
+}
+git add $(git diff --cached --name-only --diff-filter=ACM) 2>/dev/null
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$STAGED_FILES" ] && exit 0
+
+FAILED=0
+
+# non-ASCII characters
+for FILE in $STAGED_FILES; do
+  [ -f "$FILE" ] && LC_ALL=C grep -q '[^[:print:][:space:]]' "$FILE" 2>/dev/null && {
+    echo "Error: non-ASCII found in $FILE"
+    FAILED=1
+  }
+done
+
+# total changed lines limit (75 lines) for .cpp and .h files
+CPP_H_FILES=$(echo "$STAGED_FILES" | tr ' ' '\n' | grep -E '\.(cpp|h)$')
+if [ -n "$CPP_H_FILES" ]; then
+  TOTAL_LINES=$(($(git diff --cached -- $CPP_H_FILES | grep -c '^+' || echo 0) - $(echo "$CPP_H_FILES" | wc -w)))
+  if [ $TOTAL_LINES -gt 75 ]; then
+    echo "Error: commit has $TOTAL_LINES changed lines in .cpp/.h files (max 75)"
+    FAILED=1
+  fi
+fi
+
+[ $FAILED -eq 1 ] && exit 1
+exit 0
