@@ -8,9 +8,11 @@
 #include <iostream>
 
 #include "../db/Database.h"
+#include "data/CountQuery.h"
 #include "data/DeleteQuery.h"
 #include "data/InsertQuery.h"
 #include "data/SelectQuery.h"
+#include "data/SumQuery.h"
 #include "data/UpdateQuery.h"
 #include "management/DropTableQuery.h"
 #include "management/DumpTableQuery.h"
@@ -166,13 +168,11 @@ Query::Ptr ComplexQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
   /*return std::make_unique<DuplicateQuery>(
           this->targetTable, this->operandToken, this->conditionToken);*/
   if (operation == "COUNT")
-    return std::make_unique<NopQuery>(); // Not implemented
-                                         /*return std::make_unique<CountQuery>(
-                                                 this->targetTable, this->operandToken, this->conditionToken);*/
+    return std::make_unique<CountQuery>(this->targetTable, this->operandToken,
+                                        this->conditionToken);
   if (operation == "SUM")
-    return std::make_unique<NopQuery>(); // Not implemented
-                                         /*return std::make_unique<SumQuery>(
-                                                 this->targetTable, this->operandToken, this->conditionToken);*/
+    return std::make_unique<SumQuery>(this->targetTable, this->operandToken,
+                                      this->conditionToken);
   if (operation == "MIN")
     return std::make_unique<NopQuery>(); // Not implemented
                                          /*return std::make_unique<MinQuery>(
