@@ -9,6 +9,7 @@
 
 #include "../db/Database.h"
 #include "data/InsertQuery.h"
+#include "data/SelectQuery.h"
 #include "data/UpdateQuery.h"
 #include "management/DropTableQuery.h"
 #include "management/DumpTableQuery.h"
@@ -154,9 +155,8 @@ Query::Ptr ComplexQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
     return std::make_unique<UpdateQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);
   if (operation == "SELECT")
-    return std::make_unique<NopQuery>(); // Not implemented
-  /*return std::make_unique<SelectQuery>(
-          this->targetTable, this->operandToken, this->conditionToken);*/
+    return std::make_unique<SelectQuery>(this->targetTable, this->operandToken,
+                                         this->conditionToken);
   if (operation == "DELETE")
     return std::make_unique<NopQuery>(); // Not implemented
   /*return std::make_unique<DeleteQuery>(
