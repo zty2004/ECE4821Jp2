@@ -32,6 +32,23 @@ void Table::insertByIndex(const KeyType &key, std::vector<ValueType> &&data) {
   this->data.emplace_back(key, data);
 }
 
+bool Table::deleteByIndex(const KeyType &key) {
+  auto it = keyMap.find(key);
+  if (it == keyMap.end())
+    return false;
+  SizeType del_ind = it->second;
+  SizeType last_ind = this->data.size() - 1;
+  if (del_ind != last_ind) {
+    std::swap(this->data[del_ind], this->data[last_ind]);
+
+    // update the keyMap for the swapped element
+    this->keyMap[this->data[del_ind].key] = del_ind;
+  }
+  this->data.pop_back();
+  this->keyMap.erase(it);
+  return true;
+}
+
 Table::Object::Ptr Table::operator[](const Table::KeyType &key) {
   auto it = keyMap.find(key);
   if (it == keyMap.end()) {

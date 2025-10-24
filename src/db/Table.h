@@ -288,6 +288,13 @@ public:
   void insertByIndex(const KeyType &key, std::vector<ValueType> &&data);
 
   /**
+   * Delete a row by its key
+   * @param key
+   * @return true if the row was deleted, false if key doesn't exist
+   */
+  bool deleteByIndex(const KeyType &key);
+
+  /**
    * Access the value according to the key
    * @param key
    * @return the Object that KEY = key, or nullptr if key doesn't exist
