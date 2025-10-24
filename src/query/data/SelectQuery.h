@@ -5,6 +5,8 @@
 
 class SelectQuery : public ComplexQuery {
   static constexpr const char *qname = "SELECT";
+
+  // record the index of all target field
   std::vector<Table::FieldIndex> fieldId;
 
 public:
