@@ -14,23 +14,28 @@ QueryResult::Ptr DuplicateQuery::execute() {
   Table::SizeType counter = 0;
   try {
     auto &table = db[this->targetTable];
+    auto fieldSize = table.field().size();
     auto result = initCondition(table);
     if (result.second) {
+      vector<Table::Iterator> dupIt;
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (this->evalCondition(*it)) {
-          Table::KeyType key = it->key();
-          string copyKey = key + "_copy";
-          // if cannot find existed key, avoid copy again!
-          if (!table[copyKey]) {
-            vector<Table::ValueType> copyData;
-            for (auto i = 0; i < table.field().size(); ++i) {
-              copyData.push_back((*it)[i]);
-            }
-            table.insertByIndex(copyKey, std::move(copyData));
-            ++counter;
-          }
+          dupIt.emplace_back(it);
         }
-        ++counter;
+      }
+      for (auto it : dupIt) {
+        Table::KeyType key = it->key();
+        string copyKey = key + "_copy";
+        // if cannot find existed key, avoid copy again!
+        if (!table[copyKey]) {
+          vector<Table::ValueType> copyData;
+          copyData.reserve(fieldSize);
+          for (auto i = 0; i < table.field().size(); ++i) {
+            copyData.push_back((*it)[i]);
+          }
+          table.insertByIndex(copyKey, std::move(copyData));
+          ++counter;
+        }
       }
     }
     return make_unique<RecordCountResult>(counter);
