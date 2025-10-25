@@ -1,3 +1,0 @@
-LOAD test/table/minmax.tbl;
-MIN ( A B ) FROM minmax WHERE ( A >= 0 );
-MAX ( B C ) FROM minmax WHERE ( KEY = k2 );

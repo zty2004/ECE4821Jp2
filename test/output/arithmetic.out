@@ -1,0 +1,31 @@
+lemondb: info: auto detect thread num
+1
+Query "LOAD" success : arithmetic
+2
+Affected 4 rows.
+3
+ANSWER = ( 6 )
+4
+Affected 2 rows.
+5
+ANSWER = ( -6 )
+6
+Affected 1 rows.
+7
+ANSWER = ( 0 )
+8
+Affected 1 rows.
+9
+Affected 1 rows.
+10
+ANSWER = ( 3 )
+11
+Affected 1 rows.
+12
+Affected 1 rows.
+13
+ANSWER = ( 12 )
+14
+Affected 1 rows.
+15
+ANSWER = ( 11 )
