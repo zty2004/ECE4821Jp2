@@ -1,5 +1,7 @@
-name: Run JOJ3 on Push
-on: [push]
+name: Run JOJ3 on Release
+on:
+  release:
+    types: [published]
 
 jobs:
   run:
@@ -14,5 +16,5 @@ jobs:
         uses: actions/checkout@focs
       - name: Run joj3
         run: |
-          sudo -E -u tt joj3 -conf-root /home/tt/.config/joj/projects/p2/push          
+          sudo -E -u tt joj3 -conf-root /home/tt/.config/joj/projects/p2/release -tag "${{ github.ref_name }}"          
 
