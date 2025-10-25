@@ -1,0 +1,7 @@
+lemondb: info: auto detect thread num
+1
+Query "LOAD" success : minmax
+2
+ANSWER = ( 1 5 )
+3
+ANSWER = ( 7 4 )
