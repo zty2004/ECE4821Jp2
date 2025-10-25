@@ -36,8 +36,9 @@ QueryResult::Ptr MinQuery::execute() {
           ++matched;
           for (size_t i = 0; i < fieldId.size(); ++i) {
             auto v = (*it)[fieldId[i]];
-            if (v < mins[i])
+            if (v < mins[i]) {
               mins[i] = v;
+            }
           }
         }
       }
