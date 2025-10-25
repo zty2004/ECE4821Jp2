@@ -33,7 +33,7 @@ QueryResult::Ptr DuplicateQuery::execute() {
             for (auto i = 0; i < table.field().size(); ++i) {
               copyData.push_back((*it)[i]);
             }
-            table.insertByIndex(key, std::move(copyData));
+            table.insertByIndex(copyKey, std::move(copyData));
             ++counter;
           }
         }
