@@ -1,16 +1,16 @@
 *
 
 !Makefile
+!.gitea/
+!.gitea/**
 !src/
 !src/**
-!src/**/*.c
-!src/**/*.h
 !tools/
 !tools/**
+!test/
+!test/**
 !README.md
 !CHANGELOG.md
 !.gitignore
 !.gitattributes
 !.clang-format
-!.gitea/
-!.gitea/**
