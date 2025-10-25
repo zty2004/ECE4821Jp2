@@ -4,7 +4,6 @@
 
 #include "DuplicateQuery.h"
 
-#include <algorithm>
 #include <memory>
 
 #include "../../db/Database.h"
