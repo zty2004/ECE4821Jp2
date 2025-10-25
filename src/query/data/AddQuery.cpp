@@ -17,11 +17,10 @@ QueryResult::Ptr AddQuery::execute() {
     auto &db = Database::getInstance();
     auto &table = db[this->targetTable];
 
-    // Resolve indices
-    dstId = table.getFieldIndex(this->operands[0]);
+    dstId = table.getFieldIndex(this->operands.back());
     srcId.clear();
     srcId.reserve(this->operands.size() - 1);
-    for (size_t i = 1; i < this->operands.size(); ++i) {
+    for (size_t i = 0; i + 1 < this->operands.size(); ++i) {
       srcId.emplace_back(table.getFieldIndex(this->operands[i]));
     }
 
@@ -32,11 +31,11 @@ QueryResult::Ptr AddQuery::execute() {
     if (condInit.second) {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
-          int delta = 0;
+          int sum = 0;
           for (auto idx : srcId) {
-            delta += (*it)[idx];
+            sum += (*it)[idx];
           }
-          (*it)[dstId] += delta;
+          (*it)[dstId] = sum;
           ++counter;
         }
       }
