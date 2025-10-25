@@ -26,7 +26,6 @@ QueryResult::Ptr DuplicateQuery::execute() {
           if (!table[copyKey]) {
             vector<Table::ValueType> copyData;
             copyData.reserve(fieldSize);
-            copyData.reserve(table.field().size());
             for (auto i = 0; i < table.field().size(); ++i) {
               copyData.push_back((*it)[i]);
             }
