@@ -2,36 +2,39 @@ lemondb: info: auto detect thread num
 1
 Query "LOAD" success : arithmetic
 2
-
+QUERY FAILED:
+	Query "MIN" failed in Table "arithmetic" : Field name "F" doesn't exists.
 3
 
 4
-ANSWER = ( -3 -10 0 )
+
 5
-Affected 4 rows.
+ANSWER = ( -3 -10 0 )
 6
-ANSWER = ( 6 )
+Affected 4 rows.
 7
-Affected 2 rows.
+ANSWER = ( 6 )
 8
-ANSWER = ( -6 )
+Affected 2 rows.
 9
-Affected 1 rows.
+ANSWER = ( -6 )
 10
-ANSWER = ( 0 )
-11
 Affected 1 rows.
+11
+ANSWER = ( 0 )
 12
 Affected 1 rows.
 13
-ANSWER = ( 3 )
-14
 Affected 1 rows.
+14
+ANSWER = ( 3 )
 15
 Affected 1 rows.
 16
-ANSWER = ( 12 )
-17
 Affected 1 rows.
+17
+ANSWER = ( 12 )
 18
+Affected 1 rows.
+19
 ANSWER = ( 11 )
