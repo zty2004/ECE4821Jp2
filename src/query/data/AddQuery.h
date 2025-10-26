@@ -1,6 +1,9 @@
 #ifndef PROJECT_ADDQUERY_H
 #define PROJECT_ADDQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 #include "../QueryResult.h"
 
