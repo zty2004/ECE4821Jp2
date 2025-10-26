@@ -45,8 +45,7 @@ QueryResult::Ptr MaxQuery::execute() {
     }
 
     if (matched == 0) {
-      return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                         "Empty result set");
+      return make_unique<NullQueryResult>();
     }
 
     return make_unique<SuccessMsgResult>(std::move(maxs));
