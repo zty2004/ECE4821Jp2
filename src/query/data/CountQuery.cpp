@@ -1,11 +1,13 @@
 #include "CountQuery.h"
 
+#include <memory>
+#include <string>
+
 #include "../../db/Database.h"
 
 constexpr const char *CountQuery::qname;
 
 QueryResult::Ptr CountQuery::execute() {
-  using namespace std;
   Database &db = Database::getInstance();
   try {
     int counter = 0;
@@ -17,17 +19,17 @@ QueryResult::Ptr CountQuery::execute() {
         if (this->evalCondition(*it))
           ++counter;
     }
-    return make_unique<SuccessMsgResult>(counter);
+    return std::make_unique<SuccessMsgResult>(counter);
   } catch (const TableNameNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const IllFormedQueryCondition &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
-  } catch (const invalid_argument &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "Unknown error '?'"_f % e.what());
-  } catch (const exception &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "Unknown error '?'."_f % e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+  } catch (const std::invalid_argument &e) {
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
+                                            "Unknown error '?'"_f % e.what());
+  } catch (const std::exception &e) {
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
+                                            "Unknown error '?'"_f % e.what());
   }
 }
 

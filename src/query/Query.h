@@ -8,6 +8,8 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "../db/Table.h"
 #include "QueryResult.h"

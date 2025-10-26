@@ -8,8 +8,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "Database.h"
-
 constexpr const Table::ValueType Table::ValueTypeMax;
 constexpr const Table::ValueType Table::ValueTypeMin;
 

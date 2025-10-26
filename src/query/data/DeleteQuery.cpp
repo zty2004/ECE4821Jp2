@@ -1,13 +1,15 @@
 #include "DeleteQuery.h"
 
 #include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "../../db/Database.h"
 
 constexpr const char *DeleteQuery::qname;
 
 QueryResult::Ptr DeleteQuery::execute() {
-  using namespace std;
   Database &db = Database::getInstance();
   try {
     Table::SizeType counter = 0;
@@ -15,7 +17,7 @@ QueryResult::Ptr DeleteQuery::execute() {
     auto result = initCondition(table);
     if (result.second) {
       // collect keys to delete because can't delete while iterating
-      vector<Table::KeyType> del_keys;
+      std::vector<Table::KeyType> del_keys;
 
       // iterate through all datum and check conditions
       for (auto it = table.begin(); it != table.end(); ++it)
@@ -26,18 +28,18 @@ QueryResult::Ptr DeleteQuery::execute() {
         if (table.deleteByIndex(key))
           ++counter;
     }
-    return make_unique<RecordCountResult>(counter);
+    return std::make_unique<RecordCountResult>(counter);
   } catch (const TableNameNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const IllFormedQueryCondition &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
-  } catch (const invalid_argument &e) {
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+  } catch (const std::invalid_argument &e) {
     // Cannot convert operand to string
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "Unknown error '?'"_f % e.what());
-  } catch (const exception &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "Unknown error '?'."_f % e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
+                                            "Unknown error '?'"_f % e.what());
+  } catch (const std::exception &e) {
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
+                                            "Unknown error '?'"_f % e.what());
   }
 }
 
