@@ -50,8 +50,9 @@ QueryResult::Ptr MaxQuery::execute() {
 
     return make_unique<SuccessMsgResult>(std::move(maxs));
   } catch (const TableNameNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "No such table."s);
+    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+  } catch (const TableFieldNotFound &e) {
+    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const IllFormedQueryCondition &e) {
     return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const std::exception &e) {

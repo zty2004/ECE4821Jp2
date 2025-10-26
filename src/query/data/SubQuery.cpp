@@ -43,8 +43,9 @@ QueryResult::Ptr SubQuery::execute() {
 
     return make_unique<RecordCountResult>(static_cast<int>(counter));
   } catch (const TableNameNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "No such table."s);
+    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+  } catch (const TableFieldNotFound &e) {
+    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const IllFormedQueryCondition &e) {
     return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const std::exception &e) {
