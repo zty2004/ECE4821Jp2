@@ -1,5 +1,4 @@
 #!/bin/bash
 
-CLANG_VERSION=$(find /usr/bin/ -name clang-[0-9]* | sed 's/.*-\([0-9]*\)/\1/')
 cd "$(dirname "$0")/.."
-run-clang-tidy-${CLANG_VERSION} -header-filter=.* -quiet -load=/usr/local/lib/libcodequality.so -p ./build ./src
+run-clang-tidy-18 -header-filter=.* -quiet -load=/usr/local/lib/libcodequality.so -p ./build ./src
