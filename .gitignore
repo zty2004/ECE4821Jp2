@@ -1,6 +1,7 @@
 *
 
 !Makefile
+!CMakeLists.txt
 !.gitea/
 !.gitea/**
 !src/
