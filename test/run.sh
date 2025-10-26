@@ -12,11 +12,11 @@ cmake --build . -- -j8
 
 cd ..
 
-echo "[CLANG-TIDY]"
-tools/cq-clang-tidy
-
 echo "[CPPCHECK]"
 tools/cq-cppcheck
 
 echo "[CPPLINT]"
 tools/cq-cpplint
+
+echo "[CLANG-TIDY]"
+tools/cq-clang-tidy
