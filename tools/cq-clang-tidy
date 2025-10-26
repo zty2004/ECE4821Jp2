@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-run-clang-tidy-18 -header-filter=.* -quiet -j 8 -p ./build ./src
+run-clang-tidy-18 -header-filter=.* -quiet -j 16 -p ./build ./src
