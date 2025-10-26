@@ -5,6 +5,8 @@
 #ifndef PROJECT_PRINTTABLEQUERY_H
 #define PROJECT_PRINTTABLEQUERY_H
 
+#include <string>
+
 #include "../Query.h"
 
 class PrintTableQuery : public Query {

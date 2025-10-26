@@ -5,6 +5,8 @@
 #ifndef PROJECT_QUITQUERY_H
 #define PROJECT_QUITQUERY_H
 
+#include <string>
+
 #include "../Query.h"
 
 class QuitQuery : public Query {

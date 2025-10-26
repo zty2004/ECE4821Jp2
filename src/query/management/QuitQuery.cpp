@@ -4,6 +4,9 @@
 
 #include "QuitQuery.h"
 
+#include <memory>
+#include <string>
+
 #include "../../db/Database.h"
 
 constexpr const char *QuitQuery::qname;

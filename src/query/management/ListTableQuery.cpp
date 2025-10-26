@@ -4,6 +4,9 @@
 
 #include "ListTableQuery.h"
 
+#include <memory>
+#include <string>
+
 #include "../../db/Database.h"
 
 constexpr const char *ListTableQuery::qname;
