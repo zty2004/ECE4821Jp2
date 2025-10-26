@@ -5,6 +5,8 @@
 #ifndef PROJECT_UPDATEQUERY_H
 #define PROJECT_UPDATEQUERY_H
 
+#include <string>
+
 #include "../Query.h"
 
 class UpdateQuery : public ComplexQuery {

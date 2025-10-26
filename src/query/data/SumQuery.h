@@ -1,6 +1,9 @@
 #ifndef PROJECT_SUMQUERY_H
 #define PROJECT_SUMQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 
 class SumQuery : public ComplexQuery {

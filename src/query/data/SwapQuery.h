@@ -1,6 +1,8 @@
 #ifndef PROJECT_SWAPQUERY_H
 #define PROJECT_SWAPQUERY_H
 
+#include <string>
+
 #include "../Query.h"
 
 class SwapQuery : public ComplexQuery {

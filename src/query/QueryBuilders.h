@@ -5,12 +5,13 @@
 #ifndef PROJECT_QUERYBUILDERS_H
 #define PROJECT_QUERYBUILDERS_H
 
-#include "../db/Table.h"
-#include "QueryParser.h"
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "../db/Table.h"
+#include "QueryParser.h"
 
 #define QueryBuilder(name) name##QueryBuilder
 

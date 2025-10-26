@@ -1,6 +1,9 @@
 #ifndef PROJECT_SELECTQUERY_H
 #define PROJECT_SELECTQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 
 class SelectQuery : public ComplexQuery {

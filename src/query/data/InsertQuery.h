@@ -5,6 +5,8 @@
 #ifndef PROJECT_INSERTQUERY_H
 #define PROJECT_INSERTQUERY_H
 
+#include <string>
+
 #include "../Query.h"
 
 class InsertQuery : public ComplexQuery {

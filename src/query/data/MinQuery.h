@@ -1,6 +1,9 @@
 #ifndef PROJECT_MINQUERY_H
 #define PROJECT_MINQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 #include "../QueryResult.h"
 

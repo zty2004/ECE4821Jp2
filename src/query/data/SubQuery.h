@@ -1,6 +1,9 @@
 #ifndef PROJECT_SUBQUERY_H
 #define PROJECT_SUBQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 #include "../QueryResult.h"
 

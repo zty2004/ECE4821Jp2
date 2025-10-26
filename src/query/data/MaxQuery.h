@@ -1,6 +1,9 @@
 #ifndef PROJECT_MAXQUERY_H
 #define PROJECT_MAXQUERY_H
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 #include "../QueryResult.h"
 
