@@ -1,4 +1,7 @@
 LOAD test/table/arithmetic.tbl;
+MIN ( A ) FROM arithmetic WHERE ( A > 10 );
+MAX ( A ) FROM arithmetic WHERE ( A > 10 );
+MIN ( A B C ) FROM arithmetic;
 ADD ( A B E ) FROM arithmetic WHERE ( A >= 0 );
 MAX ( E ) FROM arithmetic WHERE ( KEY = k1 );
 ADD ( A A A ) FROM arithmetic WHERE ( B >= 7 );

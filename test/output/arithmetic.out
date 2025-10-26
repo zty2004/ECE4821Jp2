@@ -2,30 +2,36 @@ lemondb: info: auto detect thread num
 1
 Query "LOAD" success : arithmetic
 2
-Affected 4 rows.
+
 3
-ANSWER = ( 6 )
+
 4
-Affected 2 rows.
+ANSWER = ( -3 -10 0 )
 5
-ANSWER = ( -6 )
+Affected 4 rows.
 6
-Affected 1 rows.
+ANSWER = ( 6 )
 7
-ANSWER = ( 0 )
+Affected 2 rows.
 8
-Affected 1 rows.
+ANSWER = ( -6 )
 9
 Affected 1 rows.
 10
-ANSWER = ( 3 )
+ANSWER = ( 0 )
 11
 Affected 1 rows.
 12
 Affected 1 rows.
 13
-ANSWER = ( 12 )
+ANSWER = ( 3 )
 14
 Affected 1 rows.
 15
+Affected 1 rows.
+16
+ANSWER = ( 12 )
+17
+Affected 1 rows.
+18
 ANSWER = ( 11 )
