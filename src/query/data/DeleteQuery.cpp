@@ -9,8 +9,8 @@ constexpr const char *DeleteQuery::qname;
 QueryResult::Ptr DeleteQuery::execute() {
   using namespace std;
   Database &db = Database::getInstance();
-  Table::SizeType counter = 0;
   try {
+    Table::SizeType counter = 0;
     auto &table = db[this->targetTable];
     auto result = initCondition(table);
     if (result.second) {

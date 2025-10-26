@@ -9,8 +9,8 @@ constexpr const char *SwapQuery::qname;
 QueryResult::Ptr SwapQuery::execute() {
   using namespace std;
   Database &db = Database::getInstance();
-  Table::SizeType counter = 0;
   try {
+    Table::SizeType counter = 0;
     auto &table = db[this->targetTable];
 
     // check that exactly 2 operands are provided

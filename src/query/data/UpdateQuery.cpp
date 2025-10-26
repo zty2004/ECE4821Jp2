@@ -15,8 +15,8 @@ QueryResult::Ptr UpdateQuery::execute() {
         qname, this->targetTable.c_str(),
         "Invalid number of operands (? operands)."_f % operands.size());
   Database &db = Database::getInstance();
-  Table::SizeType counter = 0;
   try {
+    Table::SizeType counter = 0;
     auto &table = db[this->targetTable];
     if (this->operands[0] == "KEY") {
       this->keyValue = this->operands[1];

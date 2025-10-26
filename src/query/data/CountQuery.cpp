@@ -7,8 +7,8 @@ constexpr const char *CountQuery::qname;
 QueryResult::Ptr CountQuery::execute() {
   using namespace std;
   Database &db = Database::getInstance();
-  int counter = 0;
   try {
+    int counter = 0;
     auto &table = db[this->targetTable];
     auto result = initCondition(table);
     if (result.second) {
