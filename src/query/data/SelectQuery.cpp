@@ -1,5 +1,7 @@
 #include "SelectQuery.h"
 
+#include <algorithm>
+
 #include "../../db/Database.h"
 
 constexpr const char *SelectQuery::qname;
@@ -46,7 +48,7 @@ QueryResult::Ptr SelectQuery::execute() {
       }
 
       // sort in ascending lexical order
-      sort(v_msg.begin(), v_msg.end());
+      std::sort(v_msg.begin(), v_msg.end());
 
       // concat as a whole message
       for (auto x : v_msg)

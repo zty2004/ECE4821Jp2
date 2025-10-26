@@ -1,0 +1,134 @@
+lemondb: info: auto detect thread num
+1
+Query "LOAD" success : manipulation
+2
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+3
+
+4
+Query "SELECT" success in Table "backup1" : ( alpha 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+5
+Query "INSERT" success : backup1
+6
+Query "SELECT" success in Table "backup1" : ( alpha 10 20 30 )
+( alpha_new 15 25 35 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+7
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+8
+Affected 1 rows.
+9
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+10
+Affected 0 rows.
+11
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+12
+Affected 1 rows.
+13
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 40 50 60 )
+( gamma 70 80 90 )
+
+14
+Affected 2 rows.
+15
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 40 50 60 )
+( beta_copy 40 50 60 )
+( gamma 70 80 90 )
+( gamma_copy 70 80 90 )
+
+16
+Affected 1 rows.
+17
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 80 90 )
+( gamma_copy 70 80 90 )
+
+18
+Affected 2 rows.
+19
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 90 80 )
+( gamma_copy 70 90 80 )
+
+20
+Affected 0 rows.
+21
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 90 80 )
+( gamma_copy 70 90 80 )
+
+22
+
+23
+Query "SELECT" success in Table "backup2" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 90 80 )
+( gamma_copy 70 90 80 )
+
+24
+
+25
+Query "SELECT" success in Table "backup1" : 
+26
+Query "SELECT" success in Table "backup2" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 90 80 )
+( gamma_copy 70 90 80 )
+
+27
+Query "SELECT" success in Table "manipulation" : ( alpha 10 20 30 )
+( alpha_copy 10 20 30 )
+( alpha_copy_copy 10 20 30 )
+( beta 50 40 60 )
+( beta_copy 40 50 60 )
+( gamma 70 90 80 )
+( gamma_copy 70 90 80 )
+
+28
+Affected 0 rows.
+29
+Affected 0 rows.
