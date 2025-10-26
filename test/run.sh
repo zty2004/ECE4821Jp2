@@ -10,6 +10,8 @@ cd build
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 ..
 cmake --build . -- -j8
 
+cd ..
+
 echo "[CLANG-TIDY]"
 tools/cq-clang-tidy
 
