@@ -7,6 +7,9 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 constexpr const Table::ValueType Table::ValueTypeMax;
 constexpr const Table::ValueType Table::ValueTypeMin;

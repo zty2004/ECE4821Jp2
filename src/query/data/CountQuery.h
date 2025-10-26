@@ -2,6 +2,7 @@
 #define PROJECT_COUNTQUERY_H
 
 #include "../Query.h"
+#include <string>
 
 class CountQuery : public ComplexQuery {
   static constexpr const char *qname = "COUNT";

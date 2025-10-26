@@ -1,15 +1,18 @@
 #include "AddQuery.h"
-#include "../../db/Database.h"
+
+#include <memory>
 #include <numeric>
+#include <string>
+
+#include "../../db/Database.h"
 
 constexpr const char *AddQuery::qname;
 
 QueryResult::Ptr AddQuery::execute() {
-  using namespace std;
 
   // Expect at least dst + one src
   if (this->operands.size() < 2) {
-    return make_unique<ErrorMsgResult>(
+    return std::make_unique<ErrorMsgResult>(
         qname, this->targetTable.c_str(),
         "Invalid number of operands (? operands)."_f % operands.size());
   }
@@ -41,16 +44,16 @@ QueryResult::Ptr AddQuery::execute() {
       }
     }
 
-    return make_unique<RecordCountResult>(static_cast<int>(counter));
+    return std::make_unique<RecordCountResult>(static_cast<int>(counter));
   } catch (const TableNameNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const TableFieldNotFound &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const IllFormedQueryCondition &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const std::exception &e) {
-    return make_unique<ErrorMsgResult>(qname, this->targetTable,
-                                       "Unkonwn error '?'."_f % e.what());
+    return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
+                                            "Unkonwn error '?'"_f % e.what());
   }
 }
 

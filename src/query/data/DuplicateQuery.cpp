@@ -30,7 +30,7 @@ QueryResult::Ptr DuplicateQuery::execute() {
           if (!table[copyKey]) {
             std::vector<Table::ValueType> copyData;
             copyData.reserve(fieldSize);
-            for (unsigned long i = 0; i < table.field().size(); ++i) {
+            for (std::size_t i = 0; i < table.field().size(); ++i) {
               copyData.push_back((*it)[i]);
             }
             table.insertByIndex(copyKey, std::move(copyData));

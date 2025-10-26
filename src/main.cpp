@@ -2,6 +2,8 @@
 // Created by liu on 18-10-21.
 //
 
+#include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
@@ -12,7 +14,7 @@
 
 struct {
   std::string listen;
-  long threads = 0;
+  int64_t threads = 0;
 } parsedArgs;
 
 void parseArgs(int argc, char *argv[]) {
@@ -26,7 +28,7 @@ void parseArgs(int argc, char *argv[]) {
     if (opt == 'l') {
       parsedArgs.listen = optarg;
     } else if (opt == 't') {
-      parsedArgs.threads = std::strtol(optarg, nullptr, 10);
+      parsedArgs.threads = std::strtoll(optarg, nullptr, 10);
     } else {
       std::cerr << "lemondb: warning: unknown argument "
                 << longOpts[longIndex].name << std::endl;

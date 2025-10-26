@@ -7,6 +7,10 @@
 
 #include "../db/Table.h"
 #include "QueryParser.h"
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #define QueryBuilder(name) name##QueryBuilder
 
@@ -53,7 +57,7 @@ public:
     return nextBuilder->tryExtractQuery(query);
   }
 
-  BasicQueryBuilder() : nextBuilder(FailedQueryBuilder::getDefault()){};
+  BasicQueryBuilder() : nextBuilder(FailedQueryBuilder::getDefault()) {}
 
   void clear() override { nextBuilder->clear(); }
 
