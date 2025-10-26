@@ -151,7 +151,7 @@ Query::Ptr ComplexQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
     std::cerr << e.what() << std::endl;
     return this->nextBuilder->tryExtractQuery(query);
   }
-  std::string operation = query.token.front();
+  std::string const operation = query.token.front();
   if (operation == "INSERT")
     return std::make_unique<InsertQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);

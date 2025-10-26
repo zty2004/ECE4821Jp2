@@ -37,7 +37,7 @@ void parseArgs(int argc, char *argv[]) {
 std::string extractQueryString(std::istream &is) {
   std::string buf;
   do {
-    int ch = is.get();
+    int const ch = is.get();
     if (ch == ';')
       return buf;
     if (ch == EOF)
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
     try {
       // A very standard REPL
       // REPL: Read-Evaluate-Print-Loop
-      std::string queryStr = extractQueryString(is);
+      std::string const queryStr = extractQueryString(is);
       Query::Ptr query = p.parseQuery(queryStr);
       QueryResult::Ptr result = query->execute();
       std::cout << ++counter << "\n";

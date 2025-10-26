@@ -20,8 +20,8 @@ QueryResult::Ptr DuplicateQuery::execute() {
       auto currEnd = table.end();
       for (auto it = table.begin(); it != currEnd; ++it) {
         if (this->evalCondition(*it)) {
-          Table::KeyType key = it->key();
-          string copyKey = key + "_copy";
+          Table::KeyType const key = it->key();
+          string const copyKey = key + "_copy";
           // if cannot find existed key, avoid copy again!
           if (!table[copyKey]) {
             vector<Table::ValueType> copyData;

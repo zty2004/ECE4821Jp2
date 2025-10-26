@@ -103,7 +103,7 @@ std::string Database::getFileTableName(const std::string &fileName) {
 Table &Database::loadTableFromStream(std::istream &is,
                                      const std::string &source) {
   auto &db = Database::getInstance();
-  std::string errString =
+  std::string const errString =
       !source.empty() ? R"(Invalid table (from "?") format: )"_f % source
                       : "Invalid table format: ";
 

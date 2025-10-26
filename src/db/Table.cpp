@@ -24,8 +24,8 @@ Table::getFieldIndex(const Table::FieldNameType &field) const {
 
 void Table::insertByIndex(const KeyType &key, std::vector<ValueType> &&data) {
   if (this->keyMap.find(key) != this->keyMap.end()) {
-    std::string err = "In Table \"" + this->tableName + "\" : Key \"" + key +
-                      "\" already exists!";
+    std::string const err = "In Table \"" + this->tableName + "\" : Key \"" +
+                            key + "\" already exists!";
     throw ConflictingKey(err);
   }
   this->keyMap.emplace(key, this->data.size());
@@ -36,8 +36,8 @@ bool Table::deleteByIndex(const KeyType &key) {
   auto it = keyMap.find(key);
   if (it == keyMap.end())
     return false;
-  SizeType del_ind = it->second;
-  SizeType last_ind = this->data.size() - 1;
+  SizeType const del_ind = it->second;
+  SizeType const last_ind = this->data.size() - 1;
   if (del_ind != last_ind) {
     std::swap(this->data[del_ind], this->data[last_ind]);
 
