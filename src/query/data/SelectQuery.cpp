@@ -8,7 +8,7 @@ constexpr const char *SelectQuery::qname;
 
 QueryResult::Ptr SelectQuery::execute() {
   using namespace std;
-  size_t operands_size = this->operands.size();
+  size_t const operands_size = this->operands.size();
 
   // the operands must be ( KEY field ... ), so size >= 2
   if (operands_size < 2)
@@ -51,7 +51,7 @@ QueryResult::Ptr SelectQuery::execute() {
       std::sort(v_msg.begin(), v_msg.end());
 
       // concat as a whole message
-      for (auto x : v_msg)
+      for (const auto &x : v_msg)
         msg << x;
     }
     return make_unique<SuccessMsgResult>(qname, targetTable, msg.str());

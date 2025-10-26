@@ -15,7 +15,7 @@ QueryResult::Ptr CopyTableQuery::execute() {
     auto newTable = make_unique<Table>(this->new_table, table);
 
     // register the new table
-    db.registerTable(move(newTable));
+    db.registerTable(std::move(newTable));
 
     return make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &e) {

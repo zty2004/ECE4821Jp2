@@ -58,6 +58,9 @@ private:
     Datum() = default;
 
     Datum(const Datum &) = default;
+    Datum &operator=(const Datum &) = default;
+    Datum(Datum &&) noexcept = default;
+    Datum &operator=(Datum &&) noexcept = default;
 
     explicit Datum(const SizeType &size) {
       datum = std::vector<ValueType>(size, ValueType());

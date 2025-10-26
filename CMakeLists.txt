@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
 project(lemondb)
-cmake_minimum_required(VERSION 2.7)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-std=c++20 -Wall -Wextra -Werror -pedantic -Wno-unused-result -Wconversion -Wno-unused-parameter -O2")
