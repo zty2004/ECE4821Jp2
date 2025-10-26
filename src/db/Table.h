@@ -62,9 +62,7 @@ private:
     Datum(Datum &&) noexcept = default;
     Datum &operator=(Datum &&) noexcept = default;
 
-    explicit Datum(const SizeType &size) {
-      datum = std::vector<ValueType>(size, ValueType());
-    }
+    explicit Datum(const SizeType &size) : datum(size, ValueType()) {}
 
     template <class ValueTypeContainer>
     explicit Datum(const KeyType &key, const ValueTypeContainer &datum) {

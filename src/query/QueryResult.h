@@ -81,7 +81,7 @@ public:
     this->msg = R"(ANSWER = "?".)"_f % number;
   }
 
-  explicit SuccessMsgResult(std::vector<int> results) {
+  explicit SuccessMsgResult(const std::vector<int> &results) {
     std::stringstream ss;
     ss << "ANSWER = ( ";
     for (auto result : results) {

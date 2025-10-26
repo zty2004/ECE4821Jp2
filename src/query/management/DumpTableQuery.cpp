@@ -12,7 +12,7 @@ constexpr const char *DumpTableQuery::qname;
 
 QueryResult::Ptr DumpTableQuery::execute() {
   using namespace std;
-  auto &db = Database::getInstance();
+  const auto &db = Database::getInstance();
   try {
     ofstream outfile(this->fileName);
     if (!outfile.is_open()) {
