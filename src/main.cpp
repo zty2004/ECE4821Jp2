@@ -2,10 +2,11 @@
 // Created by liu on 18-10-21.
 //
 
+#include <getopt.h>
+
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
-#include <getopt.h>
 #include <iostream>
 #include <string>
 

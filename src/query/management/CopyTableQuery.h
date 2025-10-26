@@ -1,6 +1,9 @@
 #ifndef PROJECT_COPYTABLEQUERY_H
 #define PROJECT_COPYTABLEQUERY_H
 
+#include <string>
+#include <utility>
+
 #include "../Query.h"
 
 class CopyTableQuery : public Query {

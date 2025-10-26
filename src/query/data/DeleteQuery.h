@@ -1,8 +1,10 @@
 #ifndef PROJECT_DELETEQUERY_H
 #define PROJECT_DELETEQUERY_H
 
-#include "../Query.h"
 #include <string>
+
+#include "../Query.h"
+#include "../QueryResult.h"
 
 class DeleteQuery : public ComplexQuery {
   static constexpr const char *qname = "DELETE";
