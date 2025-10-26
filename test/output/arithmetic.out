@@ -1,0 +1,40 @@
+lemondb: info: auto detect thread num
+1
+Query "LOAD" success : arithmetic
+2
+QUERY FAILED:
+	Query "MIN" failed in Table "arithmetic" : Field name "F" doesn't exists.
+3
+
+4
+
+5
+ANSWER = ( -3 -10 0 )
+6
+Affected 4 rows.
+7
+ANSWER = ( 6 )
+8
+Affected 2 rows.
+9
+ANSWER = ( -6 )
+10
+Affected 1 rows.
+11
+ANSWER = ( 0 )
+12
+Affected 1 rows.
+13
+Affected 1 rows.
+14
+ANSWER = ( 3 )
+15
+Affected 1 rows.
+16
+Affected 1 rows.
+17
+ANSWER = ( 12 )
+18
+Affected 1 rows.
+19
+ANSWER = ( 11 )
