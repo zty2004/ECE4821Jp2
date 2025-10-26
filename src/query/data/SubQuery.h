@@ -8,8 +8,8 @@ class SubQuery : public ComplexQuery {
   static constexpr const char *qname = "SUB";
 
   // Destination field and source fields to subtract
-  Table::FieldIndex dstId;
-  std::vector<Table::FieldIndex> srcId;
+  Table::FieldIndex dstId{};
+  std::vector<Table::FieldIndex> srcId{};
 
 public:
   using ComplexQuery::ComplexQuery;

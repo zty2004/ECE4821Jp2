@@ -1,5 +1,6 @@
 #include "AddQuery.h"
 #include "../../db/Database.h"
+#include <numeric>
 
 constexpr const char *AddQuery::qname;
 
@@ -31,10 +32,9 @@ QueryResult::Ptr AddQuery::execute() {
     if (condInit.second) {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
-          int sum = 0;
-          for (auto idx : srcId) {
-            sum += (*it)[idx];
-          }
+          int const sum = std::accumulate(
+              srcId.begin(), srcId.end(), 0,
+              [&](int acc, Table::FieldIndex idx) { return acc + (*it)[idx]; });
           (*it)[dstId] = sum;
           ++counter;
         }

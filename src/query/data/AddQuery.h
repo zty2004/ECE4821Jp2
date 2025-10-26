@@ -8,8 +8,8 @@ class AddQuery : public ComplexQuery {
   static constexpr const char *qname = "ADD";
 
   // Destination field and source fields to add
-  Table::FieldIndex dstId;
-  std::vector<Table::FieldIndex> srcId;
+  Table::FieldIndex dstId{};
+  std::vector<Table::FieldIndex> srcId{};
 
 public:
   using ComplexQuery::ComplexQuery;

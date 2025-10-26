@@ -6,8 +6,8 @@
 class SwapQuery : public ComplexQuery {
   static constexpr const char *qname = "SWAP";
 
-  Table::FieldIndex field1Id;
-  Table::FieldIndex field2Id;
+  Table::FieldIndex field1Id{};
+  Table::FieldIndex field2Id{};
 
 public:
   using ComplexQuery::ComplexQuery;
