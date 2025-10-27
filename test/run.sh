@@ -1,7 +1,24 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-ls test
+
+
+
+
+ls test/data
+# tools/compile
+
+
+
+
+
+
+
+
+
+
+
+
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
