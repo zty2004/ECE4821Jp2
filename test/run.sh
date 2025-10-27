@@ -10,9 +10,8 @@ rm -rf test/data/tmp
 mkdir -p test/data/tmp
 
 cd test/data
-../../build/lemondb --listen queries/few_insert_delete.query > lemondb.out
-
-cat lemondb.out
+time ../../build/lemondb --listen queries/few_insert_delete.query > lemondb.out
+diff lemondb.out stdout/few_insert_delete.out
 echo ""
 ls tmp
 
