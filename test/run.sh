@@ -12,7 +12,7 @@ mkdir -p test/data/tmp
 cd test/data
 time ../../build/lemondb --listen queries/few_insert_delete.query > lemondb.out
 # diff lemondb.out stdout/few_insert_delete.out
-diff tmp/few_insert_delete_dump_fTable0.tbl dump/few_insert_delete_dump_fTable0.tbl
+diff tmp/dump_fTable0.tbl dump/few_insert_delete_dump_fTable0.tbl
 
 echo ""
 ls tmp
