@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-ls ../
+tree test
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
