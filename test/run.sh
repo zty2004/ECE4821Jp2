@@ -2,17 +2,69 @@
 
 cd "$(dirname "$0")/.."
 
-git status
-echo "Last commit: $(git log -1 --pretty=format:'%s')"
+# check non-conventional commit
+tools/commit-msg .git/COMMIT_EDITMSG 2>/dev/null || exit 1
 
-#echo "[COMPILE]" | tee /dev/stderr
-#tools/compile
+LOGFILE=$(mktemp)
+trap "rm -f $LOGFILE" EXIT
 
-#echo "[CPPCHECK]" | tee /dev/stderr
-#tools/cq-cppcheck
+check_result() {
+  [ $2 -eq 0 ] && echo "[$1] PASSED" || { echo "[$1] FAILED"; return 1; }
+}
 
-#echo "[CPPLINT]" | tee /dev/stderr
-#tools/cq-cpplint
+# compile
+run_compile() {
+  echo "[COMPILE]" >> "$LOGFILE"
+  tools/compile >> "$LOGFILE" 2>&1
+  check_result "COMPILE" $?
+}
 
-#echo "[CLANG-TIDY]" | tee /dev/stderr
-#tools/cq-clang-tidy
+# check file length
+run_file_length() {
+  echo "[FILE-LENGTH]" >> "$LOGFILE"
+  tools/file-length >> "$LOGFILE" 2>&1
+  check_result "FILE-LENGTH" $?
+}
+
+# cppcheck
+run_cppcheck() {
+  echo "[CPPCHECK]" >> "$LOGFILE"
+  tools/cq-cppcheck >> "$LOGFILE" 2>&1
+  check_result "CPPCHECK" $?
+}
+
+# cpplint
+run_cpplint() {
+  echo "[CPPLINT]" >> "$LOGFILE"
+  tools/cq-cpplint >> "$LOGFILE" 2>&1
+  check_result "CPPLINT" $?
+}
+
+# clang-tidy
+run_clang_tidy() {
+  echo "[CLANG-TIDY]" >> "$LOGFILE"
+  tools/cq-clang-tidy >> "$LOGFILE" 2>&1
+  check_result "CLANG-TIDY" $?
+}
+
+# workflow controlled by scope
+[[ $(git log -1 --pretty=format:'%s') =~ ^[a-zA-Z]+\(([a-zA-Z0-9_/-]+)\): ]] || exit 0
+case "${BASH_REMATCH[1]}" in
+  compile) run_compile || { cat "$LOGFILE" >&2; exit 1; } ;;
+  file-length) run_file_length || { cat "$LOGFILE" >&2; exit 1; } ;;
+  cppcheck) run_compile || { cat "$LOGFILE" >&2; exit 1; }; run_cppcheck || { cat "$LOGFILE" >&2; exit 1; } ;;
+  cpplint) run_compile || { cat "$LOGFILE" >&2; exit 1; }; run_cpplint || { cat "$LOGFILE" >&2; exit 1; } ;;
+  clang-tidy) run_compile || { cat "$LOGFILE" >&2; exit 1; }; run_clang_tidy || { cat "$LOGFILE" >&2; exit 1; } ;;
+  cq)
+    run_compile || { cat "$LOGFILE" >&2; exit 1; }
+    failed=0
+    run_file_length || failed=1
+    run_cppcheck || failed=1
+    run_cpplint || failed=1
+    run_clang_tidy || failed=1
+    [ $failed -eq 1 ] && { cat "$LOGFILE" >&2; exit 1; }
+    ;;
+  *) exit 0 ;;
+esac
+check_result "ALL" 0
+exit 0

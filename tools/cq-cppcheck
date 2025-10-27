@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-cppcheck --force --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem --quiet -i build src
+cppcheck --force --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem --error-exitcode=1 --quiet -i build src
