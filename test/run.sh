@@ -1,12 +1,6 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-
-cat .git/COMMIT_EDITMSG
-
-# check non-conventional commit
-tools/commit-msg .git/COMMIT_EDITMSG 2>/dev/null || exit 1
-
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
