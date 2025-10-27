@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
+ls
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
