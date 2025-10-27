@@ -2,21 +2,14 @@
 
 cd "$(dirname "$0")/.."
 
-echo "[COMPILE]"
+echo "[COMPILE]" | tee /dev/stderr
+tools/compile
 
-rm -rf build
-mkdir build
-cd build
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang-18 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 ..
-cmake --build . -- -j8
-
-cd ..
-
-echo "[CPPCHECK]"
+echo "[CPPCHECK]" | tee /dev/stderr
 tools/cq-cppcheck
 
-echo "[CPPLINT]"
+echo "[CPPLINT]" | tee /dev/stderr
 tools/cq-cpplint
 
-echo "[CLANG-TIDY]"
+echo "[CLANG-TIDY]" | tee /dev/stderr
 tools/cq-clang-tidy

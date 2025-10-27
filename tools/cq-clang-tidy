@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-run-clang-tidy-18 -header-filter=.* -quiet -j 6 -p ./build ./src
+run-clang-tidy-18 -j 6 -header-filter='^src/.*$' -quiet -load=/usr/local/lib/libcodequality.so -p build src

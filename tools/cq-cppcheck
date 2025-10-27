@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-find src -name "*.h" -o -name "*.cpp" | xargs cppcheck --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem
+cppcheck --force --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem --quiet -i build src
