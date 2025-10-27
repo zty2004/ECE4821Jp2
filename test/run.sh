@@ -3,15 +3,20 @@
 cd "$(dirname "$0")/.."
 
 
-
-
 ls test/data
-# tools/compile
+tools/compile
 
+rm -rf test/data/tmp
+mkdir -p test/data/tmp
 
+cd test/data
+../../build/lemondb --listen queries/few_insert_delete.query > lemondb.out
 
+cat lemondb.out
+echo ""
+ls tmp
 
-
+exit 0
 
 
 
