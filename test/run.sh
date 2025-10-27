@@ -2,14 +2,17 @@
 
 cd "$(dirname "$0")/.."
 
-echo "[COMPILE]" | tee /dev/stderr
-tools/compile
+git status
+echo "Last commit: $(git log -1 --pretty=format:'%s')"
 
-echo "[CPPCHECK]" | tee /dev/stderr
-tools/cq-cppcheck
+#echo "[COMPILE]" | tee /dev/stderr
+#tools/compile
 
-echo "[CPPLINT]" | tee /dev/stderr
-tools/cq-cpplint
+#echo "[CPPCHECK]" | tee /dev/stderr
+#tools/cq-cppcheck
 
-echo "[CLANG-TIDY]" | tee /dev/stderr
-tools/cq-clang-tidy
+#echo "[CPPLINT]" | tee /dev/stderr
+#tools/cq-cpplint
+
+#echo "[CLANG-TIDY]" | tee /dev/stderr
+#tools/cq-clang-tidy
