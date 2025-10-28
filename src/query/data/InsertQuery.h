@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_INSERTQUERY_H
-#define PROJECT_INSERTQUERY_H
+#ifndef SRC_QUERY_DATA_INSERTQUERY_H_
+#define SRC_QUERY_DATA_INSERTQUERY_H_
 
 #include <string>
 
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_INSERTQUERY_H
+#endif // SRC_QUERY_DATA_INSERTQUERY_H_

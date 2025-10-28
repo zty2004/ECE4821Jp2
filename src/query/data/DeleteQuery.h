@@ -1,5 +1,5 @@
-#ifndef PROJECT_DELETEQUERY_H
-#define PROJECT_DELETEQUERY_H
+#ifndef SRC_QUERY_DATA_DELETEQUERY_H_
+#define SRC_QUERY_DATA_DELETEQUERY_H_
 
 #include <string>
 
@@ -17,4 +17,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_DELETEQUERY_H
+#endif // SRC_QUERY_DATA_DELETEQUERY_H_

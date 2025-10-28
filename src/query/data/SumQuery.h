@@ -1,5 +1,5 @@
-#ifndef PROJECT_SUMQUERY_H
-#define PROJECT_SUMQUERY_H
+#ifndef SRC_QUERY_DATA_SUMQUERY_H_
+#define SRC_QUERY_DATA_SUMQUERY_H_
 
 #include <string>
 #include <vector>
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_SUMQUERY_H
+#endif // SRC_QUERY_DATA_SUMQUERY_H_

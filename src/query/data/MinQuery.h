@@ -1,5 +1,5 @@
-#ifndef PROJECT_MINQUERY_H
-#define PROJECT_MINQUERY_H
+#ifndef SRC_QUERY_DATA_MINQUERY_H_
+#define SRC_QUERY_DATA_MINQUERY_H_
 
 #include <string>
 #include <vector>
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_MINQUERY_H
+#endif // SRC_QUERY_DATA_MINQUERY_H_

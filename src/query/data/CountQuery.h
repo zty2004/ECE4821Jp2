@@ -1,5 +1,5 @@
-#ifndef PROJECT_COUNTQUERY_H
-#define PROJECT_COUNTQUERY_H
+#ifndef SRC_QUERY_DATA_COUNTQUERY_H_
+#define SRC_QUERY_DATA_COUNTQUERY_H_
 
 #include <string>
 
@@ -16,4 +16,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_COUNTQUERY_H
+#endif // SRC_QUERY_DATA_COUNTQUERY_H_

@@ -1,5 +1,5 @@
-#ifndef PROJECT_SELECTQUERY_H
-#define PROJECT_SELECTQUERY_H
+#ifndef SRC_QUERY_DATA_SELECTQUERY_H_
+#define SRC_QUERY_DATA_SELECTQUERY_H_
 
 #include <string>
 #include <vector>
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_UPDATEQUERY_H
+#endif // SRC_QUERY_DATA_SELECTQUERY_H_

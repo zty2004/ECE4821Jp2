@@ -2,10 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_UPDATEQUERY_H
-#define PROJECT_UPDATEQUERY_H
-
-#include <string>
+#ifndef SRC_QUERY_DATA_UPDATEQUERY_H_
+#define SRC_QUERY_DATA_UPDATEQUERY_H_
 
 #include "../Query.h"
 
@@ -24,4 +22,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_UPDATEQUERY_H
+#endif // SRC_QUERY_DATA_UPDATEQUERY_H_

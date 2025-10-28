@@ -1,5 +1,5 @@
-#ifndef PROJECT_DUPLICATEQUERY_H
-#define PROJECT_DUPLICATEQUERY_H
+#ifndef SRC_QUERY_DATA_DUPLICATEQUERY_H_
+#define SRC_QUERY_DATA_DUPLICATEQUERY_H_
 
 #include <string>
 
@@ -17,4 +17,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_DUPLICATEQUERY_H
+#endif // SRC_QUERY_DATA_DUPLICATEQUERY_H_

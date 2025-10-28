@@ -1,5 +1,5 @@
-#ifndef PROJECT_MAXQUERY_H
-#define PROJECT_MAXQUERY_H
+#ifndef SRC_QUERY_DATA_MAXQUERY_H_
+#define SRC_QUERY_DATA_MAXQUERY_H_
 
 #include <string>
 #include <vector>
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_MAXQUERY_H
+#endif // SRC_QUERY_DATA_MAXQUERY_H_
