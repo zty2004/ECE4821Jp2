@@ -1,5 +1,5 @@
-#ifndef PROJECT_COPYTABLEQUERY_H
-#define PROJECT_COPYTABLEQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_COPYTABLEQUERY_H_
+#define SRC_QUERY_MANAGEMENT_COPYTABLEQUERY_H_
 
 #include <string>
 #include <utility>
@@ -19,4 +19,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_COPYTABLEQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_COPYTABLEQUERY_H_

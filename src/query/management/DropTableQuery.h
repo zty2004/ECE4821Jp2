@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_DROPTABLEQUERY_H
-#define PROJECT_DROPTABLEQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_DROPTABLEQUERY_H_
+#define SRC_QUERY_MANAGEMENT_DROPTABLEQUERY_H_
 
 #include <string>
 
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_DROPTABLEQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_DROPTABLEQUERY_H_

@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_DUMPTABLEQUERY_H
-#define PROJECT_DUMPTABLEQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_DUMPTABLEQUERY_H_
+#define SRC_QUERY_MANAGEMENT_DUMPTABLEQUERY_H_
 
 #include <string>
 #include <utility>
@@ -23,4 +23,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_DUMPTABLEQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_DUMPTABLEQUERY_H_

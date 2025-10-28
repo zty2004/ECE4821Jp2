@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_LOADTABLEQUERY_H
-#define PROJECT_LOADTABLEQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_LOADTABLEQUERY_H_
+#define SRC_QUERY_MANAGEMENT_LOADTABLEQUERY_H_
 
 #include <string>
 #include <utility>
@@ -23,4 +23,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_LOADTABLEQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_LOADTABLEQUERY_H_

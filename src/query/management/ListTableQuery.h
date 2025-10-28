@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_LISTTABLEQUERY_H
-#define PROJECT_LISTTABLEQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_LISTTABLEQUERY_H_
+#define SRC_QUERY_MANAGEMENT_LISTTABLEQUERY_H_
 
 #include <string>
 
@@ -18,4 +18,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_LISTTABLEQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_LISTTABLEQUERY_H_

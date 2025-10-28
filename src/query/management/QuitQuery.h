@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_QUITQUERY_H
-#define PROJECT_QUITQUERY_H
+#ifndef SRC_QUERY_MANAGEMENT_QUITQUERY_H_
+#define SRC_QUERY_MANAGEMENT_QUITQUERY_H_
 
 #include <string>
 
@@ -20,4 +20,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_QUITQUERY_H
+#endif // SRC_QUERY_MANAGEMENT_QUITQUERY_H_
