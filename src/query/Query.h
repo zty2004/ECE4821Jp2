@@ -91,7 +91,7 @@ public:
    * @param function
    * @return
    */
-  bool testKeyCondition(
+  [[maybe_unused]] bool testKeyCondition(
       const Table &table,
       const std::function<void(bool, Table::ConstObject::Ptr &&)> &function);
 
@@ -101,10 +101,14 @@ public:
         condition(std::move(condition)) {}
 
   /** Get operands in the query */
-  const std::vector<std::string> &getOperands() const { return operands; }
+  [[maybe_unused]] const std::vector<std::string> &getOperands() const {
+    return operands;
+  }
 
   /** Get condition in the query, seems no use now */
-  const std::vector<QueryCondition> &getCondition() { return condition; }
+  [[maybe_unused]] const std::vector<QueryCondition> &getCondition() {
+    return condition;
+  }
 };
 
 #endif // PROJECT_QUERY_H

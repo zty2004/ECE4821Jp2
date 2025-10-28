@@ -313,7 +313,9 @@ public:
    * Set the name of the table
    * @param name
    */
-  void setName(std::string name) { this->tableName = std::move(name); }
+  [[maybe_unused]] void setName(std::string name) {
+    this->tableName = std::move(name);
+  }
 
   /**
    * Get the name of the table
