@@ -32,7 +32,8 @@ QueryResult::Ptr SumQuery::execute() {
     }
 
     // if no record is affected, then the sum is set to zero
-    std::vector<int> sums(fieldId.size(), 0);
+    // use long long to avoid overflow during accumulation
+    std::vector<long long> sums(fieldId.size(), 0);
 
     auto result = initCondition(table);
     if (result.second) {
@@ -45,7 +46,12 @@ QueryResult::Ptr SumQuery::execute() {
         }
       }
     }
-    return std::make_unique<SuccessMsgResult>(sums);
+    // Convert back to int for the result
+    std::vector<int> result_sums(sums.size());
+    for (size_t i = 0; i < sums.size(); ++i) {
+      result_sums[i] = static_cast<int>(sums[i]);
+    }
+    return std::make_unique<SuccessMsgResult>(result_sums);
   } catch (const TableNameNotFound &e) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const TableFieldNotFound &e) {

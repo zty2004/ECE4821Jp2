@@ -34,13 +34,14 @@ QueryResult::Ptr SubQuery::execute() {
     if (condInit.second) {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
-          int value = (*it)[srcId[0]];
+          long long value = (*it)[srcId[0]];
           // subtract the sum of remaining sources using std::accumulate
-          int sub_sum = std::accumulate(
-              srcId.begin() + 1, srcId.end(), 0,
-              [&](int acc, size_t idx) { return acc + (*it)[idx]; });
+          // use long long to avoid overflow during accumulation
+          long long sub_sum = std::accumulate(
+              srcId.begin() + 1, srcId.end(), 0LL,
+              [&](long long acc, size_t idx) { return acc + (*it)[idx]; });
           value -= sub_sum;
-          (*it)[dstId] = value;
+          (*it)[dstId] = static_cast<int>(value);
           ++counter;
         }
       }

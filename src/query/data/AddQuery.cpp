@@ -34,10 +34,13 @@ QueryResult::Ptr AddQuery::execute() {
     if (condInit.second) {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
-          int const sum = std::accumulate(
-              srcId.begin(), srcId.end(), 0,
-              [&](int acc, Table::FieldIndex idx) { return acc + (*it)[idx]; });
-          (*it)[dstId] = sum;
+          // use long long to avoid overflow during accumulation
+          long long const sum =
+              std::accumulate(srcId.begin(), srcId.end(), 0LL,
+                              [&](long long acc, Table::FieldIndex idx) {
+                                return acc + (*it)[idx];
+                              });
+          (*it)[dstId] = static_cast<int>(sum);
           ++counter;
         }
       }
