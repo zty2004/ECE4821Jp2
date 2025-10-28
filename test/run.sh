@@ -1,33 +1,6 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
-
-
-ls test/data
-tools/compile
-
-rm -rf test/data/tmp
-mkdir -p test/data/tmp
-
-cd test/data
-time ../../build/lemondb --listen queries/few_insert_delete.query > lemondb.out
-
-ls stdout
-
-diff lemondb.out stdout/few_insert_delete.out
-# diff tmp/dump_fTable0.tbl dump/few_insert_delete_dump_fTable0.tbl
-
-echo ""
-ls tmp
-
-exit 0
-
-
-
-
-
-
-
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
@@ -70,6 +43,36 @@ run_clang_tidy() {
   check_result "CLANG-TIDY" $?
 }
 
+# run executable programme
+run_exec() {
+  local binary=$1
+  local test=$2
+  local diff_on=$3
+  time ../../build/$binary --listen queries/"${test}.query" > "${binary}-${test}.out" 2> "${binary}-${test}.err"
+  check_result "${binary}" $? || { tail -n 10 "${binary}-${test}.err" >&2; return 1; }
+  [ -z "$diff_on" ] && return 0
+  diff "${binary}-${test}.out" stdout/"${test}.out" > "${binary}-${test}.diff"
+  [ -s "${binary}-${test}.diff" ]
+  check_result "DIFF" $? || { cat "${binary}-${test}.diff" >&2; return 1; }
+}
+
+# run whole test
+run_test() {
+  local test=$1
+  run_compile || { cat "$LOGFILE" >&2; return 1; }
+  rm -rf test/data/tmp
+  mkdir -p test/data/tmp
+  cd test/data
+  local failed=0
+  run_exec lemondb-asan "${test}" || failed=1
+  run_exec lemondb-msan "${test}" || failed=1
+  run_exec lemondb-ubsan "${test}" || failed=1
+  run_exec lemondb "${test}" 1 || failed=1
+  rm -rf tmp *.out *.err *.diff
+  cd ../..
+  return ${failed}
+}
+
 # workflow controlled by scope
 [[ $(git log -1 --pretty=format:'%s') =~ ^[a-zA-Z]+\(([a-zA-Z0-9_/-]+)\): ]] || exit 0
 case "${BASH_REMATCH[1]}" in
@@ -87,6 +90,19 @@ case "${BASH_REMATCH[1]}" in
     run_clang_tidy || failed=1
     [ $failed -eq 1 ] && { cat "$LOGFILE" >&2; exit 1; }
     ;;
+  1|test) run_test test || exit 1 ;;
+  2|few_read) run_test few_read || exit 1 ;;
+  3|few_read_dup) run_test few_read_dup || exit 1 ;;
+  4|few_read_update) run_test few_read_update || exit 1 ;;
+  5|few_insert_delete) run_test few_insert_delete || exit 1 ;;
+  6|single_read) run_test single_read || exit 1 ;;
+  7|single_read_dup) run_test single_read_dup || exit 1 ;;
+  8|single_read_update) run_test single_read_update || exit 1 ;;
+  9|single_insert_delete) run_test single_insert_delete || exit 1 ;;
+  10|many_read) run_test many_read || exit 1 ;;
+  11|many_read_dup) run_test many_read_dup || exit 1 ;;
+  12|many_read_update) run_test many_read_update || exit 1 ;;
+  13|many_insert_delete) run_test many_insert_delete || exit 1 ;;
   *) exit 0 ;;
 esac
 check_result "ALL" 0
