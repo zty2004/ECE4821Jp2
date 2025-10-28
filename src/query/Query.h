@@ -82,6 +82,7 @@ public:
    * @return
    */
   bool evalCondition(const Table::Object &object);
+  bool evalCondition(const Table::ConstObject &object);
 
   /**
    * This function seems have small effect and causes somme bugs
@@ -91,8 +92,8 @@ public:
    * @return
    */
   bool testKeyCondition(
-      Table &table,
-      const std::function<void(bool, Table::Object::Ptr &&)> &function);
+      const Table &table,
+      const std::function<void(bool, Table::ConstObject::Ptr &&)> &function);
 
   ComplexQuery(std::string targetTable, std::vector<std::string> operands,
                std::vector<QueryCondition> condition)

@@ -1,6 +1,7 @@
 #include "SubQuery.h"
 
 #include <memory>
+#include <numeric>
 #include <string>
 
 #include "../../db/Database.h"
@@ -35,9 +36,11 @@ QueryResult::Ptr SubQuery::execute() {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
           int value = (*it)[srcId[0]];
-          for (size_t j = 1; j < srcId.size(); ++j) {
-            value -= (*it)[srcId[j]];
-          }
+          // subtract the sum of remaining sources using std::accumulate
+          int sub_sum = std::accumulate(
+              srcId.begin() + 1, srcId.end(), 0,
+              [&](int acc, size_t idx) { return acc + (*it)[idx]; });
+          value -= sub_sum;
           (*it)[dstId] = value;
           ++counter;
         }

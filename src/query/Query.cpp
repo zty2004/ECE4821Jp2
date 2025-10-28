@@ -73,9 +73,21 @@ bool ComplexQuery::evalCondition(const Table::Object &object) {
   return ret;
 }
 
+bool ComplexQuery::evalCondition(const Table::ConstObject &object) {
+  bool ret = true;
+  for (const auto &cond : condition) {
+    if (cond.field != "KEY") {
+      ret = ret && cond.comp(object[cond.fieldId], cond.valueParsed);
+    } else {
+      ret = ret && (object.key() == cond.value);
+    }
+  }
+  return ret;
+}
+
 bool ComplexQuery::testKeyCondition(
-    Table &table,
-    const std::function<void(bool, Table::Object::Ptr &&)> &function) {
+    const Table &table,
+    const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) {
   auto condResult = initCondition(table);
   if (!condResult.second) {
     function(false, nullptr);

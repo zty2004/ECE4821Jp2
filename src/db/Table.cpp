@@ -63,6 +63,19 @@ Table::Object::Ptr Table::operator[](const Table::KeyType &key) {
   }
 }
 
+Table::ConstObject::Ptr Table::operator[](const Table::KeyType &key) const {
+  auto it = keyMap.find(key);
+  if (it == keyMap.end()) {
+    // not found
+    return nullptr;
+  } else {
+    return createProxy(
+        data.cbegin() +
+            static_cast<std::vector<Table::Datum>::difference_type>(it->second),
+        this);
+  }
+}
+
 std::ostream &operator<<(std::ostream &os, const Table &table) {
   const int width = 10;
   std::stringstream buffer;

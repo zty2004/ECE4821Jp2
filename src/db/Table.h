@@ -126,7 +126,7 @@ public:
 
     ~ObjectImpl() = default;
 
-    KeyType key() const { return it->key; }
+    const KeyType &key() const { return it->key; }
 
     void setKey(KeyType key) {
       auto keyMapIt = table->keyMap.find(it->key);
@@ -301,6 +301,13 @@ public:
    * @return the Object that KEY = key, or nullptr if key doesn't exist
    */
   Object::Ptr operator[](const KeyType &key);
+
+  /**
+   * Const access the value according to the key
+   * @param key
+   * @return the ConstObject that KEY = key, or nullptr if key doesn't exist
+   */
+  ConstObject::Ptr operator[](const KeyType &key) const;
 
   /**
    * Set the name of the table
