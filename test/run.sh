@@ -68,6 +68,7 @@ run_test() {
   run_exec lemondb-msan "${test}" || failed=1
   run_exec lemondb-ubsan "${test}" || failed=1
   run_exec lemondb "${test}" 1 || failed=1
+  ls
   rm -rf tmp *.out *.err *.diff
   cd ../..
   return ${failed}
@@ -90,7 +91,7 @@ case "${BASH_REMATCH[1]}" in
     run_clang_tidy || failed=1
     [ $failed -eq 1 ] && { cat "$LOGFILE" >&2; exit 1; }
     ;;
-  1|test) run_test test || { ls; exit 1; } ;;
+  1|test) run_test test || exit 1 ;;
   2|few_read) run_test few_read || exit 1 ;;
   3|few_read_dup) run_test few_read_dup || exit 1 ;;
   4|few_read_update) run_test few_read_update || exit 1 ;;
