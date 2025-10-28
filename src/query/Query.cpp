@@ -85,7 +85,7 @@ bool ComplexQuery::evalCondition(const Table::ConstObject &object) {
   return ret;
 }
 
-bool ComplexQuery::testKeyCondition(
+[[maybe_unused]] bool ComplexQuery::testKeyCondition(
     const Table &table,
     const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) {
   auto condResult = initCondition(table);

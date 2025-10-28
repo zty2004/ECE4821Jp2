@@ -56,6 +56,6 @@ QueryResult::Ptr AddQuery::execute() {
   }
 }
 
-std::string AddQuery::toString() {
+[[maybe_unused]] std::string AddQuery::toString() {
   return "QUERY = ADD " + this->targetTable + "\"";
 }

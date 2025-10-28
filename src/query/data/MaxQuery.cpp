@@ -1,5 +1,6 @@
 #include "MaxQuery.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -22,10 +23,11 @@ QueryResult::Ptr MaxQuery::execute() {
     auto &table = db[this->targetTable];
 
     fieldId.clear();
-    fieldId.reserve(this->operands.size());
-    for (const auto &fname : this->operands) {
-      fieldId.emplace_back(table.getFieldIndex(fname));
-    }
+    fieldId.resize(this->operands.size());
+    std::transform(this->operands.begin(), this->operands.end(),
+                   fieldId.begin(), [&table](const std::string &fname) {
+                     return table.getFieldIndex(fname);
+                   });
 
     auto condInit = initCondition(table);
 
