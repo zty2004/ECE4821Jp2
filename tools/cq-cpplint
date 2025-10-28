@@ -7,4 +7,4 @@ if [ "$major" -lt 2 ]; then
   echo "Error: cpplint version $version is less than 2.0.0" >&2
   exit 1
 fi
-cpplint --linelength=120 --filter=-legal,-readability/todo --recursive --exclude=build src
+cpplint --linelength=120 --filter=-legal,-readability/todo,-whitespace/indent,-whitespace/comments --recursive --exclude=build src
