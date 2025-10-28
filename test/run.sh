@@ -50,7 +50,7 @@ run_exec() {
   local diff_on=$3
   echo "" && echo "[${binary}] START" && echo "[${binary}] ERROR INFO" >&2
   { time ../../build/$binary --listen queries/"${test}.query" > "${binary}-${test}.out" 2> "${binary}-${test}.err"; } 2>&1
-  check_result "${binary}" $? || { tail -n 10 "${binary}-${test}.err" >&2; return 1; }
+  check_result "${binary}" $? || { tail -n 150 "${binary}-${test}.err" >&2; return 1; }
   [ -z "$diff_on" ] && return 0
   diff "${binary}-${test}.out" stdout/"${test}.out" > "${binary}-${test}.diff"
   [ ! -s "${binary}-${test}.diff" ]
