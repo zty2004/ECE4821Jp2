@@ -52,7 +52,7 @@ run_exec() {
   check_result "${binary}" $? || { tail -n 10 "${binary}-${test}.err" >&2; return 1; }
   [ -z "$diff_on" ] && return 0
   diff "${binary}-${test}.out" stdout/"${test}.out" > "${binary}-${test}.diff"
-  [ -s "${binary}-${test}.diff" ]
+  [ ! -s "${binary}-${test}.diff" ]
   check_result "DIFF" $? || { cat "${binary}-${test}.diff" >&2; return 1; }
 }
 
