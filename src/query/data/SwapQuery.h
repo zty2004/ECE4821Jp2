@@ -1,5 +1,5 @@
-#ifndef PROJECT_SWAPQUERY_H
-#define PROJECT_SWAPQUERY_H
+#ifndef SRC_QUERY_DATA_SWAPQUERY_H_
+#define SRC_QUERY_DATA_SWAPQUERY_H_
 
 #include <string>
 
@@ -19,4 +19,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_SWAPQUERY_H
+#endif // SRC_QUERY_DATA_SWAPQUERY_H_

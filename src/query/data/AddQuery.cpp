@@ -9,7 +9,6 @@
 constexpr const char *AddQuery::qname;
 
 QueryResult::Ptr AddQuery::execute() {
-
   // Expect at least dst + one src
   if (this->operands.size() < 2) {
     return std::make_unique<ErrorMsgResult>(

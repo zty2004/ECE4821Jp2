@@ -10,7 +10,6 @@
 constexpr const char *MinQuery::qname;
 
 QueryResult::Ptr MinQuery::execute() {
-
   // check operands
   if (this->operands.empty()) {
     return std::make_unique<ErrorMsgResult>(

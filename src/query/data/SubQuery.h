@@ -1,5 +1,5 @@
-#ifndef PROJECT_SUBQUERY_H
-#define PROJECT_SUBQUERY_H
+#ifndef SRC_QUERY_DATA_SUBQUERY_H_
+#define SRC_QUERY_DATA_SUBQUERY_H_
 
 #include <string>
 #include <vector>
@@ -22,4 +22,4 @@ public:
   std::string toString() override;
 };
 
-#endif // PROJECT_SUBQUERY_H
+#endif // SRC_QUERY_DATA_SUBQUERY_H_

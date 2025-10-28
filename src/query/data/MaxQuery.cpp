@@ -10,7 +10,6 @@
 constexpr const char *MaxQuery::qname;
 
 QueryResult::Ptr MaxQuery::execute() {
-
   // check operands
   if (this->operands.empty()) {
     return std::make_unique<ErrorMsgResult>(
