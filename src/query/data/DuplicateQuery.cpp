@@ -21,22 +21,27 @@ QueryResult::Ptr DuplicateQuery::execute() {
     auto fieldSize = table.field().size();
     auto result = initCondition(table);
     if (result.second) {
-      auto currEnd = table.end();
-      for (auto it = table.begin(); it != currEnd; ++it) {
+      // collect rows to duplicate first to avoid iterator invalidation
+      std::vector<std::pair<Table::KeyType, std::vector<Table::ValueType>>>
+          duplicate_datums;
+
+      for (auto it = table.begin(); it != table.end(); ++it) {
         if (this->evalCondition(*it)) {
           Table::KeyType const key = it->key();
           std::string const copyKey = key + "_copy";
-          // if cannot find existed key, avoid copy again!
           if (!table[copyKey]) {
             std::vector<Table::ValueType> copyData;
             copyData.reserve(fieldSize);
             for (std::size_t i = 0; i < table.field().size(); ++i) {
               copyData.push_back((*it)[i]);
             }
-            table.insertByIndex(copyKey, std::move(copyData));
-            ++counter;
+            duplicate_datums.emplace_back(copyKey, std::move(copyData));
           }
         }
+      }
+      for (auto &entry : duplicate_datums) {
+        table.insertByIndex(entry.first, std::move(entry.second));
+        ++counter;
       }
     }
     return std::make_unique<RecordCountResult>(counter);
