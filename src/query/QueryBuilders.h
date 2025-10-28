@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_QUERYBUILDERS_H
-#define PROJECT_QUERYBUILDERS_H
+#ifndef SRC_QUERY_QUERYBUILDERS_H_
+#define SRC_QUERY_QUERYBUILDERS_H_
 
 #include <memory>
 #include <string>
@@ -98,4 +98,4 @@ BasicQueryBuilderClass(ManageTable);
 // ComplexQueryBuilderClass(Insert);
 // ComplexQueryBuilderClass(Delete);
 
-#endif // PROJECT_QUERYBUILDERS_H
+#endif // SRC_QUERY_QUERYBUILDERS_H_

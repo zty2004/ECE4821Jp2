@@ -1,5 +1,5 @@
-#ifndef SRC_FORMATTER_H
-#define SRC_FORMATTER_H
+#ifndef SRC_UTILS_FORMATTER_H_
+#define SRC_UTILS_FORMATTER_H_
 
 #include <string>
 #include <vector>
@@ -44,4 +44,4 @@ inline std::string operator""_f(const char *str, size_t size) {
   return std::string(str);
 }
 
-#endif // SRC_FORMATTER_H
+#endif // SRC_UTILS_FORMATTER_H_

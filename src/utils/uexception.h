@@ -1,5 +1,5 @@
-#ifndef SRC_QEURY_EXCEPTION_H
-#define SRC_QEURY_EXCEPTION_H
+#ifndef SRC_UTILS_UEXCEPTION_H_
+#define SRC_UTILS_UEXCEPTION_H_
 
 #include <exception>
 #include <stdexcept>
@@ -58,4 +58,4 @@ public:
                               qString) {}
 };
 
-#endif // SRC_QEURY_EXCEPTION_H
+#endif // SRC_UTILS_UEXCEPTION_H_

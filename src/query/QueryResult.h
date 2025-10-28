@@ -2,8 +2,8 @@
 // Created by liu on 18-10-25.
 //
 
-#ifndef PROJECT_QUERYRESULT_H
-#define PROJECT_QUERYRESULT_H
+#ifndef SRC_QUERY_QUERYRESULT_H_
+#define SRC_QUERY_QUERYRESULT_H_
 
 #include <memory>
 #include <sstream>
@@ -119,4 +119,4 @@ protected:
   }
 };
 
-#endif // PROJECT_QUERYRESULT_H
+#endif // SRC_QUERY_QUERYRESULT_H_

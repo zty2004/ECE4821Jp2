@@ -2,8 +2,8 @@
 // Created by liu on 18-10-23.
 //
 
-#ifndef PROJECT_DB_TABLE_H
-#define PROJECT_DB_TABLE_H
+#ifndef SRC_DB_TABLE_H_
+#define SRC_DB_TABLE_H_
 
 #include <limits>
 #include <memory>
@@ -400,4 +400,4 @@ Table::Table(const std::string &name, const FieldIDContainer &fields)
   }
 }
 
-#endif // PROJECT_DB_TABLE_H
+#endif // SRC_DB_TABLE_H_

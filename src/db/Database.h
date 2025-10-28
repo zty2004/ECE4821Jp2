@@ -2,8 +2,8 @@
 // Created by liu on 18-10-23.
 //
 
-#ifndef PROJECT_DB_H
-#define PROJECT_DB_H
+#ifndef SRC_DB_DATABASE_H_
+#define SRC_DB_DATABASE_H_
 
 #include <memory>
 #include <string>
@@ -74,4 +74,4 @@ public:
   void exit();
 };
 
-#endif // PROJECT_DB_H
+#endif // SRC_DB_DATABASE_H_

@@ -1,5 +1,5 @@
-#ifndef SRC_QUERY_PARSER_H
-#define SRC_QUERY_PARSER_H
+#ifndef SRC_QUERY_QUERYPARSER_H_
+#define SRC_QUERY_QUERYPARSER_H_
 
 #include <memory>
 #include <string>
@@ -37,4 +37,4 @@ public:
   ~QueryParser() = default;
 };
 
-#endif // SRC_QUERY_PARSER_H
+#endif // SRC_QUERY_QUERYPARSER_H_
