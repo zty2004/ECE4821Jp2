@@ -1,4 +1,10 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
+version=$(cpplint --version 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
+major=$(echo $version | cut -d. -f1)
+if [ "$major" -lt 2 ]; then
+  echo "Error: cpplint version $version is less than 2.0.0" >&2
+  exit 1
+fi
 cpplint --linelength=120 --filter=-legal,-readability/todo --recursive --exclude=build src

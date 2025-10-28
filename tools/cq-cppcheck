@@ -1,4 +1,11 @@
 #!/bin/bash
 
 cd "$(dirname "$0")/.."
+version=$(cppcheck --version 2>&1 | grep -oP '\d+\.\d+' | head -1)
+major=$(echo $version | cut -d. -f1)
+minor=$(echo $version | cut -d. -f2)
+if [ "$major" -lt 2 ] || ([ "$major" -eq 2 ] && [ "$minor" -lt 10 ]); then
+  echo "Error: cppcheck version $version is less than 2.10" >&2
+  exit 1
+fi
 cppcheck --force --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem --error-exitcode=1 --quiet -i build src
