@@ -1,5 +1,5 @@
 ---
-Checks: '-*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-security*,misc-*,-misc-no-recursion,performance-*,readability-*,-readability-container-*,-readability-use-std-min-max,bugprone-assignment-in-if-condition,bugprone-integer-division,bugprone-suspicious-string-compare,bugprone-infinite-loop,bugprone-macro-parentheses,bugprone-too-small-loop-variable,cppcoreguidelines-*,-cppcoreguidelines-no-malloc,-cppcoreguidelines-macro-to-enum,google-global-names-in-headers,codequality-*,portability-*'
+Checks: '-*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-security*,misc-*,-misc-no-recursion,performance-*,readability-*,-readability-container-*,-readability-use-std-min-max,bugprone-*,cppcoreguidelines-*,-cppcoreguidelines-macro-to-enum,google-global-names-in-headers,codequality-*,portability-*,modernize-*'
 WarningsAsErrors: '*'
 CheckOptions:
   - key:             readability-function-size.LineThreshold
