@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-template <typename T> static inline std::string to_string(std::vector<T> &vec) {
+template <typename T>
+static inline std::string to_string(const std::vector<T> &vec) {
   std::string str;
   for (const auto &val : vec) {
     str += std::to_string(val) + " ";

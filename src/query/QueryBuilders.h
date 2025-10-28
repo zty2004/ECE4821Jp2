@@ -17,17 +17,17 @@
 
 #define QueryBuilderClass(name)                                                \
   class QueryBuilder(name) : public QueryBuilder {                             \
-    Query::Ptr tryExtractQuery(TokenizedQueryString &query) override;          \
+    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
   }
 
 #define BasicQueryBuilderClass(name)                                           \
   class QueryBuilder(name) : public BasicQueryBuilder {                        \
-    Query::Ptr tryExtractQuery(TokenizedQueryString &query) override;          \
+    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
   }
 
 #define ComplexQueryBuilderClass(name)                                         \
   class QueryBuilder(name) : public ComplexQueryBuilder {                      \
-    Query::Ptr tryExtractQuery(TokenizedQueryString &query) override;          \
+    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
   }
 
 class FailedQueryBuilder : public QueryBuilder {
@@ -36,7 +36,7 @@ public:
     return std::make_unique<FailedQueryBuilder>();
   }
 
-  Query::Ptr tryExtractQuery(TokenizedQueryString &q) final {
+  Query::Ptr tryExtractQuery(const TokenizedQueryString &q) final {
     throw QueryBuilderMatchFailed(q.rawQeuryString);
   }
 
@@ -54,7 +54,7 @@ protected:
 public:
   void setNext(Ptr &&builder) override { nextBuilder = std::move(builder); }
 
-  Query::Ptr tryExtractQuery(TokenizedQueryString &query) override {
+  Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override {
     return nextBuilder->tryExtractQuery(query);
   }
 
@@ -71,7 +71,7 @@ protected:
   std::vector<std::string> operandToken;
   std::vector<QueryCondition> conditionToken;
 
-  virtual void parseToken(TokenizedQueryString &query);
+  virtual void parseToken(const TokenizedQueryString &query);
 
 public:
   void clear() override;
@@ -79,7 +79,7 @@ public:
 public:
   // Used as a debugging function.
   // Prints the parsed information
-  Query::Ptr tryExtractQuery(TokenizedQueryString &query) override;
+  Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;
 };
 
 // Transparant builder

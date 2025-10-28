@@ -45,7 +45,7 @@ std::string extractQueryString(std::istream &is) {
       return buf;
     if (ch == EOF)
       throw std::ios_base::failure("End of input");
-    buf.push_back((char)ch);
+    buf.push_back(static_cast<char>(ch));
   } while (true);
 }
 

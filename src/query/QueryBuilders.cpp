@@ -33,7 +33,8 @@
 
 // Prints out debugging information.
 // Does no real work
-Query::Ptr FakeQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
+Query::Ptr
+FakeQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   std::cerr << "Query string: \n" << query.rawQeuryString << "\n";
   std::cerr << "Tokens:\n";
   int count = 0;
@@ -49,7 +50,7 @@ Query::Ptr FakeQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
 }
 
 Query::Ptr
-ManageTableQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
+ManageTableQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   if (query.token.size() == 2) {
     if (query.token.front() == "LOAD") {
       auto &db = Database::getInstance();
@@ -73,7 +74,8 @@ ManageTableQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
   return this->nextBuilder->tryExtractQuery(query);
 }
 
-Query::Ptr DebugQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
+Query::Ptr
+DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   if (query.token.size() == 1) {
     if (query.token.front() == "LIST")
       return std::make_unique<ListTableQuery>();
@@ -87,7 +89,7 @@ Query::Ptr DebugQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
   return BasicQueryBuilder::tryExtractQuery(query);
 }
 
-void ComplexQueryBuilder::parseToken(TokenizedQueryString &query) {
+void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
   // Treats forms like:
   //
   // $OPER$ ( arg1 arg2 ... )
@@ -146,7 +148,8 @@ void ComplexQueryBuilder::parseToken(TokenizedQueryString &query) {
   }
 }
 
-Query::Ptr ComplexQueryBuilder::tryExtractQuery(TokenizedQueryString &query) {
+Query::Ptr
+ComplexQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   try {
     this->parseToken(query);
   } catch (const IllFormedQuery &e) {

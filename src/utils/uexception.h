@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "formatter.h"
+#include "./formatter.h"
 
 struct UnableToOpenFile : public std::runtime_error {
   explicit UnableToOpenFile(const std::string &file)

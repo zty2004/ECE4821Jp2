@@ -16,7 +16,8 @@ class QueryBuilder {
 public:
   typedef std::unique_ptr<QueryBuilder> Ptr;
 
-  virtual Query::Ptr tryExtractQuery(TokenizedQueryString &queryString) = 0;
+  virtual Query::Ptr
+  tryExtractQuery(const TokenizedQueryString &queryString) = 0;
   virtual void setNext(Ptr &&builder) = 0;
   virtual void clear() = 0;
 
