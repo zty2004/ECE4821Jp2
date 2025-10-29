@@ -26,7 +26,7 @@ QueryResult::Ptr SwapQuery::execute() {
     field2Id = table.getFieldIndex(this->operands[1]);
     auto result = initCondition(table);
     if (result.second) {
-      // if fields are the same, do nothing
+      // if fields are the same, only count as affected number
       bool flag = field1Id != field2Id;
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (this->evalCondition(*it)) {
