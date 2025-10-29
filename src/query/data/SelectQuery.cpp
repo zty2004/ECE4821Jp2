@@ -14,10 +14,12 @@ QueryResult::Ptr SelectQuery::execute() {
   std::size_t const operands_size = this->operands.size();
 
   // the operands must be ( KEY ...), so size >= 1
-  if (operands_size < 1)
+  if (operands_size < 1) {
     return std::make_unique<ErrorMsgResult>(
         qname, this->targetTable.c_str(),
+        // cppcheck-suppress zerodivcond
         "Invalid number of operands (? operands)."_f % operands_size);
+  }
 
   // KEY field must always appear at the beginning
   if (this->operands[0] != "KEY")

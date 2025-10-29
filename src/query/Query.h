@@ -49,7 +49,8 @@ public:
     return std::make_unique<NullQueryResult>();
   }
 
-  std::string toString() override { return "QUERY = NOOP"; }
+  // cppcheck-suppress unusedFunction
+  [[maybe_unused]] std::string toString() override { return "QUERY = NOOP"; }
 };
 
 class ComplexQuery : public Query {
@@ -101,11 +102,13 @@ public:
         condition(std::move(condition)) {}
 
   /** Get operands in the query */
+  // cppcheck-suppress unusedFunction
   [[maybe_unused]] const std::vector<std::string> &getOperands() const {
     return operands;
   }
 
   /** Get condition in the query, seems no use now */
+  // cppcheck-suppress unusedFunction
   [[maybe_unused]] const std::vector<QueryCondition> &getCondition() {
     return condition;
   }

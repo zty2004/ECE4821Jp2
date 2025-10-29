@@ -8,4 +8,4 @@ if [ "$major" -lt 2 ] || ([ "$major" -eq 2 ] && [ "$minor" -lt 10 ]); then
   echo "Error: cppcheck version $version is less than 2.10" >&2
   exit 1
 fi
-cppcheck --force --enable=all --language=c++ --std=c++20 --suppress=missingIncludeSystem --error-exitcode=1 --quiet -i build src
+cppcheck --force --enable=all --language=c++ --std=c++20 --inline-suppr --suppress=missingIncludeSystem --error-exitcode=1 --quiet -i build src

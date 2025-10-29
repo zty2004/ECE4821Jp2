@@ -85,6 +85,7 @@ bool ComplexQuery::evalCondition(const Table::ConstObject &object) {
   return ret;
 }
 
+// cppcheck-suppress unusedFunction
 [[maybe_unused]] bool ComplexQuery::testKeyCondition(
     const Table &table,
     const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) {
