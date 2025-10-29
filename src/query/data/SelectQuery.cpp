@@ -13,8 +13,8 @@ constexpr const char *SelectQuery::qname;
 QueryResult::Ptr SelectQuery::execute() {
   std::size_t const operands_size = this->operands.size();
 
-  // the operands must be ( KEY field ... ), so size >= 2
-  if (operands_size < 2)
+  // the operands must be ( KEY ...), so size >= 1
+  if (operands_size < 1)
     return std::make_unique<ErrorMsgResult>(
         qname, this->targetTable.c_str(),
         "Invalid number of operands (? operands)."_f % operands_size);
@@ -61,6 +61,8 @@ QueryResult::Ptr SelectQuery::execute() {
       tmp = msg.str();
       if (!tmp.empty()) {
         tmp.pop_back();
+      } else {
+return std::make_unique<NullQueryResult>();
       }
     }
     return std::make_unique<SuccessMsgResult>(tmp);
