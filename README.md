@@ -14,10 +14,26 @@ p2team03
 - Zuo Tianyou
 
 ## Installation
+### Build Instructions
+1. **Clone the project**:
+   ```bash
+   git clone ssh://git@focs.ji.sjtu.edu.cn:2222/ece482/p2team03.git
+   ```
+2. **Build the project**:
+   ```bash
+   cd p2team03
+   tools/compile
+   ```
+3. **Run mum shell**:
+   ```bash
+   ./build/lemondb
+   ./build/lemondb-asan      # AddressSanitizer version
+   ./build/lemondb-msan      # UndefinedBehaviorSanitizer version
+   ./build/lemondb-ubsan     # MemorySanitizer version
+   ```
 
-```shell
-$ git clone ssh://git@focs.ji.sjtu.edu.cn:2222/ece482/p2team03.git lemondb
-$ cd lemondb
-$ make
-$ ./bin/lemondb-2025
+### Clean Build
+To remove all compiled files:
+```bash
+rm -rf build
 ```
