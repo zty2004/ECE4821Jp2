@@ -40,13 +40,13 @@ public:
 class SucceededQueryResult : public QueryResult {
 public:
   bool success() override { return true; }
-  bool display() override { return false; }
+  bool display() override { return true; }
 };
 
 class NullQueryResult : public SucceededQueryResult {
 public:
 protected:
-  std::ostream &output(std::ostream &os) const override { return os << "\n"; }
+  std::ostream &output(std::ostream &os) const override { return os; }
 };
 
 class ErrorMsgResult : public FailedQueryResult {
@@ -73,7 +73,7 @@ class SuccessMsgResult : public SucceededQueryResult {
 
 public:
   explicit SuccessMsgResult(const int number) {
-    this->msg = R"(ANSWER = "?".)"_f % number;
+    this->msg = R"(ANSWER = ?)"_f % number;
   }
 
   explicit SuccessMsgResult(const std::vector<int> &results) {
@@ -88,6 +88,10 @@ public:
 
   explicit SuccessMsgResult(const char *qname) {
     this->msg = R"(Query "?" success.)"_f % qname;
+  }
+
+  explicit SuccessMsgResult(const std::string &msg) {
+    this->msg = msg;
   }
 
   SuccessMsgResult(const char *qname, const std::string &msg) {
