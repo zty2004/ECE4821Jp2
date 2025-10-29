@@ -24,7 +24,7 @@ p2team03
    cd p2team03
    tools/compile
    ```
-3. **Run mum shell**:
+3. **Run lemondb**:
    ```bash
    ./build/lemondb
    ./build/lemondb-asan      # AddressSanitizer version
