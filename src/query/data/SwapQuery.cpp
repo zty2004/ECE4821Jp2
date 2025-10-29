@@ -27,12 +27,12 @@ QueryResult::Ptr SwapQuery::execute() {
     auto result = initCondition(table);
     if (result.second) {
       // if fields are the same, do nothing
-      if (field1Id != field2Id) {
-        for (auto it = table.begin(); it != table.end(); ++it) {
-          if (this->evalCondition(*it)) {
+      bool flag = field1Id != field2Id;
+      for (auto it = table.begin(); it != table.end(); ++it) {
+        if (this->evalCondition(*it)) {
+          if (flag)
             std::swap((*it)[field1Id], (*it)[field2Id]);
-            ++counter;
-          }
+          ++counter;
         }
       }
     }
