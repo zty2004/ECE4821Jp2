@@ -90,9 +90,7 @@ public:
     this->msg = R"(Query "?" success.)"_f % qname;
   }
 
-  explicit SuccessMsgResult(const std::string &msg) {
-    this->msg = msg;
-  }
+  explicit SuccessMsgResult(const std::string &msg) { this->msg = msg; }
 
   SuccessMsgResult(const char *qname, const std::string &msg) {
     this->msg = R"(Query "?" success : ?)"_f % qname % msg;

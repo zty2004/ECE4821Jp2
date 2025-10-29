@@ -62,7 +62,7 @@ QueryResult::Ptr SelectQuery::execute() {
       if (!tmp.empty()) {
         tmp.pop_back();
       } else {
-return std::make_unique<NullQueryResult>();
+        return std::make_unique<NullQueryResult>();
       }
     }
     return std::make_unique<SuccessMsgResult>(tmp);
