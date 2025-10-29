@@ -27,25 +27,27 @@ QueryResult::Ptr SelectQuery::execute() {
 
   Database &db = Database::getInstance();
   std::stringstream msg;
-  std::string tmp;
   try {
     auto &table = db[this->targetTable];
+    std::string tmp;
     auto result = initCondition(table);
     if (result.second) {
       // vector of line message, used to sort in ascending lexical order
       std::vector<std::string> v_msg;
 
       // save the target field index in a vector
-      for (std::size_t i = 1; i < operands_size; ++i)
+      for (std::size_t i = 1; i < operands_size; ++i) {
         this->fieldId.push_back(table.getFieldIndex(this->operands[i]));
+      }
 
       // if condition satisfies, push line message to v_msg
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (this->evalCondition(*it)) {
           std::stringstream line_msg;
           line_msg << "( " << it->key();
-          for (auto fieldVal : fieldId)
+          for (auto fieldVal : fieldId) {
             line_msg << " " << (*it)[fieldVal];
+          }
           line_msg << " )\n";
           v_msg.push_back(line_msg.str());
         }
@@ -55,8 +57,9 @@ QueryResult::Ptr SelectQuery::execute() {
       std::sort(v_msg.begin(), v_msg.end());
 
       // concat as a whole message
-      for (const auto &x : v_msg)
-        msg << x;
+      for (const auto &line : v_msg) {
+        msg << line;
+      }
 
       tmp = msg.str();
       if (!tmp.empty()) {

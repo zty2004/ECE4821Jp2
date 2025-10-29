@@ -111,8 +111,6 @@ class RecordCountResult : public SucceededQueryResult {
   const int affectedRows;
 
 public:
-  bool display() override { return true; }
-
   explicit RecordCountResult(int count) : affectedRows(count) {}
 
 protected:
