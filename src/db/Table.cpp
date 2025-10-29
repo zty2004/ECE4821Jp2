@@ -18,7 +18,7 @@ Table::FieldIndex
 Table::getFieldIndex(const Table::FieldNameType &field) const {
   try {
     return this->fieldMap.at(field);
-  } catch (const std::out_of_range &e) {
+  } catch (const std::out_of_range &) {
     throw TableFieldNotFound(R"(Field name "?" doesn't exists.)"_f % (field));
   }
 }

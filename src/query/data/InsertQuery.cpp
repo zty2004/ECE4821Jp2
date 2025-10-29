@@ -30,7 +30,7 @@ QueryResult::Ptr InsertQuery::execute() {
     }
     table.insertByIndex(key, std::move(data));
     return std::make_unique<NullQueryResult>();
-  } catch (const TableNameNotFound &e) {
+  } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
                                             std::string("No such table."));
   } catch (const IllFormedQueryCondition &e) {

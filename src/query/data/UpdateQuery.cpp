@@ -41,7 +41,7 @@ QueryResult::Ptr UpdateQuery::execute() {
       }
     }
     return std::make_unique<RecordCountResult>(counter);
-  } catch (const TableNameNotFound &e) {
+  } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
                                             std::string("No such table."));
   } catch (const IllFormedQueryCondition &e) {

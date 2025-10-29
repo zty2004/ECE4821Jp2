@@ -16,7 +16,7 @@ QueryResult::Ptr DropTableQuery::execute() {
   try {
     db.dropTable(this->targetTable);
     return std::make_unique<NullQueryResult>();
-  } catch (const TableNameNotFound &e) {
+  } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, targetTable,
                                             std::string("No such table."));
   } catch (const std::exception &e) {

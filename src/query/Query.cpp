@@ -33,7 +33,7 @@ std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
       int op = 0;
       try {
         op = opmap.at(cond.op);
-      } catch (const std::out_of_range &e) {
+      } catch (const std::out_of_range &) {
         throw IllFormedQueryCondition(
             R"("?" is not a valid condition operator.)"_f % cond.op);
       }

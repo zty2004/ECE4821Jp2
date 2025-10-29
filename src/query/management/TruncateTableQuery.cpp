@@ -13,7 +13,7 @@ QueryResult::Ptr TruncateTableQuery::execute() {
     auto &table = db[this->targetTable];
     table.clear();
     return std::make_unique<NullQueryResult>();
-  } catch (const TableNameNotFound &e) {
+  } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
                                             std::string("No such table."));
   } catch (const std::exception &e) {

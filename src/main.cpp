@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
         std::cout.flush();
         std::cerr << "QUERY FAILED:\n\t" << *result;
       }
-    } catch (const std::ios_base::failure &e) {
+    } catch (const std::ios_base::failure &) {
       // End of input
       break;
     } catch (const std::exception &e) {
