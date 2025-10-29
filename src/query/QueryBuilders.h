@@ -40,7 +40,7 @@ public:
     throw QueryBuilderMatchFailed(q.rawQeuryString);
   }
 
-  void setNext(QueryBuilder::Ptr &&builder) final {}
+  void setNext(QueryBuilder::Ptr &&) final {}
 
   void clear() override {}
 
