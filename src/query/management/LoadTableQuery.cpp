@@ -22,7 +22,7 @@ QueryResult::Ptr LoadTableQuery::execute() {
     }
     db.loadTableFromStream(infile, this->fileName);
     infile.close();
-    return std::make_unique<SuccessMsgResult>(qname, targetTable);
+    return std::make_unique<NullQueryResult>();
   } catch (const std::exception &e) {
     return std::make_unique<ErrorMsgResult>(qname, e.what());
   }
