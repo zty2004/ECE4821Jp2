@@ -15,7 +15,7 @@ QueryResult::Ptr DropTableQuery::execute() {
   Database &db = Database::getInstance();
   try {
     db.dropTable(this->targetTable);
-    return std::make_unique<SuccessMsgResult>(qname);
+    return std::make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &e) {
     return std::make_unique<ErrorMsgResult>(qname, targetTable,
                                             std::string("No such table."));
