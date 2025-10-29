@@ -27,6 +27,7 @@ QueryResult::Ptr SelectQuery::execute() {
 
   Database &db = Database::getInstance();
   std::stringstream msg;
+  std::string tmp;
   try {
     auto &table = db[this->targetTable];
     auto result = initCondition(table);
@@ -56,8 +57,13 @@ QueryResult::Ptr SelectQuery::execute() {
       // concat as a whole message
       for (const auto &x : v_msg)
         msg << x;
+
+      tmp = msg.str();
+      if (!tmp.empty()) {
+        tmp.pop_back();
+      }
     }
-    return std::make_unique<SuccessMsgResult>(qname, targetTable, msg.str());
+    return std::make_unique<SuccessMsgResult>(tmp);
   } catch (const TableNameNotFound &e) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable, e.what());
   } catch (const TableFieldNotFound &e) {
