@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+- support gitea workflows
 - support aggregate queries `SUM`, `COUNT`.
 - support arithmatic queries `MIN`, `MAX`, `ADD`, `SUB`.
 - support data manipulation queries `SELECT`, `DELETE`, `SWAP`, `DUPLICATE`.
