@@ -23,7 +23,7 @@ target_link_options(lemondb-asan PRIVATE -fsanitize=address)
 add_executable(lemondb-msan ${SOURCES})
 target_link_libraries(lemondb-msan pthread)
 target_compile_options(lemondb-msan PRIVATE -DDEBUG -g -O2 -fsanitize=memory -fno-omit-frame-pointer -fsanitize-memory-track-origins -fPIE -stdlib=libc++ -nostdinc++ -isystem /usr/local/lib/libc++_msan-18/include/c++/v1)
-target_link_options(lemondb-msan PRIVATE -fsanitize=memory -pie -stdlib=libc++ -L/usr/local/lib/libc++_msan-18/lib -Wl,-rpath,/usr/local/lib/libc++_msan-18/lib)
+target_link_options(lemondb-msan PRIVATE -fsanitize=memory -pie -stdlib=libc++ -Wl,-rpath,/usr/local/lib/libc++_msan-18/lib)
 
 # lemondb-ubsan
 add_executable(lemondb-ubsan ${SOURCES})
