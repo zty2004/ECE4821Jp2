@@ -20,7 +20,7 @@
     try {                                                                      \
       auto &index = table->fieldMap.at(field);                                 \
       return it->datum.at(index);                                              \
-    } catch (const std::out_of_range &e) {                                     \
+    } catch (const std::out_of_range &) {                                      \
       throw TableFieldNotFound(R"(Field name "?" doesn't exists.)"_f %         \
                                (field));                                       \
     }                                                                          \
@@ -30,7 +30,7 @@
   do {                                                                         \
     try {                                                                      \
       return it->datum.at(index);                                              \
-    } catch (const std::out_of_range &e) {                                     \
+    } catch (const std::out_of_range &) {                                      \
       throw TableFieldNotFound(R"(Field index ? out of range.)"_f % (index));  \
     }                                                                          \
   } while (0)

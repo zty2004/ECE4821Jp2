@@ -24,8 +24,8 @@ QueryResult::Ptr UpdateQuery::execute() {
       this->keyValue = this->operands[1];
     } else {
       this->fieldId = table.getFieldIndex(this->operands[0]);
-      this->fieldValue =
-          (Table::ValueType)strtol(this->operands[1].c_str(), nullptr, 10);
+      this->fieldValue = static_cast<Table::ValueType>(
+          strtol(this->operands[1].c_str(), nullptr, 10));
     }
     auto result = initCondition(table);
     if (result.second) {
@@ -41,7 +41,7 @@ QueryResult::Ptr UpdateQuery::execute() {
       }
     }
     return std::make_unique<RecordCountResult>(counter);
-  } catch (const TableNameNotFound &e) {
+  } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
                                             std::string("No such table."));
   } catch (const IllFormedQueryCondition &e) {

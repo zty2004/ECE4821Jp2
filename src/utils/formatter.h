@@ -41,7 +41,7 @@ template <> inline std::string operator%(std::string format, const char *s) {
   return format;
 }
 
-inline std::string operator""_f(const char *str, size_t size) {
+inline std::string operator""_f(const char *str, size_t) {
   return std::string(str);
 }
 
