@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_COMPILER /usr/lib/llvm-18/bin/clang++)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS "-std=c++20 -Weverything -Werror -Wno-c++98-compat -Wno-reserved-macro-identifier -Wno-documentation -Wno-padded -Wno-shadow -Wno-shadow-field -Wno-weak-vtables")
+set(CMAKE_CXX_FLAGS "-std=c++20 -Wall -Wextra -Werror -Wconversion -Wunused-parameter -Wvla -Wpedantic")
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 
 # lemondb
