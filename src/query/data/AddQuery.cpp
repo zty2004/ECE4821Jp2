@@ -1,5 +1,6 @@
 #include "AddQuery.h"
 
+#include <cstdint>
 #include <memory>
 #include <numeric>
 #include <string>
@@ -34,10 +35,10 @@ QueryResult::Ptr AddQuery::execute() {
     if (condInit.second) {
       for (auto it = table.begin(); it != table.end(); ++it) {
         if (evalCondition(*it)) {
-          // use long long to avoid overflow during accumulation
-          long long const sum =
+          // use int64_t to avoid overflow during accumulation
+          int64_t const sum =
               std::accumulate(srcId.begin(), srcId.end(), 0LL,
-                              [&](long long acc, Table::FieldIndex idx) {
+                              [&](int64_t acc, Table::FieldIndex idx) {
                                 return acc + (*it)[idx];
                               });
           (*it)[dstId] = static_cast<int>(sum);

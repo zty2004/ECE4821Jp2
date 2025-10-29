@@ -1,5 +1,6 @@
 #include "SumQuery.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -32,8 +33,8 @@ QueryResult::Ptr SumQuery::execute() {
     }
 
     // if no record is affected, then the sum is set to zero
-    // use long long to avoid overflow during accumulation
-    std::vector<long long> sums(fieldId.size(), 0);
+    // use int64_t to avoid overflow during accumulation
+    std::vector<int64_t> sums(fieldId.size(), 0);
 
     auto result = initCondition(table);
     if (result.second) {
