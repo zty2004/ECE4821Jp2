@@ -28,8 +28,8 @@ std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
       }
     } else {
       cond.fieldId = table.getFieldIndex(cond.field);
-      cond.valueParsed =
-          (Table::ValueType)std::strtol(cond.value.c_str(), nullptr, 10);
+      cond.valueParsed = static_cast<Table::ValueType>(
+          std::strtol(cond.value.c_str(), nullptr, 10));
       int op = 0;
       try {
         op = opmap.at(cond.op);
