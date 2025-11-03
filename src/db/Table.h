@@ -5,6 +5,7 @@
 #ifndef SRC_DB_TABLE_H_
 #define SRC_DB_TABLE_H_
 
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <string>
@@ -173,6 +174,7 @@ public:
     using pointer = typename ObjType::Ptr;
     using reference = ObjType;
     using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
     // See https://stackoverflow.com/questions/37031805/
 
     friend class Table;
@@ -198,15 +200,26 @@ public:
 
     pointer operator->() { return createProxy(it, table); }
 
-    reference operator*() { return *createProxy(it, table); }
+    // *Note: Directly build an Obj instead of Proxy, need further test
+    reference operator*() { return ObjType(it, table); }
 
-    IteratorImpl operator+(int n) { return IteratorImpl(it + n, table); }
+    IteratorImpl operator+(difference_type n) const {
+      return IteratorImpl(it + n, table);
+    }
 
-    IteratorImpl operator-(int n) { return IteratorImpl(it - n, table); }
+    IteratorImpl operator-(difference_type n) const {
+      return IteratorImpl(it - n, table);
+    }
 
-    IteratorImpl &operator+=(int n) { return it += n, *this; }
+    difference_type operator-(const IteratorImpl &other) const {
+      return this->it - other.it;
+    }
 
-    IteratorImpl &operator-=(int n) { return it -= n, *this; }
+    reference operator[](difference_type n) const { return *(*this + n); }
+
+    IteratorImpl &operator+=(difference_type n) { return it += n, *this; }
+
+    IteratorImpl &operator-=(difference_type n) { return it -= n, *this; }
 
     IteratorImpl &operator++() { return ++it, *this; }
 
@@ -224,17 +237,29 @@ public:
       return retVal;
     }
 
-    bool operator==(const IteratorImpl &other) { return this->it == other.it; }
+    bool operator==(const IteratorImpl &other) const {
+      return this->it == other.it;
+    }
 
-    bool operator!=(const IteratorImpl &other) { return this->it != other.it; }
+    bool operator!=(const IteratorImpl &other) const {
+      return this->it != other.it;
+    }
 
-    bool operator<=(const IteratorImpl &other) { return this->it <= other.it; }
+    bool operator<=(const IteratorImpl &other) const {
+      return this->it <= other.it;
+    }
 
-    bool operator>=(const IteratorImpl &other) { return this->it >= other.it; }
+    bool operator>=(const IteratorImpl &other) const {
+      return this->it >= other.it;
+    }
 
-    bool operator<(const IteratorImpl &other) { return this->it < other.it; }
+    bool operator<(const IteratorImpl &other) const {
+      return this->it < other.it;
+    }
 
-    bool operator>(const IteratorImpl &other) { return this->it > other.it; }
+    bool operator>(const IteratorImpl &other) const {
+      return this->it > other.it;
+    }
   };
 
   typedef IteratorImpl<Object, decltype(data.begin())> Iterator;
@@ -357,25 +382,25 @@ public:
    * Get a begin iterator similar to the standard iterator
    * @return begin iterator
    */
-  Iterator begin() { return {data.begin(), this}; }
+  Iterator begin() noexcept { return {data.begin(), this}; }
 
   /**
    * Get a end iterator similar to the standard iterator
    * @return end iterator
    */
-  Iterator end() { return {data.end(), this}; }
+  Iterator end() noexcept { return {data.end(), this}; }
 
   /**
    * Get a const begin iterator similar to the standard iterator
    * @return const begin iterator
    */
-  ConstIterator begin() const { return {data.cbegin(), this}; }
+  ConstIterator begin() const noexcept { return {data.cbegin(), this}; }
 
   /**
    * Get a const end iterator similar to the standard iterator
    * @return const end iterator
    */
-  ConstIterator end() const { return {data.cend(), this}; }
+  ConstIterator end() const noexcept { return {data.cend(), this}; }
 
   /**
    * Overload the << operator for complete print of the table
