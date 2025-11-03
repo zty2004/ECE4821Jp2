@@ -1,10 +1,13 @@
 #include "AddQuery.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <iterator>
 #include <memory>
 #include <numeric>
+#include <ranges>
 #include <string>
 
 #include "../../db/Database.h"
@@ -25,11 +28,17 @@ auto AddQuery::execute() -> QueryResult::Ptr {
     auto &table = database[this->targetTable];
 
     dstId = table.getFieldIndex(this->operands.back());
+    // count the number of sources (minus the last operand)
+    const auto srcCount = this->operands.size() - 1;
     srcId.clear();
-    srcId.reserve(this->operands.size() - 1);
-    for (size_t i = 0; i + 1 < this->operands.size(); ++i) {
-      srcId.emplace_back(table.getFieldIndex(this->operands[i]));
-    }
+    srcId.reserve(srcCount);
+    auto ids_view =
+        this->operands | std::ranges::views::take(srcCount) |
+        std::ranges::views::transform(
+            [&table](const std::string &fname) -> Table::FieldIndex {
+              return table.getFieldIndex(fname);
+            });
+    std::ranges::copy(ids_view, std::back_inserter(srcId));
 
     auto condInit = initCondition(table);
 
