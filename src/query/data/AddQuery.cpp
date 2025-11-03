@@ -1,15 +1,18 @@
 #include "AddQuery.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <numeric>
 #include <string>
 
 #include "../../db/Database.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *AddQuery::qname;
-
-QueryResult::Ptr AddQuery::execute() {
+auto AddQuery::execute() -> QueryResult::Ptr {
   // Expect at least dst + one src
   if (this->operands.size() < 2) {
     return std::make_unique<ErrorMsgResult>(
@@ -18,8 +21,8 @@ QueryResult::Ptr AddQuery::execute() {
   }
 
   try {
-    auto &db = Database::getInstance();
-    auto &table = db[this->targetTable];
+    auto &database = Database::getInstance();
+    auto &table = database[this->targetTable];
 
     dstId = table.getFieldIndex(this->operands.back());
     srcId.clear();
@@ -33,15 +36,15 @@ QueryResult::Ptr AddQuery::execute() {
     // Iterate and update
     size_t counter = 0;
     if (condInit.second) {
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (evalCondition(*it)) {
+      for (auto &&obj : table) {
+        if (evalCondition(obj)) {
           // use int64_t to avoid overflow during accumulation
-          int64_t const sum =
-              std::accumulate(srcId.begin(), srcId.end(), 0LL,
-                              [&](int64_t acc, Table::FieldIndex idx) {
-                                return acc + (*it)[idx];
-                              });
-          (*it)[dstId] = static_cast<int>(sum);
+          int64_t const sum = std::accumulate(
+              srcId.begin(), srcId.end(), 0LL,
+              [&obj](int64_t acc, Table::FieldIndex idx) -> int64_t {
+                return acc + obj[idx];
+              });
+          obj[dstId] = static_cast<int>(sum);
           ++counter;
         }
       }
@@ -61,6 +64,6 @@ QueryResult::Ptr AddQuery::execute() {
 }
 
 // cppcheck-suppress unusedFunction
-[[maybe_unused]] std::string AddQuery::toString() {
+[[maybe_unused]] auto AddQuery::toString() -> std::string {
   return "QUERY = ADD " + this->targetTable + "\"";
 }

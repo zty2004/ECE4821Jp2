@@ -1,9 +1,6 @@
 #ifndef SRC_QUERY_DATA_ADDQUERY_H_
 #define SRC_QUERY_DATA_ADDQUERY_H_
 
-#include <string>
-#include <vector>
-
 #include "../Query.h"
 #include "../QueryResult.h"
 
