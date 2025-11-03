@@ -1,6 +1,5 @@
 *
 
-!Makefile
 !CMakeLists.txt
 !.gitea/
 !.gitea/**
@@ -12,6 +11,7 @@
 !test/**
 !README.md
 !CHANGELOG.md
+!LICENSE
 !.gitignore
 !.gitattributes
 !.clang-format
