@@ -1,23 +1,28 @@
 #include "CountQuery.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "../../db/Database.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *CountQuery::qname;
-
-QueryResult::Ptr CountQuery::execute() {
-  Database &db = Database::getInstance();
+auto CountQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
-    int counter = 0;
-    auto &table = db[this->targetTable];
+    int64_t counter = 0;
+    auto &table = database[this->targetTable];
     auto result = initCondition(table);
     if (result.second) {
       // iterate through all datums and count the num satisfying conditions
-      for (auto it = table.begin(); it != table.end(); ++it)
-        if (this->evalCondition(*it))
-          ++counter;
+      counter = std::count_if(
+          table.begin(), table.end(),
+          [this](const auto &obj) -> bool { return this->evalCondition(obj); });
     }
     return std::make_unique<SuccessMsgResult>(counter);
   } catch (const TableNameNotFound &e) {
@@ -33,6 +38,6 @@ QueryResult::Ptr CountQuery::execute() {
   }
 }
 
-std::string CountQuery::toString() {
+auto CountQuery::toString() -> std::string {
   return "QUERY = COUNT FROM " + this->targetTable + "\"";
 }

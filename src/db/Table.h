@@ -169,6 +169,12 @@ public:
    * @tparam DatumIterator
    */
   template <typename ObjType, typename DatumIterator> class IteratorImpl {
+    friend class Table;
+
+    DatumIterator it;
+    const Table *table = nullptr;
+
+  public:
     using difference_type = std::ptrdiff_t;
     using value_type = ObjType;
     using pointer = typename ObjType::Ptr;
@@ -177,12 +183,6 @@ public:
     using iterator_concept = std::random_access_iterator_tag;
     // See https://stackoverflow.com/questions/37031805/
 
-    friend class Table;
-
-    DatumIterator it;
-    const Table *table = nullptr;
-
-  public:
     IteratorImpl(DatumIterator datumIt, const Table *t)
         : it(datumIt), table(t) {}
 
