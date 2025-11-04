@@ -1,19 +1,23 @@
 #include "SwapQuery.h"
 
 #include <algorithm>
+#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *SwapQuery::qname;
-
-QueryResult::Ptr SwapQuery::execute() {
-  Database &db = Database::getInstance();
+auto SwapQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
     Table::SizeType counter = 0;
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
 
     // check that exactly 2 operands are provided
     if (this->operands.size() != 2) {
@@ -27,11 +31,12 @@ QueryResult::Ptr SwapQuery::execute() {
     auto result = initCondition(table);
     if (result.second) {
       // if fields are the same, only count as affected number
-      bool flag = field1Id != field2Id;
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (this->evalCondition(*it)) {
-          if (flag)
-            std::swap((*it)[field1Id], (*it)[field2Id]);
+      bool const flag = field1Id != field2Id;
+      for (auto &&obj : table) {
+        if (this->evalCondition(obj)) {
+          if (flag) {
+            std::swap(obj[field1Id], obj[field2Id]);
+          }
           ++counter;
         }
       }
@@ -52,6 +57,6 @@ QueryResult::Ptr SwapQuery::execute() {
   }
 }
 
-std::string SwapQuery::toString() {
+auto SwapQuery::toString() -> std::string {
   return "QUERY = SWAP FROM " + this->targetTable;
 }
