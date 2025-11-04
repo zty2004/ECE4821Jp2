@@ -1,16 +1,21 @@
 #include "MaxQuery.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <exception>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *MaxQuery::qname;
-
-QueryResult::Ptr MaxQuery::execute() {
+auto MaxQuery::execute() -> QueryResult::Ptr {
   // check operands
   if (this->operands.empty()) {
     return std::make_unique<ErrorMsgResult>(
@@ -19,15 +24,18 @@ QueryResult::Ptr MaxQuery::execute() {
   }
 
   try {
-    auto &db = Database::getInstance();
-    auto &table = db[this->targetTable];
+    auto &database = Database::getInstance();
+    auto &table = database[this->targetTable];
 
     fieldId.clear();
     fieldId.resize(this->operands.size());
-    std::transform(this->operands.begin(), this->operands.end(),
-                   fieldId.begin(), [&table](const std::string &fname) {
-                     return table.getFieldIndex(fname);
-                   });
+    auto ids_view =
+        this->operands |
+        std::ranges::views::transform(
+            [&table](const std::string &fname) -> Table::FieldIndex {
+              return table.getFieldIndex(fname);
+            });
+    std::ranges::copy(ids_view, fieldId.begin());
 
     auto condInit = initCondition(table);
 
@@ -36,15 +44,15 @@ QueryResult::Ptr MaxQuery::execute() {
     std::size_t matched = 0;
 
     if (condInit.second) {
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (evalCondition(*it)) {
+      for (auto &&obj : table) {
+        if (evalCondition(obj)) {
           ++matched;
-          for (size_t i = 0; i < fieldId.size(); ++i) {
-            auto v = (*it)[fieldId[i]];
-            if (v > maxs[i]) {
-              maxs[i] = v;
-            }
-          }
+          std::ranges::transform(
+              fieldId, maxs, maxs.begin(),
+              [&obj](Table::FieldIndex fid, int curMax) -> int {
+                int const val = obj[fid];
+                return val > curMax ? val : curMax;
+              });
         }
       }
     }
@@ -66,6 +74,6 @@ QueryResult::Ptr MaxQuery::execute() {
   }
 }
 
-std::string MaxQuery::toString() {
+auto MaxQuery::toString() -> std::string {
   return "QUERY = MAX " + this->targetTable + "\"";
 }
