@@ -52,6 +52,7 @@ auto Table::deleteByIndex(const KeyType &key) -> bool {
   return true;
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 auto Table::duplicateByKey(const Table::KeyType &src, const Table::KeyType &dst)
     -> bool {
   if (this->keyMap.contains(dst)) {
