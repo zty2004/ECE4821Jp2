@@ -43,6 +43,7 @@ QueryResult::Ptr DeleteQuery::execute() {
   }
 }
 
-std::string DeleteQuery::toString() {
+// cppcheck-suppress unusedFunction
+[[maybe_unused]] auto DeleteQuery::toString() -> std::string {
   return "QUERY = DELETE " + this->targetTable + "\"";
 }

@@ -132,6 +132,7 @@ void ComplexQueryBuilder::parseWhereConditions(
     QueryCondition cond;
     cond.fieldId = 0;
     cond.valueParsed = 0;
+    // cppcheck-suppress knownConditionTrueFalse
     if (++(*iter) == end) {
       throw IllFormedQuery("Missing field in condition");
     }
