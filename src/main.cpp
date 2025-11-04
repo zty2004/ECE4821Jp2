@@ -2,12 +2,13 @@
 // Created by liu on 18-10-21.
 //
 
+#include <getopt.h> // NOLINT(misc-include-cleaner)
+
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <fstream>
-#include <getopt.h> // NOLINT(misc-include-cleaner)
 #include <iostream>
 #include <memory>
 #include <string>

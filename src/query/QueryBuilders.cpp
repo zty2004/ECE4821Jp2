@@ -106,49 +106,49 @@ auto DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
 }
 
 void ComplexQueryBuilder::parseOperands(
-    std::vector<std::string>::const_iterator &iter,
+    std::vector<std::string>::const_iterator *iter,
     const std::vector<std::string>::const_iterator &end) {
-  if (*iter != "(") {
+  if (**iter != "(") {
     throw IllFormedQuery("Ill-formed operand.");
   }
-  ++iter;
-  while (*iter != ")") {
-    this->operandToken.push_back(*iter);
-    ++iter;
-    if (iter == end) {
+  ++(*iter);
+  while (**iter != ")") {
+    this->operandToken.push_back(**iter);
+    ++(*iter);
+    if (*iter == end) {
       throw IllFormedQuery("Ill-formed operand");
     }
   }
-  ++iter;
+  ++(*iter);
 }
 
 void ComplexQueryBuilder::parseWhereConditions(
-    std::vector<std::string>::const_iterator &iter,
+    std::vector<std::string>::const_iterator *iter,
     const std::vector<std::string>::const_iterator &end) {
-  while (iter != end) {
-    if (*iter != "(") {
+  while (*iter != end) {
+    if (**iter != "(") {
       throw IllFormedQuery("Ill-formed query condition");
     }
     QueryCondition cond;
     cond.fieldId = 0;
     cond.valueParsed = 0;
-    if (++iter == end) {
+    if (++(*iter) == end) {
       throw IllFormedQuery("Missing field in condition");
     }
-    cond.field = *iter;
-    if (++iter == end) {
+    cond.field = **iter;
+    if (++(*iter) == end) {
       throw IllFormedQuery("Missing operator in condition");
     }
-    cond.op = *iter;
-    if (++iter == end) {
+    cond.op = **iter;
+    if (++(*iter) == end) {
       throw IllFormedQuery("Missing  in condition");
     }
-    cond.value = *iter;
-    if (++iter == end || *iter != ")") {
+    cond.value = **iter;
+    if (++(*iter) == end || **iter != ")") {
       throw IllFormedQuery("Ill-formed query condition");
     }
     this->conditionToken.push_back(cond);
-    ++iter;
+    ++(*iter);
   }
 }
 
@@ -169,7 +169,7 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
     throw IllFormedQuery("Missing FROM clause");
   }
   if (*iter != "FROM") {
-    parseOperands(iter, end);
+    parseOperands(&iter, end);
     if (iter == end || *iter != "FROM") {
       throw IllFormedQuery("Missing FROM clause");
     }
@@ -188,7 +188,7 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
     throw IllFormedQuery(R"(Expecting "WHERE", found "?".)"_f % *iter);
   }
   ++iter;
-  parseWhereConditions(iter, end);
+  parseWhereConditions(&iter, end);
 }
 
 auto ComplexQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
