@@ -1,32 +1,39 @@
 #include "DeleteQuery.h"
 
-#include <algorithm>
+#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *DeleteQuery::qname;
-
-QueryResult::Ptr DeleteQuery::execute() {
-  Database &db = Database::getInstance();
+auto DeleteQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
     Table::SizeType counter = 0;
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
     auto result = initCondition(table);
     if (result.second) {
       // collect keys to delete because can't delete while iterating
       std::vector<Table::KeyType> del_keys;
 
       // iterate through all datum and check conditions
-      for (auto it = table.begin(); it != table.end(); ++it)
-        if (this->evalCondition(*it))
-          del_keys.push_back(it->key());
+      for (auto &&obj : table) {
+        if (this->evalCondition(obj)) {
+          del_keys.push_back(obj.key());
+        }
+      }
 
-      for (const auto &key : del_keys)
-        if (table.deleteByIndex(key))
+      for (const auto &key : del_keys) {
+        if (table.deleteByIndex(key)) {
           ++counter;
+        }
+      }
     }
     return std::make_unique<RecordCountResult>(counter);
   } catch (const TableNameNotFound &e) {
