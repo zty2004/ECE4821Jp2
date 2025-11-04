@@ -7,11 +7,17 @@
 #include <cassert>
 #include <cstdlib>
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
-std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
+#include "../db/Table.h"
+#include "../utils/formatter.h"
+#include "../utils/uexception.h"
+
+auto ComplexQuery::initCondition(const Table &table) -> std::pair<std::string, bool> {
+  constexpr int base_ten = 10;
   const std::unordered_map<std::string, int> opmap{
       {">", '>'}, {"<", '<'}, {"=", '='}, {">=", 'g'}, {"<=", 'l'},
   };
@@ -20,7 +26,8 @@ std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
     if (cond.field == "KEY") {
       if (cond.op != "=") {
         throw IllFormedQueryCondition("Can only compare equivalence on KEY");
-      } else if (result.first.empty()) {
+      }
+      if (result.first.empty()) {
         result.first = cond.value;
       } else if (result.first != cond.value) {
         result.second = false;
@@ -29,15 +36,15 @@ std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
     } else {
       cond.fieldId = table.getFieldIndex(cond.field);
       cond.valueParsed = static_cast<Table::ValueType>(
-          std::strtol(cond.value.c_str(), nullptr, 10));
-      int op = 0;
+          std::strtol(cond.value.c_str(), nullptr, base_ten));
+      int oper = 0;
       try {
-        op = opmap.at(cond.op);
+        oper = opmap.at(cond.op);
       } catch (const std::out_of_range &) {
         throw IllFormedQueryCondition(
             R"("?" is not a valid condition operator.)"_f % cond.op);
       }
-      switch (op) {
+      switch (oper) {
       case '>':
         cond.comp = std::greater<>();
         break;
@@ -61,7 +68,7 @@ std::pair<std::string, bool> ComplexQuery::initCondition(const Table &table) {
   return result;
 }
 
-bool ComplexQuery::evalCondition(const Table::Object &object) {
+auto ComplexQuery::evalCondition(const Table::Object &object) -> bool {
   bool ret = true;
   for (const auto &cond : condition) {
     if (cond.field != "KEY") {
@@ -73,7 +80,7 @@ bool ComplexQuery::evalCondition(const Table::Object &object) {
   return ret;
 }
 
-bool ComplexQuery::evalCondition(const Table::ConstObject &object) {
+auto ComplexQuery::evalCondition(const Table::ConstObject &object) -> bool {
   bool ret = true;
   for (const auto &cond : condition) {
     if (cond.field != "KEY") {
@@ -86,9 +93,9 @@ bool ComplexQuery::evalCondition(const Table::ConstObject &object) {
 }
 
 // cppcheck-suppress unusedFunction
-[[maybe_unused]] bool ComplexQuery::testKeyCondition(
+[[maybe_unused]] auto ComplexQuery::testKeyCondition(
     const Table &table,
-    const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) {
+    const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) -> bool {
   auto condResult = initCondition(table);
   if (!condResult.second) {
     function(false, nullptr);

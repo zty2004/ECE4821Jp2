@@ -28,7 +28,7 @@ class QueryParser {
   QueryBuilder::Ptr first; // An owning pointer
   QueryBuilder *last;      // None owning reference
 
-  TokenizedQueryString tokenizeQueryString(const std::string &queryString);
+  static TokenizedQueryString tokenizeQueryString(const std::string &queryString);
 
 public:
   Query::Ptr parseQuery(const std::string &queryString);
