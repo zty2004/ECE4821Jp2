@@ -321,6 +321,15 @@ public:
   bool deleteByIndex(const KeyType &key);
 
   /**
+   * Duplicate a row by source key to a destination key.
+   * @param src Source key to copy from (must exist)
+   * @param dst Destination key to create (must not exist)
+   * @return true if duplicated successfully, false if src not found or dst
+   * already exists
+   */
+  bool duplicateByKey(const KeyType &src, const KeyType &dst);
+
+  /**
    * Access the value according to the key
    * @param key
    * @return the Object that KEY = key, or nullptr if key doesn't exist

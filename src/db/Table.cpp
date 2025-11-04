@@ -25,7 +25,7 @@ auto Table::getFieldIndex(const Table::FieldNameType &field) const
 }
 
 void Table::insertByIndex(const KeyType &key, std::vector<ValueType> &&data) {
-  if (this->keyMap.find(key) != this->keyMap.end()) {
+  if (this->keyMap.contains(key)) {
     std::string const err = "In Table \"" + this->tableName + "\" : Key \"" +
                             key + "\" already exists!";
     throw ConflictingKey(err);
@@ -49,6 +49,23 @@ auto Table::deleteByIndex(const KeyType &key) -> bool {
   }
   this->data.pop_back();
   this->keyMap.erase(iter);
+  return true;
+}
+
+auto Table::duplicateByKey(const Table::KeyType &src, const Table::KeyType &dst)
+    -> bool {
+  if (this->keyMap.contains(dst)) {
+    return false;
+  }
+  auto srcIt = this->keyMap.find(src);
+  if (srcIt == this->keyMap.end()) {
+    return false;
+  }
+  // Snapshot source row values
+  const auto &srcDatum = this->data[srcIt->second];
+  std::vector<ValueType> copyValues = srcDatum.datum;
+  // Insert new row with destination key
+  this->insertByIndex(dst, std::move(copyValues));
   return true;
 }
 
