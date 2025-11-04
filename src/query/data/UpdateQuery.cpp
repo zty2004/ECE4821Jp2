@@ -4,37 +4,44 @@
 
 #include "UpdateQuery.h"
 
+#include <cstdlib>
+#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *UpdateQuery::qname;
-
-QueryResult::Ptr UpdateQuery::execute() {
-  if (this->operands.size() != 2)
+auto UpdateQuery::execute() -> QueryResult::Ptr {
+  if (this->operands.size() != 2) {
     return std::make_unique<ErrorMsgResult>(
         qname, this->targetTable.c_str(),
         "Invalid number of operands (? operands)."_f % operands.size());
-  Database &db = Database::getInstance();
+  }
+  Database &database = Database::getInstance();
   try {
     Table::SizeType counter = 0;
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
     if (this->operands[0] == "KEY") {
       this->keyValue = this->operands[1];
     } else {
       this->fieldId = table.getFieldIndex(this->operands[0]);
+      constexpr int dec = 10;
       this->fieldValue = static_cast<Table::ValueType>(
-          strtol(this->operands[1].c_str(), nullptr, 10));
+          strtol(this->operands[1].c_str(), nullptr, dec));
     }
     auto result = initCondition(table);
     if (result.second) {
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (this->evalCondition(*it)) {
+      for (auto &&obj : table) {
+        if (this->evalCondition(obj)) {
           if (this->keyValue.empty()) {
-            (*it)[this->fieldId] = this->fieldValue;
+            obj[this->fieldId] = this->fieldValue;
           } else {
-            it->setKey(this->keyValue);
+            obj.setKey(this->keyValue);
           }
           ++counter;
         }
@@ -56,6 +63,6 @@ QueryResult::Ptr UpdateQuery::execute() {
   }
 }
 
-std::string UpdateQuery::toString() {
+auto UpdateQuery::toString() -> std::string {
   return "QUERY = UPDATE " + this->targetTable + "\"";
 }

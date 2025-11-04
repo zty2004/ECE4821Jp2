@@ -5,23 +5,23 @@
 #ifndef SRC_QUERY_DATA_UPDATEQUERY_H_
 #define SRC_QUERY_DATA_UPDATEQUERY_H_
 
-#include <string>
-
+#include "../../db/Table.h"
 #include "../Query.h"
+#include "../QueryResult.h"
 
 class UpdateQuery : public ComplexQuery {
   static constexpr const char *qname = "UPDATE";
   Table::ValueType
       fieldValue{}; // = (operands[0]=="KEY")? 0 :std::stoi(operands[1]);
   Table::FieldIndex fieldId{};
-  Table::KeyType keyValue{};
+  Table::KeyType keyValue;
 
 public:
   using ComplexQuery::ComplexQuery;
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_DATA_UPDATEQUERY_H_
