@@ -1,10 +1,8 @@
 #ifndef SRC_QUERY_DATA_SUMQUERY_H_
 #define SRC_QUERY_DATA_SUMQUERY_H_
 
-#include <string>
-#include <vector>
-
 #include "../Query.h"
+#include "../QueryResult.h"
 
 class SumQuery : public ComplexQuery {
   static constexpr const char *qname = "SUM";
@@ -15,9 +13,9 @@ class SumQuery : public ComplexQuery {
 public:
   using ComplexQuery::ComplexQuery;
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_DATA_SUMQUERY_H_
