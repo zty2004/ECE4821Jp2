@@ -1,6 +1,9 @@
 #ifndef SRC_QUERY_DATA_SUMQUERY_H_
 #define SRC_QUERY_DATA_SUMQUERY_H_
 
+#include <string>
+#include <vector>
+
 #include "../Query.h"
 #include "../QueryResult.h"
 

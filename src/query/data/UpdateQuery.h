@@ -5,6 +5,8 @@
 #ifndef SRC_QUERY_DATA_UPDATEQUERY_H_
 #define SRC_QUERY_DATA_UPDATEQUERY_H_
 
+#include <string>
+
 #include "../../db/Table.h"
 #include "../Query.h"
 #include "../QueryResult.h"
