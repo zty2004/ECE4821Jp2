@@ -5,7 +5,7 @@
 #include <vector>
 
 template <typename T>
-static inline std::string to_string(const std::vector<T> &vec) {
+static inline auto to_string(const std::vector<T> &vec) -> std::string {
   std::string str;
   for (const auto &val : vec) {
     str += std::to_string(val) + " ";
@@ -13,36 +13,42 @@ static inline std::string to_string(const std::vector<T> &vec) {
   return str;
 }
 
-template <typename T> static inline std::string to_string(T t) {
-  return std::to_string(t);
+// t is too short, use tt instead
+
+template <typename T> static inline auto to_string(T tt) -> std::string {
+  return std::to_string(tt);
 }
 
-template <typename T> inline std::string operator%(std::string format, T t) {
+template <typename T>
+inline auto operator%(std::string format, T value) -> std::string {
   auto ind = format.find('?');
   if (ind == 0 || format[ind - 1] != '\\') {
-    format.replace(ind, 1u, to_string(t));
+    format.replace(ind, 1U, to_string(value));
   }
   return format;
 }
 
-template <> inline std::string operator%(std::string format, std::string s) {
+template <>
+inline auto operator%(std::string format, const std::string &value)
+    -> std::string {
   auto ind = format.find('?');
   if (ind == 0 || format[ind - 1] != '\\') {
-    format.replace(ind, 1u, s);
+    format.replace(ind, 1U, value);
   }
   return format;
 }
 
-template <> inline std::string operator%(std::string format, const char *s) {
+template <>
+inline auto operator%(std::string format, const char *value) -> std::string {
   auto ind = format.find('?');
   if (ind == 0 || format[ind - 1] != '\\') {
-    format.replace(ind, 1u, s);
+    format.replace(ind, 1U, value);
   }
   return format;
 }
 
-inline std::string operator""_f(const char *str, size_t) {
-  return std::string(str);
+inline auto operator""_f(const char *str, size_t /*length*/) -> std::string {
+  return std::string{str};
 }
 
 #endif // SRC_UTILS_FORMATTER_H_
