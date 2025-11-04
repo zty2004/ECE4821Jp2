@@ -69,7 +69,8 @@ public:
    * @param source
    * @return reference of loaded table
    */
-  static Table &loadTableFromStream(std::istream &input_stream, const std::string &source = "");
+  static Table &loadTableFromStream(std::istream &input_stream,
+                                    const std::string &source = "");
 
   static void exit();
 };

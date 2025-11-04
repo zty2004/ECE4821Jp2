@@ -108,7 +108,7 @@ auto Database::getFileTableName(const std::string &fileName) -> std::string {
 }
 
 auto Database::loadTableFromStream(std::istream &input_stream,
-                                     const std::string &source) -> Table & {
+                                   const std::string &source) -> Table & {
   auto &database = Database::getInstance();
   std::string const errString =
       !source.empty() ? R"(Invalid table (from "?") format: )"_f % source

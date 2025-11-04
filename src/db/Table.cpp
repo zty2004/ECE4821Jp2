@@ -15,8 +15,8 @@
 #include "../utils/formatter.h"
 #include "../utils/uexception.h"
 
-auto
-Table::getFieldIndex(const Table::FieldNameType &field) const -> Table::FieldIndex {
+auto Table::getFieldIndex(const Table::FieldNameType &field) const
+    -> Table::FieldIndex {
   try {
     return this->fieldMap.at(field);
   } catch (const std::out_of_range &) {
@@ -64,7 +64,8 @@ auto Table::operator[](const Table::KeyType &key) -> Table::Object::Ptr {
       this);
 }
 
-auto Table::operator[](const Table::KeyType &key) const -> Table::ConstObject::Ptr {
+auto Table::operator[](const Table::KeyType &key) const
+    -> Table::ConstObject::Ptr {
   auto iter = keyMap.find(key);
   if (iter == keyMap.end()) {
     // not found
