@@ -4,30 +4,41 @@
 
 #include "InsertQuery.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <exception>
 #include <memory>
+#include <ranges>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
 #include "../QueryResult.h"
 
-constexpr const char *InsertQuery::qname;
-
-QueryResult::Ptr InsertQuery::execute() {
-  if (this->operands.empty())
+auto InsertQuery::execute() -> QueryResult::Ptr {
+  if (this->operands.empty()) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable.c_str(),
                                             "No operand (? operands)."_f %
                                                 operands.size());
-  Database &db = Database::getInstance();
+  }
+  Database &database = Database::getInstance();
   try {
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
     auto &key = this->operands.front();
     std::vector<Table::ValueType> data;
-    data.reserve(this->operands.size() - 1);
-    for (auto it = ++this->operands.begin(); it != this->operands.end(); ++it) {
-      data.emplace_back(std::strtol(it->c_str(), nullptr, 10));
-    }
+    data.resize(this->operands.size() - 1);
+    auto tail = this->operands | std::ranges::views::drop(1);
+    constexpr int dec = 10;
+    std::ranges::transform(tail, data.begin(),
+                           [](const std::string &str) -> Table::ValueType {
+                             return static_cast<Table::ValueType>(
+                                 std::strtol(str.c_str(), nullptr, dec));
+                           });
     table.insertByIndex(key, std::move(data));
     return std::make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &) {
@@ -45,6 +56,6 @@ QueryResult::Ptr InsertQuery::execute() {
   }
 }
 
-std::string InsertQuery::toString() {
+auto InsertQuery::toString() -> std::string {
   return "QUERY = INSERT " + this->targetTable + "\"";
 }
