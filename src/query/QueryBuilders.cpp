@@ -10,6 +10,10 @@
 #include <string>
 
 #include "../db/Database.h"
+#include "../utils/formatter.h"
+#include "../utils/uexception.h"
+#include "Query.h"
+#include "QueryParser.h"
 #include "data/AddQuery.h"
 #include "data/CountQuery.h"
 #include "data/DeleteQuery.h"
@@ -110,51 +114,63 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
   // The "WHERE" clause can be ommitted
   // The args of OPER clause can be ommitted
 
-  auto it = query.token.cbegin();
+  auto iter = query.token.cbegin();
   auto end = query.token.cend();
-  it += 1; // Take to args;
-  if (it == query.token.end())
+  iter += 1; // Take to args;
+  if (iter == query.token.end()) {
     throw IllFormedQuery("Missing FROM clause");
-  if (*it != "FROM") {
-    if (*it != "(")
-      throw IllFormedQuery("Ill-formed operand.");
-    ++it;
-    while (*it != ")") {
-      this->operandToken.push_back(*it);
-      ++it;
-      if (it == end)
-        throw IllFormedQuery("Ill-formed operand");
-    }
-    if (++it == end || *it != "FROM")
-      throw IllFormedQuery("Missing FROM clause");
   }
-  if (++it == end)
+  if (*iter != "FROM") {
+    if (*iter != "(") {
+      throw IllFormedQuery("Ill-formed operand.");
+    }
+    ++iter;
+    while (*iter != ")") {
+      this->operandToken.push_back(*iter);
+      ++iter;
+      if (iter == end) {
+        throw IllFormedQuery("Ill-formed operand");
+      }
+    }
+    if (++iter == end || *iter != "FROM") {
+      throw IllFormedQuery("Missing FROM clause");
+    }
+  }
+  if (++iter == end) {
     throw IllFormedQuery("Missing targed table");
-  this->targetTable = *it;
-  if (++it == end) // the "WHERE" clause is ommitted
+  }
+  this->targetTable = *iter;
+  if (++iter == end) { // the "WHERE" clause is ommitted
     return;
-  if (*it != "WHERE")
+  }
+  if (*iter != "WHERE") {
     // Hmmm, C++11 style Raw-string literal
     // Reference:
     // http://en.cppreference.com/w/cpp/language/string_literal
-    throw IllFormedQuery(R"(Expecting "WHERE", found "?".)"_f % *it);
-  while (++it != end) {
-    if (*it != "(")
+    throw IllFormedQuery(R"(Expecting "WHERE", found "?".)"_f % *iter);
+  }
+  while (++iter != end) {
+    if (*iter != "(") {
       throw IllFormedQuery("Ill-formed query condition");
+    }
     QueryCondition cond;
     cond.fieldId = 0;
     cond.valueParsed = 0;
-    if (++it == end)
+    if (++iter == end) {
       throw IllFormedQuery("Missing field in condition");
-    cond.field = *it;
-    if (++it == end)
+    }
+    cond.field = *iter;
+    if (++iter == end) {
       throw IllFormedQuery("Missing operator in condition");
-    cond.op = *it;
-    if (++it == end)
+    }
+    cond.op = *iter;
+    if (++iter == end) {
       throw IllFormedQuery("Missing  in condition");
-    cond.value = *it;
-    if (++it == end || *it != ")")
+    }
+    cond.value = *iter;
+    if (++iter == end || *iter != ")") {
       throw IllFormedQuery("Ill-formed query condition");
+    }
     this->conditionToken.push_back(cond);
   }
 }
