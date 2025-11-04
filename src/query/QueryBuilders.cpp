@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "../db/Database.h"
 #include "../utils/formatter.h"
@@ -104,52 +105,27 @@ auto DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
   return BasicQueryBuilder::tryExtractQuery(query);
 }
 
-void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
-  // Treats forms like:
-  //
-  // $OPER$ ( arg1 arg2 ... )
-  // FROM table
-  // WHERE ( KEY = $STR$ ) ( $field$ $OP$ $int$ ) ...
-  //
-  // The "WHERE" clause can be ommitted
-  // The args of OPER clause can be ommitted
-
-  auto iter = query.token.cbegin();
-  auto end = query.token.cend();
-  iter += 1; // Take to args;
-  if (iter == query.token.end()) {
-    throw IllFormedQuery("Missing FROM clause");
+void ComplexQueryBuilder::parseOperands(
+    std::vector<std::string>::const_iterator &iter,
+    const std::vector<std::string>::const_iterator &end) {
+  if (*iter != "(") {
+    throw IllFormedQuery("Ill-formed operand.");
   }
-  if (*iter != "FROM") {
-    if (*iter != "(") {
-      throw IllFormedQuery("Ill-formed operand.");
-    }
+  ++iter;
+  while (*iter != ")") {
+    this->operandToken.push_back(*iter);
     ++iter;
-    while (*iter != ")") {
-      this->operandToken.push_back(*iter);
-      ++iter;
-      if (iter == end) {
-        throw IllFormedQuery("Ill-formed operand");
-      }
-    }
-    if (++iter == end || *iter != "FROM") {
-      throw IllFormedQuery("Missing FROM clause");
+    if (iter == end) {
+      throw IllFormedQuery("Ill-formed operand");
     }
   }
-  if (++iter == end) {
-    throw IllFormedQuery("Missing targed table");
-  }
-  this->targetTable = *iter;
-  if (++iter == end) { // the "WHERE" clause is ommitted
-    return;
-  }
-  if (*iter != "WHERE") {
-    // Hmmm, C++11 style Raw-string literal
-    // Reference:
-    // http://en.cppreference.com/w/cpp/language/string_literal
-    throw IllFormedQuery(R"(Expecting "WHERE", found "?".)"_f % *iter);
-  }
-  while (++iter != end) {
+  ++iter;
+}
+
+void ComplexQueryBuilder::parseWhereConditions(
+    std::vector<std::string>::const_iterator &iter,
+    const std::vector<std::string>::const_iterator &end) {
+  while (iter != end) {
     if (*iter != "(") {
       throw IllFormedQuery("Ill-formed query condition");
     }
@@ -172,7 +148,47 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
       throw IllFormedQuery("Ill-formed query condition");
     }
     this->conditionToken.push_back(cond);
+    ++iter;
   }
+}
+
+void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
+  // Treats forms like:
+  //
+  // $OPER$ ( arg1 arg2 ... )
+  // FROM table
+  // WHERE ( KEY = $STR$ ) ( $field$ $OP$ $int$ ) ...
+  //
+  // The "WHERE" clause can be ommitted
+  // The args of OPER clause can be ommitted
+
+  auto iter = query.token.cbegin();
+  auto end = query.token.cend();
+  iter += 1; // Take to args;
+  if (iter == query.token.end()) {
+    throw IllFormedQuery("Missing FROM clause");
+  }
+  if (*iter != "FROM") {
+    parseOperands(iter, end);
+    if (iter == end || *iter != "FROM") {
+      throw IllFormedQuery("Missing FROM clause");
+    }
+  }
+  if (++iter == end) {
+    throw IllFormedQuery("Missing targed table");
+  }
+  this->targetTable = *iter;
+  if (++iter == end) { // the "WHERE" clause is ommitted
+    return;
+  }
+  if (*iter != "WHERE") {
+    // Hmmm, C++11 style Raw-string literal
+    // Reference:
+    // http://en.cppreference.com/w/cpp/language/string_literal
+    throw IllFormedQuery(R"(Expecting "WHERE", found "?".)"_f % *iter);
+  }
+  ++iter;
+  parseWhereConditions(iter, end);
 }
 
 auto ComplexQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)

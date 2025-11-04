@@ -73,6 +73,13 @@ protected:
 
   virtual void parseToken(const TokenizedQueryString &query);
 
+private:
+  void parseOperands(std::vector<std::string>::const_iterator &iter,
+                     const std::vector<std::string>::const_iterator &end);
+  void
+  parseWhereConditions(std::vector<std::string>::const_iterator &iter,
+                       const std::vector<std::string>::const_iterator &end);
+
 public:
   void clear() override;
 
