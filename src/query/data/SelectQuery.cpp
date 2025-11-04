@@ -1,16 +1,23 @@
 #include "SelectQuery.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <exception>
+#include <iterator>
 #include <memory>
+#include <ranges>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *SelectQuery::qname;
-
-QueryResult::Ptr SelectQuery::execute() {
+auto SelectQuery::execute() -> QueryResult::Ptr {
   std::size_t const operands_size = this->operands.size();
 
   // the operands must be ( KEY ...), so size >= 1
@@ -22,33 +29,38 @@ QueryResult::Ptr SelectQuery::execute() {
   }
 
   // KEY field must always appear at the beginning
-  if (this->operands[0] != "KEY")
+  if (this->operands[0] != "KEY") {
     return std::make_unique<ErrorMsgResult>(
         qname, this->targetTable.c_str(),
         "Invalid format, the first must be KEY.");
+  }
 
-  Database &db = Database::getInstance();
+  Database &database = Database::getInstance();
   std::stringstream msg;
   try {
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
     std::string tmp;
     auto result = initCondition(table);
     if (result.second) {
       // vector of line message, used to sort in ascending lexical order
       std::vector<std::string> v_msg;
 
-      // save the target field index in a vector
-      for (std::size_t i = 1; i < operands_size; ++i) {
-        this->fieldId.push_back(table.getFieldIndex(this->operands[i]));
-      }
+      // save the target field index in a vector (append, do not clear)
+      auto ids_view =
+          this->operands | std::ranges::views::drop(1) |
+          std::ranges::views::transform(
+              [&table](const std::string &fname) -> Table::FieldIndex {
+                return table.getFieldIndex(fname);
+              });
+      std::ranges::copy(ids_view, std::back_inserter(this->fieldId));
 
       // if condition satisfies, push line message to v_msg
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (this->evalCondition(*it)) {
+      for (auto &&obj : table) {
+        if (this->evalCondition(obj)) {
           std::stringstream line_msg;
-          line_msg << "( " << it->key();
+          line_msg << "( " << obj.key();
           for (auto fieldVal : fieldId) {
-            line_msg << " " << (*it)[fieldVal];
+            line_msg << " " << obj[fieldVal];
           }
           line_msg << " )\n";
           v_msg.push_back(line_msg.str());
@@ -56,7 +68,7 @@ QueryResult::Ptr SelectQuery::execute() {
       }
 
       // sort in ascending lexical order
-      std::sort(v_msg.begin(), v_msg.end());
+      std::ranges::sort(v_msg);
 
       // concat as a whole message
       for (const auto &line : v_msg) {
@@ -87,6 +99,6 @@ QueryResult::Ptr SelectQuery::execute() {
   }
 }
 
-std::string SelectQuery::toString() {
+auto SelectQuery::toString() -> std::string {
   return "QUERY = SELECT " + this->targetTable + "\"";
 }
