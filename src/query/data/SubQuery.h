@@ -1,9 +1,7 @@
 #ifndef SRC_QUERY_DATA_SUBQUERY_H_
 #define SRC_QUERY_DATA_SUBQUERY_H_
 
-#include <string>
-#include <vector>
-
+#include "../../db/Table.h"
 #include "../Query.h"
 #include "../QueryResult.h"
 
@@ -12,14 +10,14 @@ class SubQuery : public ComplexQuery {
 
   // Destination field and source fields to subtract
   Table::FieldIndex dstId{};
-  std::vector<Table::FieldIndex> srcId{};
+  std::vector<Table::FieldIndex> srcId;
 
 public:
   using ComplexQuery::ComplexQuery;
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_DATA_SUBQUERY_H_
