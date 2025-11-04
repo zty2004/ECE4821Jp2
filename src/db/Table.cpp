@@ -7,15 +7,16 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
-constexpr const Table::ValueType Table::ValueTypeMax;
-constexpr const Table::ValueType Table::ValueTypeMin;
+#include "../utils/formatter.h"
+#include "../utils/uexception.h"
 
-Table::FieldIndex
-Table::getFieldIndex(const Table::FieldNameType &field) const {
+auto
+Table::getFieldIndex(const Table::FieldNameType &field) const -> Table::FieldIndex {
   try {
     return this->fieldMap.at(field);
   } catch (const std::out_of_range &) {
@@ -30,14 +31,15 @@ void Table::insertByIndex(const KeyType &key, std::vector<ValueType> &&data) {
     throw ConflictingKey(err);
   }
   this->keyMap.emplace(key, this->data.size());
-  this->data.emplace_back(key, data);
+  this->data.emplace_back(key, std::move(data));
 }
 
-bool Table::deleteByIndex(const KeyType &key) {
-  auto it = keyMap.find(key);
-  if (it == keyMap.end())
+auto Table::deleteByIndex(const KeyType &key) -> bool {
+  auto iter = keyMap.find(key);
+  if (iter == keyMap.end()) {
     return false;
-  SizeType const del_ind = it->second;
+  }
+  SizeType const del_ind = iter->second;
   SizeType const last_ind = this->data.size() - 1;
   if (del_ind != last_ind) {
     std::swap(this->data[del_ind], this->data[last_ind]);
@@ -46,37 +48,35 @@ bool Table::deleteByIndex(const KeyType &key) {
     this->keyMap[this->data[del_ind].key] = del_ind;
   }
   this->data.pop_back();
-  this->keyMap.erase(it);
+  this->keyMap.erase(iter);
   return true;
 }
 
-Table::Object::Ptr Table::operator[](const Table::KeyType &key) {
-  auto it = keyMap.find(key);
-  if (it == keyMap.end()) {
+auto Table::operator[](const Table::KeyType &key) -> Table::Object::Ptr {
+  auto iter = keyMap.find(key);
+  if (iter == keyMap.end()) {
     // not found
     return nullptr;
-  } else {
-    return createProxy(
-        data.begin() +
-            static_cast<std::vector<Table::Datum>::difference_type>(it->second),
-        this);
   }
+  return createProxy(
+      data.begin() +
+          static_cast<std::vector<Table::Datum>::difference_type>(iter->second),
+      this);
 }
 
-Table::ConstObject::Ptr Table::operator[](const Table::KeyType &key) const {
-  auto it = keyMap.find(key);
-  if (it == keyMap.end()) {
+auto Table::operator[](const Table::KeyType &key) const -> Table::ConstObject::Ptr {
+  auto iter = keyMap.find(key);
+  if (iter == keyMap.end()) {
     // not found
     return nullptr;
-  } else {
-    return createProxy(
-        data.cbegin() +
-            static_cast<std::vector<Table::Datum>::difference_type>(it->second),
-        this);
   }
+  return createProxy(
+      data.cbegin() +
+          static_cast<std::vector<Table::Datum>::difference_type>(iter->second),
+      this);
 }
 
-std::ostream &operator<<(std::ostream &os, const Table &table) {
+auto operator<<(std::ostream &os, const Table &table) -> std::ostream & {
   const int width = 10;
   std::stringstream buffer;
   buffer << table.tableName << "\t" << (table.fields.size() + 1) << "\n";
