@@ -1,16 +1,21 @@
 #include "MinQuery.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <exception>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
+#include "../../utils/formatter.h"
+#include "../../utils/uexception.h"
+#include "../QueryResult.h"
 
-constexpr const char *MinQuery::qname;
-
-QueryResult::Ptr MinQuery::execute() {
+auto MinQuery::execute() -> QueryResult::Ptr {
   // check operands
   if (this->operands.empty()) {
     return std::make_unique<ErrorMsgResult>(
@@ -19,15 +24,18 @@ QueryResult::Ptr MinQuery::execute() {
   }
 
   try {
-    auto &db = Database::getInstance();
-    auto &table = db[this->targetTable];
+    auto &database = Database::getInstance();
+    auto &table = database[this->targetTable];
 
     fieldId.clear();
     fieldId.resize(this->operands.size());
-    std::transform(this->operands.begin(), this->operands.end(),
-                   fieldId.begin(), [&table](const std::string &fname) {
-                     return table.getFieldIndex(fname);
-                   });
+    auto ids_view =
+        this->operands |
+        std::ranges::views::transform(
+            [&table](const std::string &fname) -> Table::FieldIndex {
+              return table.getFieldIndex(fname);
+            });
+    std::ranges::copy(ids_view, fieldId.begin());
 
     auto condInit = initCondition(table);
 
@@ -36,15 +44,16 @@ QueryResult::Ptr MinQuery::execute() {
     std::size_t matched = 0;
 
     if (condInit.second) {
-      for (auto it = table.begin(); it != table.end(); ++it) {
-        if (evalCondition(*it)) {
+      for (auto &&obj : table) {
+        if (evalCondition(obj)) {
           ++matched;
-          for (size_t i = 0; i < fieldId.size(); ++i) {
-            auto v = (*it)[fieldId[i]];
-            if (v < mins[i]) {
-              mins[i] = v;
-            }
-          }
+          // Update mins in-place using ranges transform: pair (fieldId, mins)
+          std::ranges::transform(
+              fieldId, mins, mins.begin(),
+              [&obj](Table::FieldIndex fid, int curMin) -> int {
+                int const val = obj[fid];
+                return val < curMin ? val : curMin;
+              });
         }
       }
     }
@@ -66,6 +75,6 @@ QueryResult::Ptr MinQuery::execute() {
   }
 }
 
-std::string MinQuery::toString() {
+auto MinQuery::toString() -> std::string {
   return "QUERY = MIN " + this->targetTable + "\"";
 }
