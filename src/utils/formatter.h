@@ -2,6 +2,7 @@
 #define SRC_UTILS_FORMATTER_H_
 
 #include <string>
+#include <utility>
 #include <vector>
 
 template <typename T>
