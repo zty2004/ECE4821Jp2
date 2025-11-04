@@ -65,13 +65,13 @@ public:
 
   /**
    * Load a table from an input stream (i.e., a file)
-   * @param is
+   * @param input_stream
    * @param source
    * @return reference of loaded table
    */
-  Table &loadTableFromStream(std::istream &is, const std::string &source = "");
+  static Table &loadTableFromStream(std::istream &input_stream, const std::string &source = "");
 
-  void exit();
+  static void exit();
 };
 
 #endif // SRC_DB_DATABASE_H_
