@@ -1,7 +1,6 @@
 #ifndef SRC_UTILS_UEXCEPTION_H_
 #define SRC_UTILS_UEXCEPTION_H_
 
-#include <exception>
 #include <stdexcept>
 #include <string>
 
