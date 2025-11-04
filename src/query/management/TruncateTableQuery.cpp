@@ -2,8 +2,10 @@
 
 #include <memory>
 #include <string>
+#include <exception>
 
 #include "../../db/Database.h"
+#include "../../query/QueryResult.h"
 
 auto TruncateTableQuery::execute() -> QueryResult::Ptr {
   Database &database = Database::getInstance();

@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../../db/Database.h"
-
+#include "../../query/QueryResult.h"
 
 auto QuitQuery::toString() -> std::string { return "QUERY = Quit"; }
 

@@ -6,8 +6,11 @@
 
 #include <memory>
 #include <string>
+#include <exception>
 
 #include "../../db/Database.h"
+#include "../../query/QueryResult.h"
+#include "../../utils/uexception.h"
 
 auto DropTableQuery::execute() -> QueryResult::Ptr {
   Database &database = Database::getInstance();

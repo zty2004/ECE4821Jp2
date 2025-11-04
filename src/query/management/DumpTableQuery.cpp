@@ -7,9 +7,10 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <exception>
 
 #include "../../db/Database.h"
-
+#include "../../query/QueryResult.h"
 
 auto DumpTableQuery::execute() -> QueryResult::Ptr {
   const auto &database = Database::getInstance();

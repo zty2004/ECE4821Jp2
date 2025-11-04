@@ -8,6 +8,7 @@
 #include <string>
 
 #include "../../db/Database.h"
+#include "../../query/QueryResult.h"
 
 auto ListTableQuery::execute() -> QueryResult::Ptr {
   Database &database = Database::getInstance();

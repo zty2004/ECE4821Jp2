@@ -9,6 +9,8 @@
 #include <string>
 
 #include "../../db/Database.h"
+#include "../../query/QueryResult.h"
+#include "../../utils/uexception.h"
 
 auto PrintTableQuery::execute() -> QueryResult::Ptr {
   const auto &database = Database::getInstance();
