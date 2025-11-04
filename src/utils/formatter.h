@@ -29,7 +29,8 @@ inline auto operator%(std::string format, T value) -> std::string {
 }
 
 template <>
-inline auto operator%(std::string format, const std::string &value)
+inline auto operator%(std::string format,
+                      std::string value) // clang-tidy unfixed, keep compilation
     -> std::string {
   auto ind = format.find('?');
   if (ind == 0 || format[ind - 1] != '\\') {
