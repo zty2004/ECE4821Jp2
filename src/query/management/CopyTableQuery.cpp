@@ -6,19 +6,17 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *CopyTableQuery::qname;
-
-QueryResult::Ptr CopyTableQuery::execute() {
-  Database &db = Database::getInstance();
+auto CopyTableQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
 
   try {
-    const auto &table = db[this->targetTable];
+    const auto &table = database[this->targetTable];
 
     // create a copy of the table with the new name
     auto newTable = std::make_unique<Table>(this->new_table, table);
 
     // register the new table
-    db.registerTable(std::move(newTable));
+    database.registerTable(std::move(newTable));
 
     return std::make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &e) {
@@ -30,7 +28,7 @@ QueryResult::Ptr CopyTableQuery::execute() {
   }
 }
 
-std::string CopyTableQuery::toString() {
+auto CopyTableQuery::toString() -> std::string {
   return "QUERY = COPYTABLE, FROM " + this->targetTable + " TO " +
          this->new_table;
 }

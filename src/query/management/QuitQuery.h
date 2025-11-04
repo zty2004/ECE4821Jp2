@@ -15,9 +15,9 @@ class QuitQuery : public Query {
 public:
   QuitQuery() = default;
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_MANAGEMENT_QUITQUERY_H_

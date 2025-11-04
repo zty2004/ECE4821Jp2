@@ -10,17 +10,15 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *LoadTableQuery::qname;
-
-QueryResult::Ptr LoadTableQuery::execute() {
-  Database &db = Database::getInstance();
+auto LoadTableQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
     std::ifstream infile(this->fileName);
     if (!infile.is_open()) {
       return std::make_unique<ErrorMsgResult>(qname, "Cannot open file '?'"_f %
                                                          this->fileName);
     }
-    db.loadTableFromStream(infile, this->fileName);
+    database.loadTableFromStream(infile, this->fileName);
     infile.close();
     return std::make_unique<NullQueryResult>();
   } catch (const std::exception &e) {
@@ -28,6 +26,6 @@ QueryResult::Ptr LoadTableQuery::execute() {
   }
 }
 
-std::string LoadTableQuery::toString() {
+auto LoadTableQuery::toString() -> std::string {
   return "QUERY = Load TABLE, FILE = \"" + this->fileName + "\"";
 }

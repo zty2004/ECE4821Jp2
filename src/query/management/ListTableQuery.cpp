@@ -9,12 +9,10 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *ListTableQuery::qname;
-
-QueryResult::Ptr ListTableQuery::execute() {
-  Database &db = Database::getInstance();
-  db.printAllTable();
+auto ListTableQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
+  database.printAllTable();
   return std::make_unique<SuccessMsgResult>(qname);
 }
 
-std::string ListTableQuery::toString() { return "QUERY = LIST"; }
+auto ListTableQuery::toString() -> std::string { return "QUERY = LIST"; }

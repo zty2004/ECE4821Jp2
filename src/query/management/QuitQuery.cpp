@@ -9,13 +9,12 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *QuitQuery::qname;
 
-std::string QuitQuery::toString() { return "QUERY = Quit"; }
+auto QuitQuery::toString() -> std::string { return "QUERY = Quit"; }
 
-QueryResult::Ptr QuitQuery::execute() {
-  auto &db = Database::getInstance();
-  db.exit();
+auto QuitQuery::execute() -> QueryResult::Ptr {
+  auto &database = Database::getInstance();
+  database.exit();
   // might not reach here, but we want to keep the consistency of queries
   return std::make_unique<SuccessMsgResult>(qname);
 }

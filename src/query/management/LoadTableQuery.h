@@ -12,15 +12,15 @@
 
 class LoadTableQuery : public Query {
   static constexpr const char *qname = "LOAD";
-  const std::string fileName;
+  std::string fileName;
 
 public:
   explicit LoadTableQuery(std::string table, std::string fileName)
       : Query(std::move(table)), fileName(std::move(fileName)) {}
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_MANAGEMENT_LOADTABLEQUERY_H_

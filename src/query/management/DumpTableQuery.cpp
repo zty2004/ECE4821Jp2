@@ -10,17 +10,16 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *DumpTableQuery::qname;
 
-QueryResult::Ptr DumpTableQuery::execute() {
-  const auto &db = Database::getInstance();
+auto DumpTableQuery::execute() -> QueryResult::Ptr {
+  const auto &database = Database::getInstance();
   try {
     std::ofstream outfile(this->fileName);
     if (!outfile.is_open()) {
       return std::make_unique<ErrorMsgResult>(qname, "Cannot open file '?'"_f %
                                                          this->fileName);
     }
-    outfile << db[this->targetTable];
+    outfile << database[this->targetTable];
     outfile.close();
     return std::make_unique<NullQueryResult>();
   } catch (const std::exception &e) {
@@ -28,6 +27,6 @@ QueryResult::Ptr DumpTableQuery::execute() {
   }
 }
 
-std::string DumpTableQuery::toString() {
+auto DumpTableQuery::toString() -> std::string {
   return "QUERY = Dump TABLE, FILE = \"" + this->fileName + "\"";
 }

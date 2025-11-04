@@ -10,16 +10,15 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *PrintTableQuery::qname;
-
-QueryResult::Ptr PrintTableQuery::execute() {
-  const auto &db = Database::getInstance();
+auto PrintTableQuery::execute() -> QueryResult::Ptr {
+  const auto &database = Database::getInstance();
   try {
-    const auto &table = db[this->targetTable];
+    const auto &table = database[this->targetTable];
     std::cout << "================\n";
     std::cout << "TABLE = ";
     std::cout << table;
-    std::cout << "================\n" << std::endl;
+    std::cout << "================\n\n"; // previously, it is std::cout << "================\n" << std::endl; 
+    // I am not sure flush is needed or not here. Just keep "\n". Let's see.
     return std::make_unique<SuccessMsgResult>(qname, this->targetTable);
   } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, this->targetTable,
@@ -27,6 +26,6 @@ QueryResult::Ptr PrintTableQuery::execute() {
   }
 }
 
-std::string PrintTableQuery::toString() {
+auto PrintTableQuery::toString() -> std::string {
   return "QUERY = SHOWTABLE, Table = \"" + this->targetTable + "\"";
 }

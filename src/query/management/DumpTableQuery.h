@@ -12,15 +12,15 @@
 
 class DumpTableQuery : public Query {
   static constexpr const char *qname = "DUMP";
-  const std::string fileName;
+  std::string fileName;
 
 public:
   DumpTableQuery(std::string table, std::string filename)
       : Query(std::move(table)), fileName(std::move(filename)) {}
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_MANAGEMENT_DUMPTABLEQUERY_H_

@@ -9,12 +9,10 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *DropTableQuery::qname;
-
-QueryResult::Ptr DropTableQuery::execute() {
-  Database &db = Database::getInstance();
+auto DropTableQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
-    db.dropTable(this->targetTable);
+    database.dropTable(this->targetTable);
     return std::make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &) {
     return std::make_unique<ErrorMsgResult>(qname, targetTable,
@@ -24,6 +22,6 @@ QueryResult::Ptr DropTableQuery::execute() {
   }
 }
 
-std::string DropTableQuery::toString() {
+auto DropTableQuery::toString() -> std::string {
   return "QUERY = DROP, Table = \"" + targetTable + "\"";
 }

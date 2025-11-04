@@ -13,9 +13,9 @@ class ListTableQuery : public Query {
   static constexpr const char *qname = "LIST";
 
 public:
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_MANAGEMENT_LISTTABLEQUERY_H_

@@ -5,12 +5,10 @@
 
 #include "../../db/Database.h"
 
-constexpr const char *TruncateTableQuery::qname;
-
-QueryResult::Ptr TruncateTableQuery::execute() {
-  Database &db = Database::getInstance();
+auto TruncateTableQuery::execute() -> QueryResult::Ptr {
+  Database &database = Database::getInstance();
   try {
-    auto &table = db[this->targetTable];
+    auto &table = database[this->targetTable];
     table.clear();
     return std::make_unique<NullQueryResult>();
   } catch (const TableNameNotFound &) {
@@ -21,6 +19,6 @@ QueryResult::Ptr TruncateTableQuery::execute() {
   }
 }
 
-std::string TruncateTableQuery::toString() {
+auto TruncateTableQuery::toString() -> std::string {
   return "QUERY = TRUNCATE, Table = \"" + this->targetTable + "\"";
 }

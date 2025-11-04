@@ -8,15 +8,15 @@
 
 class CopyTableQuery : public Query {
   static constexpr const char *qname = "COPYTABLE";
-  const std::string new_table;
+  std::string new_table;
 
 public:
   CopyTableQuery(std::string table, std::string new_table)
       : Query(std::move(table)), new_table(std::move(new_table)) {}
 
-  QueryResult::Ptr execute() override;
+  auto execute() -> QueryResult::Ptr override;
 
-  std::string toString() override;
+  auto toString() -> std::string override;
 };
 
 #endif // SRC_QUERY_MANAGEMENT_COPYTABLEQUERY_H_
