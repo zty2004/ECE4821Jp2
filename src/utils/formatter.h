@@ -13,7 +13,7 @@ static inline auto to_string(const std::vector<T> &vec) -> std::string {
   return str;
 }
 
-// t is too short, use tt instead
+// t is too short, use value instead
 
 template <typename T> static inline auto to_string(T tt) -> std::string {
   return std::to_string(tt);
