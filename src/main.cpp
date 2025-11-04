@@ -24,12 +24,18 @@ struct ParsedArgs {
 } parsedArgs; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 } // anonymous namespace
 
-void parseArgs(int argc, char *argv[]) { // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+void parseArgs(
+    int argc,
+    char *argv
+        []) { // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
   constexpr int base_ten = 10;
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,misc-include-cleaner)
-  const option longOpts[] = {{"listen", required_argument, nullptr, 'l'}, // NOLINT(misc-include-cleaner)
-                             {"threads", required_argument, nullptr, 't'}, // NOLINT(misc-include-cleaner)
-                             {nullptr, no_argument, nullptr, 0}}; // NOLINT(misc-include-cleaner)
+  const option longOpts[] = {
+      {"listen", required_argument, nullptr,
+       'l'}, // NOLINT(misc-include-cleaner)
+      {"threads", required_argument, nullptr,
+       't'},                               // NOLINT(misc-include-cleaner)
+      {nullptr, no_argument, nullptr, 0}}; // NOLINT(misc-include-cleaner)
   const char *shortOpts = "l:t:";
   int opt = 0;
   int longIndex = 0;
@@ -39,11 +45,13 @@ void parseArgs(int argc, char *argv[]) { // NOLINT(cppcoreguidelines-avoid-c-arr
     if (opt == 'l') {
       parsedArgs.listen = optarg; // NOLINT(misc-include-cleaner)
     } else if (opt == 't') {
-      parsedArgs.threads = std::strtoll(optarg, nullptr, base_ten); // NOLINT(misc-include-cleaner)
+      parsedArgs.threads = std::strtoll(
+          optarg, nullptr, base_ten); // NOLINT(misc-include-cleaner)
     } else {
-      std::cerr << "lemondb: warning: unknown argument "
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-                << longOpts[longIndex].name << '\n';
+      std::cerr
+          << "lemondb: warning: unknown argument "
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+          << longOpts[longIndex].name << '\n';
     }
   }
 }

@@ -4,10 +4,10 @@
 
 #include "DumpTableQuery.h"
 
+#include <exception>
 #include <fstream>
 #include <memory>
 #include <string>
-#include <exception>
 
 #include "../../db/Database.h"
 #include "../../query/QueryResult.h"

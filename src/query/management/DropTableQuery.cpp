@@ -4,9 +4,9 @@
 
 #include "DropTableQuery.h"
 
+#include <exception>
 #include <memory>
 #include <string>
-#include <exception>
 
 #include "../../db/Database.h"
 #include "../../query/QueryResult.h"

@@ -1,9 +1,9 @@
 #include "CopyTableQuery.h"
 
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
-#include <exception>
 
 #include "../../db/Database.h"
 #include "../../db/Table.h"

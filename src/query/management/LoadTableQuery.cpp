@@ -4,10 +4,10 @@
 
 #include "LoadTableQuery.h"
 
+#include <exception>
 #include <fstream>
 #include <memory>
 #include <string>
-#include <exception>
 
 #include "../../db/Database.h"
 #include "../../query/QueryResult.h"
@@ -15,7 +15,8 @@
 
 auto LoadTableQuery::execute() -> QueryResult::Ptr {
   // Database &database = Database::getInstance();
-  // The reason of removing this line is that loadTableFromStream is a static method.
+  // The reason of removing this line is that loadTableFromStream is a static
+  // method.
   try {
     std::ifstream infile(this->fileName);
     if (!infile.is_open()) {

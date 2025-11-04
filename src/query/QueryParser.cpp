@@ -35,8 +35,8 @@ void QueryParser::registerQueryBuilder(QueryBuilder::Ptr &&qBuilder) {
   }
 }
 
-auto
-QueryParser::tokenizeQueryString(const std::string &queryString) -> TokenizedQueryString {
+auto QueryParser::tokenizeQueryString(const std::string &queryString)
+    -> TokenizedQueryString {
   TokenizedQueryString tokenized;
   tokenized.rawQeuryString = queryString;
   std::stringstream stream;

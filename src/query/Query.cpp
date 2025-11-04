@@ -16,7 +16,8 @@
 #include "../utils/formatter.h"
 #include "../utils/uexception.h"
 
-auto ComplexQuery::initCondition(const Table &table) -> std::pair<std::string, bool> {
+auto ComplexQuery::initCondition(const Table &table)
+    -> std::pair<std::string, bool> {
   constexpr int base_ten = 10;
   const std::unordered_map<std::string, int> opmap{
       {">", '>'}, {"<", '<'}, {"=", '='}, {">=", 'g'}, {"<=", 'l'},
@@ -95,7 +96,8 @@ auto ComplexQuery::evalCondition(const Table::ConstObject &object) -> bool {
 // cppcheck-suppress unusedFunction
 [[maybe_unused]] auto ComplexQuery::testKeyCondition(
     const Table &table,
-    const std::function<void(bool, Table::ConstObject::Ptr &&)> &function) -> bool {
+    const std::function<void(bool, Table::ConstObject::Ptr &&)> &function)
+    -> bool {
   auto condResult = initCondition(table);
   if (!condResult.second) {
     function(false, nullptr);
