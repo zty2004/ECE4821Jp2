@@ -6,6 +6,7 @@
 #include <exception>
 
 #include "../../db/Database.h"
+#include "../../db/Table.h"
 #include "../../query/QueryResult.h"
 #include "../../utils/uexception.h"
 

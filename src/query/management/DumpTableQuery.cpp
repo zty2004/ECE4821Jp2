@@ -11,6 +11,7 @@
 
 #include "../../db/Database.h"
 #include "../../query/QueryResult.h"
+#include "../../utils/formatter.h"
 
 auto DumpTableQuery::execute() -> QueryResult::Ptr {
   const auto &database = Database::getInstance();

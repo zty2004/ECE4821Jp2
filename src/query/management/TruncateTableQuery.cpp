@@ -6,6 +6,7 @@
 
 #include "../../db/Database.h"
 #include "../../query/QueryResult.h"
+#include "../../utils/uexception.h"
 
 auto TruncateTableQuery::execute() -> QueryResult::Ptr {
   Database &database = Database::getInstance();
