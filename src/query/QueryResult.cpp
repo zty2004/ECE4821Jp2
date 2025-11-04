@@ -4,6 +4,8 @@
 
 #include "QueryResult.h"
 
-std::ostream &operator<<(std::ostream &os, const QueryResult &table) {
+#include <ostream>
+
+auto operator<<(std::ostream &os, const QueryResult &table) -> std::ostream & {
   return table.output(os);
 }
