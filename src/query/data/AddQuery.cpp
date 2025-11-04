@@ -72,7 +72,6 @@ auto AddQuery::execute() -> QueryResult::Ptr {
   }
 }
 
-// cppcheck-suppress unusedFunction
-[[maybe_unused]] auto AddQuery::toString() -> std::string {
+auto AddQuery::toString() -> std::string {
   return "QUERY = ADD " + this->targetTable + "\"";
 }
