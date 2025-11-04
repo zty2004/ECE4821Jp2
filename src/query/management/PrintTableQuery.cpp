@@ -19,7 +19,7 @@ auto PrintTableQuery::execute() -> QueryResult::Ptr {
     std::cout << "================\n";
     std::cout << "TABLE = ";
     std::cout << table;
-    std::cout << "================\n\n"; // previously, it is std::cout << "================\n" << std::endl; 
+    std::cout << "================\n\n"; // previously, it is std::cout << "================\n" << std::endl;
     // I am not sure flush is needed or not here. Just keep "\n". Let's see.
     return std::make_unique<SuccessMsgResult>(qname, this->targetTable);
   } catch (const TableNameNotFound &) {
