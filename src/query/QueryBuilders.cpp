@@ -10,6 +10,10 @@
 #include <string>
 
 #include "../db/Database.h"
+#include "../utils/formatter.h"
+#include "../utils/uexception.h"
+#include "Query.h"
+#include "QueryParser.h"
 #include "data/AddQuery.h"
 #include "data/CountQuery.h"
 #include "data/DeleteQuery.h"
@@ -54,48 +58,42 @@ auto FakeQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
   return this->nextBuilder->tryExtractQuery(query);
 }
 
-auto ManageTableQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
-    -> Query::Ptr {
+Query::Ptr
+ManageTableQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   if (query.token.size() == 2) {
     if (query.token.front() == "LOAD") {
-      auto &database = Database::getInstance();
-      auto tableName = database.getFileTableName(query.token[1]);
+      auto &db = Database::getInstance();
+      auto tableName = db.getFileTableName(query.token[1]);
       return std::make_unique<LoadTableQuery>(tableName, query.token[1]);
     }
-    if (query.token.front() == "DROP") {
+    if (query.token.front() == "DROP")
       return std::make_unique<DropTableQuery>(query.token[1]);
-    }
-    if (query.token.front() == "TRUNCATE") {
+    if (query.token.front() == "TRUNCATE")
       return std::make_unique<TruncateTableQuery>(query.token[1]);
-    }
   }
   if (query.token.size() == 3) {
     if (query.token.front() == "DUMP") {
-      auto &database = Database::getInstance();
-      database.updateFileTableName(query.token[2], query.token[1]);
+      auto &db = Database::getInstance();
+      db.updateFileTableName(query.token[2], query.token[1]);
       return std::make_unique<DumpTableQuery>(query.token[1], query.token[2]);
     }
-    if (query.token.front() == "COPYTABLE") {
+    if (query.token.front() == "COPYTABLE")
       return std::make_unique<CopyTableQuery>(query.token[1], query.token[2]);
-    }
   }
   return this->nextBuilder->tryExtractQuery(query);
 }
 
-auto DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
-    -> Query::Ptr {
+Query::Ptr
+DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   if (query.token.size() == 1) {
-    if (query.token.front() == "LIST") {
+    if (query.token.front() == "LIST")
       return std::make_unique<ListTableQuery>();
-    }
-    if (query.token.front() == "QUIT") {
+    if (query.token.front() == "QUIT")
       return std::make_unique<QuitQuery>();
-    }
   }
   if (query.token.size() == 2) {
-    if (query.token.front() == "SHOWTABLE") {
+    if (query.token.front() == "SHOWTABLE")
       return std::make_unique<PrintTableQuery>(query.token[1]);
-    }
   }
   return BasicQueryBuilder::tryExtractQuery(query);
 }
@@ -159,80 +157,65 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
   }
 }
 
-auto ComplexQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
-    -> Query::Ptr {
+Query::Ptr
+ComplexQueryBuilder::tryExtractQuery(const TokenizedQueryString &query) {
   try {
     this->parseToken(query);
-  } catch (const IllFormedQuery &exception) {
-    std::cerr << exception.what() << '\n';
+  } catch (const IllFormedQuery &e) {
+    std::cerr << e.what() << std::endl;
     return this->nextBuilder->tryExtractQuery(query);
   }
   std::string const operation = query.token.front();
-  if (operation == "INSERT") {
+  if (operation == "INSERT")
     return std::make_unique<InsertQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);
-  }
-  if (operation == "UPDATE") {
+  if (operation == "UPDATE")
     return std::make_unique<UpdateQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);
-  }
-  if (operation == "SELECT") {
+  if (operation == "SELECT")
     return std::make_unique<SelectQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);
-  }
-  if (operation == "DELETE") {
+  if (operation == "DELETE")
     return std::make_unique<DeleteQuery>(this->targetTable, this->operandToken,
                                          this->conditionToken);
-  }
-  if (operation == "DUPLICATE") {
+  if (operation == "DUPLICATE")
     return std::make_unique<DuplicateQuery>(
         this->targetTable, this->operandToken, this->conditionToken);
-  }
-  if (operation == "COUNT") {
+  if (operation == "COUNT")
     return std::make_unique<CountQuery>(this->targetTable, this->operandToken,
                                         this->conditionToken);
-  }
-  if (operation == "SUM") {
+  if (operation == "SUM")
     return std::make_unique<SumQuery>(this->targetTable, this->operandToken,
                                       this->conditionToken);
-  }
-  if (operation == "MIN") {
+  if (operation == "MIN")
     return std::make_unique<MinQuery>(this->targetTable, this->operandToken,
                                       this->conditionToken);
-  }
-  if (operation == "MAX") {
+  if (operation == "MAX")
     return std::make_unique<MaxQuery>(this->targetTable, this->operandToken,
                                       this->conditionToken);
-  }
-  if (operation == "ADD") {
+  if (operation == "ADD")
     return std::make_unique<AddQuery>(this->targetTable, this->operandToken,
                                       this->conditionToken);
-  }
-  if (operation == "SUB") {
+  if (operation == "SUB")
     return std::make_unique<SubQuery>(this->targetTable, this->operandToken,
                                       this->conditionToken);
-  }
-  if (operation == "SWAP") {
+  if (operation == "SWAP")
     return std::make_unique<SwapQuery>(this->targetTable, this->operandToken,
                                        this->conditionToken);
-  }
-  std::cerr << "Complicated query found!" << '\n';
-  std::cerr << "Operation = " << query.token.front() << '\n';
+  std::cerr << "Complicated query found!" << std::endl;
+  std::cerr << "Operation = " << query.token.front() << std::endl;
   std::cerr << "    Operands : ";
-  for (const auto &oprand : this->operandToken) {
+  for (const auto &oprand : this->operandToken)
     std::cerr << oprand << " ";
-  }
-  std::cerr << '\n';
-  std::cerr << "Target Table = " << this->targetTable << '\n';
-  if (this->conditionToken.empty()) {
-    std::cerr << "No WHERE clause specified." << '\n';
-  } else {
+  std::cerr << std::endl;
+  std::cerr << "Target Table = " << this->targetTable << std::endl;
+  if (this->conditionToken.empty())
+    std::cerr << "No WHERE clause specified." << std::endl;
+  else
     std::cerr << "Conditions = ";
-  }
-  for (const auto &cond : this->conditionToken) {
+  for (const auto &cond : this->conditionToken)
     std::cerr << cond.field << cond.op << cond.value << " ";
-  }
-  std::cerr << '\n';
+  std::cerr << std::endl;
 
   return this->nextBuilder->tryExtractQuery(query);
 }
