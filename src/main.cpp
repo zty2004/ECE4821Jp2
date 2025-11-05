@@ -186,14 +186,11 @@ auto extractQueryString(std::istream &input_stream) -> std::string {
   }
 }
 
-} // anonymous namespace
-
-auto main(int argc, char *argv[]) -> int {
+auto run(std::span<char *> argv, int argc) -> int {
   // Assume only C++ style I/O is used in lemondb
   // Do not use printf/fprintf in <cstdio> with this line
   std::ios_base::sync_with_stdio(false);
-  const ParsedArgs parsedArgs =
-      parseArgs({argv, static_cast<size_t>(argc)}, argc);
+  const ParsedArgs parsedArgs = parseArgs(argv, argc);
 
   std::ifstream fin;
   if (!parsedArgs.listen.empty()) {
@@ -275,4 +272,17 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   return 0;
+}
+} // anonymous namespace
+
+auto main(int argc, char *argv[]) -> int {
+  try {
+    return run({argv, static_cast<size_t>(argc)}, argc);
+  } catch (const std::exception &e) {
+    std::cerr << "lemondb: fatal: " << e.what() << '\n';
+    return EXIT_FAILURE;
+  } catch (...) {
+    std::cerr << "lemondb: fatal: unknown exception" << '\n';
+    return EXIT_FAILURE;
+  }
 }
