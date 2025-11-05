@@ -93,6 +93,44 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
       continue;
     }
 
+    // Short options: -lVALUE or -l VALUE, -tN or -t N
+    if (tok[0] == '-' && tok.size() >= 2) {
+      const char sh = tok[1];
+      const std::string_view rest = tok.substr(2);
+      auto require_value_short = [&](char opt) -> std::string_view {
+        if (!rest.empty()) {
+          return rest;
+        }
+        if (i + 1 < num && argv[i + 1] != nullptr) {
+          ++i;
+          return to_sv(argv[i]);
+        }
+        std::cerr << "lemondb: warning: missing value for -" << opt << '\n';
+        return {};
+      };
+
+      if (sh == 'l') {
+        const auto v = require_value_short('l');
+        if (!v.empty()) {
+          out.listen.assign(v);
+        }
+      } else if (sh == 't') {
+        const auto v = require_value_short('t');
+        if (!v.empty()) {
+          int64_t parsed{};
+          auto res = std::from_chars(v.data(), v.data() + v.size(), parsed, 10);
+          if (res.ec == std::errc{} && res.ptr == v.data() + v.size()) {
+            out.threads = parsed;
+          } else {
+            std::cerr << "lemondb: warning: invalid value for -t " << v << '\n';
+          }
+        }
+      } else {
+        std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
+      }
+      continue;
+    }
+
     std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
   }
   return out;
