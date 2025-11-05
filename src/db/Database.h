@@ -5,7 +5,6 @@
 #ifndef SRC_DB_DATABASE_H_
 #define SRC_DB_DATABASE_H_
 
-#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -13,10 +12,8 @@
 
 class Database {
 private:
-  /**
-   * A unique pointer to the global database object
-   */
-  static std::unique_ptr<Database> instance;
+  // The singleton instance is provided via Meyers Singleton.
+  // No mutable global pointer member is kept inside the class.
 
   /**
    * The map of tableName -> table unique ptr

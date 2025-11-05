@@ -19,8 +19,6 @@
 #include "../utils/uexception.h"
 #include "Table.h"
 
-std::unique_ptr<Database> Database::instance = nullptr;
-
 void Database::testDuplicate(const std::string &tableName) {
   auto iter = this->tables.find(tableName);
   if (iter != this->tables.end()) {
@@ -80,10 +78,8 @@ void Database::printAllTable() {
 }
 
 auto Database::getInstance() -> Database & {
-  if (Database::instance == nullptr) {
-    instance = std::unique_ptr<Database>(new Database);
-  }
-  return *instance;
+  static Database instance;
+  return instance;
 }
 
 void Database::updateFileTableName(const std::string &fileName,
