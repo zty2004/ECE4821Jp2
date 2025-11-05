@@ -104,6 +104,44 @@ inline void handle_long_option(size_t &index, std::span<char *> argv,
   }
 }
 
+inline void handle_short_option(size_t &index, std::span<char *> argv,
+                                size_t num, std::string_view token,
+                                ParsedArgs &out) {
+  const char short_opt = token[1];
+  const std::string_view rest_sv = token.substr(2);
+
+  auto require_value_short = [&](char opt) -> std::string_view {
+    if (!rest_sv.empty()) {
+      return rest_sv;
+    }
+    if (index + 1 < num && argv[index + 1] != nullptr) {
+      ++index;
+      return to_sv(argv[index]);
+    }
+    warn_missing(std::string("-") + std::string(1, opt));
+    return {};
+  };
+
+  if (short_opt == 'l') {
+    const auto value_req = require_value_short('l');
+    if (!value_req.empty()) {
+      out.listen.assign(value_req);
+    }
+  } else if (short_opt == 't') {
+    const auto value_req = require_value_short('t');
+    if (!value_req.empty()) {
+      if (auto parsed = parse_int64_sv(value_req)) {
+        out.threads = *parsed;
+      } else {
+        std::cerr << "lemondb: warning: invalid value for -t " << value_req
+                  << '\n';
+      }
+    }
+  } else {
+    warn_unknown(token);
+  }
+}
+
 auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
   ParsedArgs out{};
   const auto num = static_cast<size_t>(argc);
@@ -126,38 +164,7 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
 
     // Short options: -lVALUE or -l VALUE, -tN or -t N
     if (tok[0] == '-' && tok.size() >= 2) {
-      const char short_opt = tok[1];
-      const std::string_view rest_sv = tok.substr(2);
-      auto require_value_short = [&](char opt) -> std::string_view {
-        if (!rest_sv.empty()) {
-          return rest_sv;
-        }
-        if (i + 1 < num && argv[i + 1] != nullptr) {
-          ++i;
-          return to_sv(argv[i]);
-        }
-        warn_missing(std::string("-") + std::string(1, opt));
-        return {};
-      };
-
-      if (short_opt == 'l') {
-        const auto value_req = require_value_short('l');
-        if (!value_req.empty()) {
-          out.listen.assign(value_req);
-        }
-      } else if (short_opt == 't') {
-        const auto value_req = require_value_short('t');
-        if (!value_req.empty()) {
-          if (auto parsed = parse_int64_sv(value_req)) {
-            out.threads = *parsed;
-          } else {
-            std::cerr << "lemondb: warning: invalid value for -t " << value_req
-                      << '\n';
-          }
-        }
-      } else {
-        warn_unknown(tok);
-      }
+      handle_short_option(i, argv, num, tok, out);
       continue;
     }
 
