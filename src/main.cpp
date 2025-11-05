@@ -60,9 +60,9 @@ struct ParsedArgs {
   int64_t threads = 0;
 };
 
-inline void handle_long_option(size_t &index, std::span<char *> argv,
+inline void handle_long_option(size_t *index, std::span<char *> argv,
                                size_t num, std::string_view token,
-                               ParsedArgs &out) {
+                               ParsedArgs *out) {
   const std::string_view rest = token.substr(2);
   const size_t eq_pos = rest.find('=');
   const std::string_view name = rest.substr(0, eq_pos);
@@ -77,9 +77,9 @@ inline void handle_long_option(size_t &index, std::span<char *> argv,
     if (has_value) {
       return value_sv;
     }
-    if (index + 1 < num && argv[index + 1] != nullptr) {
-      ++index;
-      return to_sv(argv[index]);
+    if ((*index) + 1 < num && argv[(*index) + 1] != nullptr) {
+      ++(*index);
+      return to_sv(argv[*index]);
     }
     warn_missing(std::string("--") + std::string(optname));
     return {};
@@ -88,13 +88,13 @@ inline void handle_long_option(size_t &index, std::span<char *> argv,
   if (name == "listen") {
     const auto value_req = require_value("listen");
     if (!value_req.empty()) {
-      out.listen.assign(value_req);
+      out->listen.assign(value_req);
     }
   } else if (name == "threads") {
     const auto value_req = require_value("threads");
     if (!value_req.empty()) {
       if (auto parsed = parse_int64_sv(value_req)) {
-        out.threads = *parsed;
+        out->threads = *parsed;
       } else {
         warn_invalid_threads(value_req);
       }
@@ -104,9 +104,9 @@ inline void handle_long_option(size_t &index, std::span<char *> argv,
   }
 }
 
-inline void handle_short_option(size_t &index, std::span<char *> argv,
+inline void handle_short_option(size_t *index, std::span<char *> argv,
                                 size_t num, std::string_view token,
-                                ParsedArgs &out) {
+                                ParsedArgs *out) {
   const char short_opt = token[1];
   const std::string_view rest_sv = token.substr(2);
 
@@ -114,9 +114,9 @@ inline void handle_short_option(size_t &index, std::span<char *> argv,
     if (!rest_sv.empty()) {
       return rest_sv;
     }
-    if (index + 1 < num && argv[index + 1] != nullptr) {
-      ++index;
-      return to_sv(argv[index]);
+    if ((*index) + 1 < num && argv[(*index) + 1] != nullptr) {
+      ++(*index);
+      return to_sv(argv[*index]);
     }
     warn_missing(std::string("-") + std::string(1, opt));
     return {};
@@ -125,13 +125,13 @@ inline void handle_short_option(size_t &index, std::span<char *> argv,
   if (short_opt == 'l') {
     const auto value_req = require_value_short('l');
     if (!value_req.empty()) {
-      out.listen.assign(value_req);
+      out->listen.assign(value_req);
     }
   } else if (short_opt == 't') {
     const auto value_req = require_value_short('t');
     if (!value_req.empty()) {
       if (auto parsed = parse_int64_sv(value_req)) {
-        out.threads = *parsed;
+        out->threads = *parsed;
       } else {
         std::cerr << "lemondb: warning: invalid value for -t " << value_req
                   << '\n';
@@ -146,8 +146,8 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
   ParsedArgs out{};
   const auto num = static_cast<size_t>(argc);
 
-  for (size_t i = 1; i < num; ++i) {
-    const std::string_view tok = to_sv(argv[i]);
+  for (size_t ind = 1; ind < num; ++ind) {
+    const std::string_view tok = to_sv(argv[ind]);
     if (tok.empty()) {
       continue;
     }
@@ -157,13 +157,13 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
 
     // Long options: --name or --name=value
     if (tok.starts_with("--")) {
-      handle_long_option(i, argv, num, tok, out);
+      handle_long_option(&ind, argv, num, tok, &out);
       continue;
     }
 
     // Short options: -lVALUE or -l VALUE, -tN or -t N
     if (tok[0] == '-' && tok.size() >= 2) {
-      handle_short_option(i, argv, num, tok, out);
+      handle_short_option(&ind, argv, num, tok, &out);
       continue;
     }
 
