@@ -49,7 +49,7 @@ inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
   const char *first = sv.data();
   const char *last = std::next(first, static_cast<std::ptrdiff_t>(sv.size()));
   auto res = std::from_chars(first, last, parsed, dec);
-  if (res.ec == std::errc{} && res.ptr == last) {
+  if (res.ec == std::errc() && res.ptr == last) {
     return parsed;
   }
   return std::nullopt;
@@ -152,7 +152,6 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
       continue;
     }
     if (tok == "--") {
-      ++i;
       break;
     }
 
