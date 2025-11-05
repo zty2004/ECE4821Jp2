@@ -2,9 +2,7 @@
 // Created by liu on 18-10-21.
 //
 
-#include <bits/getopt_ext.h>
-#include <getopt.h> // NOLINT(misc-include-cleaner)
-
+#include <charconv>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -12,49 +10,41 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
 
 #include "query/Query.h"
 #include "query/QueryBuilders.h"
 #include "query/QueryParser.h"
 #include "query/QueryResult.h"
 
+namespace {
 struct ParsedArgs {
   std::string listen;
   int64_t threads = 0;
 };
 
-auto parseArgs(int argc,
-               char *argv[])
-    -> ParsedArgs { // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-  constexpr int base_ten = 10;
-  ParsedArgs args{};
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,misc-include-cleaner)
-  const option longOpts[] = {
-      {"listen", required_argument, nullptr,
-       'l'}, // NOLINT(misc-include-cleaner)
-      {"threads", required_argument, nullptr,
-       't'},                               // NOLINT(misc-include-cleaner)
-      {nullptr, no_argument, nullptr, 0}}; // NOLINT(misc-include-cleaner)
-  const char *shortOpts = "l:t:";
-  int opt = 0;
-  int longIndex = 0;
-  // NOLINTNEXTLINE(misc-include-cleaner,cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-  while ((opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex)) !=
-         -1) {
-    if (opt == 'l') {
-      args.listen = optarg; // NOLINT(misc-include-cleaner)
-    } else if (opt == 't') {
-      args.threads = std::strtoll(optarg, nullptr,
-                                  base_ten); // NOLINT(misc-include-cleaner)
-    } else {
-      std::cerr
-          << "lemondb: warning: unknown argument "
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-          << longOpts[longIndex].name << '\n';
+auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
+  ParsedArgs out{};
+  const auto num = static_cast<size_t>(argc);
+  auto to_sv = [](char *param) -> std::string_view {
+    return (param != nullptr) ? std::string_view(param) : std::string_view();
+  };
+
+  for (size_t i = 1; i < num; ++i) {
+    const std::string_view tok = to_sv(argv[i]);
+    if (tok.empty()) {
+      continue;
     }
+    if (tok == "--") {
+      ++i;
+      break;
+    }
+
+    std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
   }
-  return args;
+  return out;
 }
 
 auto extractQueryString(std::istream &input_stream) -> std::string {
@@ -71,11 +61,14 @@ auto extractQueryString(std::istream &input_stream) -> std::string {
   }
 }
 
+} // anonymous namespace
+
 auto main(int argc, char *argv[]) -> int {
   // Assume only C++ style I/O is used in lemondb
   // Do not use printf/fprintf in <cstdio> with this line
   std::ios_base::sync_with_stdio(false);
-  const ParsedArgs parsedArgs = parseArgs(argc, argv);
+  const ParsedArgs parsedArgs =
+      parseArgs({argv, static_cast<size_t>(argc)}, argc);
 
   std::ifstream fin;
   if (!parsedArgs.listen.empty()) {
