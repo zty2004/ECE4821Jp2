@@ -13,6 +13,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include "query/Query.h"
 #include "query/QueryBuilders.h"
@@ -40,6 +41,56 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
     if (tok == "--") {
       ++i;
       break;
+    }
+
+    // Long options: --name or --name=value
+    if (tok.rfind("--", 0) == 0) {
+      const std::string_view rest = tok.substr(2);
+      const size_t eq = rest.find('=');
+      const std::string_view name = rest.substr(0, eq);
+      std::string_view value;
+      bool has_value = false;
+      if (eq != std::string_view::npos) {
+        value = rest.substr(eq + 1);
+        has_value = true;
+      }
+
+      auto require_value = [&](std::string_view optname) -> std::string_view {
+        if (has_value) {
+          return value;
+        }
+        if (i + 1 < num && argv[i + 1] != nullptr) {
+          ++i;
+          return to_sv(argv[i]);
+        }
+        std::cerr << "lemondb: warning: missing value for --" << optname
+                  << '\n';
+        return {};
+      };
+
+      if (name == "listen") {
+        const auto v = require_value("listen");
+        if (!v.empty()) {
+          out.listen.assign(v);
+        }
+      } else if (name == "threads") {
+        const auto v = require_value("threads");
+        if (!v.empty()) {
+          int64_t parsed{};
+          const auto *first = v.data();
+          const auto *last = first + v.size();
+          auto res = std::from_chars(first, last, parsed, 10);
+          if (res.ec == std::errc{} && res.ptr == last) {
+            out.threads = parsed;
+          } else {
+            std::cerr << "lemondb: warning: invalid value for --threads " << v
+                      << '\n';
+          }
+        }
+      } else {
+        std::cerr << "lemondb: warning: unknown argument --" << name << '\n';
+      }
+      continue;
     }
 
     std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
