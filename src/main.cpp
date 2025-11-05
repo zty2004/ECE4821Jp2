@@ -9,7 +9,9 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -21,6 +23,37 @@
 #include "query/QueryResult.h"
 
 namespace {
+// constants and small helpers for argument parsing
+constexpr int dec = 10;
+
+inline auto to_sv(char *param) -> std::string_view {
+  return (param != nullptr) ? std::string_view(param) : std::string_view();
+}
+
+inline void warn_unknown(std::string_view token) {
+  std::cerr << "lemondb: warning: unknown argument " << token << '\n';
+}
+
+inline void warn_missing(std::string_view opt) {
+  std::cerr << "lemondb: warning: missing value for " << opt << '\n';
+}
+
+inline void warn_invalid_threads(std::string_view value) {
+  std::cerr << "lemondb: warning: invalid value for --threads " << value
+            << '\n';
+}
+
+inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
+  int64_t parsed{};
+  const char *first = sv.data();
+  const char *last = std::next(first, static_cast<std::ptrdiff_t>(sv.size()));
+  auto res = std::from_chars(first, last, parsed, dec);
+  if (res.ec == std::errc{} && res.ptr == last) {
+    return parsed;
+  }
+  return std::nullopt;
+}
+
 struct ParsedArgs {
   std::string listen;
   int64_t threads = 0;
@@ -29,9 +62,6 @@ struct ParsedArgs {
 auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
   ParsedArgs out{};
   const auto num = static_cast<size_t>(argc);
-  auto to_sv = [](char *param) -> std::string_view {
-    return (param != nullptr) ? std::string_view(param) : std::string_view();
-  };
 
   for (size_t i = 1; i < num; ++i) {
     const std::string_view tok = to_sv(argv[i]);
@@ -44,94 +74,87 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
     }
 
     // Long options: --name or --name=value
-    if (tok.rfind("--", 0) == 0) {
+    if (tok.starts_with("--")) {
       const std::string_view rest = tok.substr(2);
-      const size_t eq = rest.find('=');
-      const std::string_view name = rest.substr(0, eq);
-      std::string_view value;
+      const size_t eq_pos = rest.find('=');
+      const std::string_view name = rest.substr(0, eq_pos);
+      std::string_view value_sv;
       bool has_value = false;
-      if (eq != std::string_view::npos) {
-        value = rest.substr(eq + 1);
+      if (eq_pos != std::string_view::npos) {
+        value_sv = rest.substr(eq_pos + 1);
         has_value = true;
       }
 
       auto require_value = [&](std::string_view optname) -> std::string_view {
         if (has_value) {
-          return value;
+          return value_sv;
         }
         if (i + 1 < num && argv[i + 1] != nullptr) {
           ++i;
           return to_sv(argv[i]);
         }
-        std::cerr << "lemondb: warning: missing value for --" << optname
-                  << '\n';
+        warn_missing(std::string("--") + std::string(optname));
         return {};
       };
 
       if (name == "listen") {
-        const auto v = require_value("listen");
-        if (!v.empty()) {
-          out.listen.assign(v);
+        const auto value_req = require_value("listen");
+        if (!value_req.empty()) {
+          out.listen.assign(value_req);
         }
       } else if (name == "threads") {
-        const auto v = require_value("threads");
-        if (!v.empty()) {
-          int64_t parsed{};
-          const auto *first = v.data();
-          const auto *last = first + v.size();
-          auto res = std::from_chars(first, last, parsed, 10);
-          if (res.ec == std::errc{} && res.ptr == last) {
-            out.threads = parsed;
+        const auto value_req = require_value("threads");
+        if (!value_req.empty()) {
+          if (auto parsed = parse_int64_sv(value_req)) {
+            out.threads = *parsed;
           } else {
-            std::cerr << "lemondb: warning: invalid value for --threads " << v
-                      << '\n';
+            warn_invalid_threads(value_req);
           }
         }
       } else {
-        std::cerr << "lemondb: warning: unknown argument --" << name << '\n';
+        warn_unknown(std::string("--") + std::string(name));
       }
       continue;
     }
 
     // Short options: -lVALUE or -l VALUE, -tN or -t N
     if (tok[0] == '-' && tok.size() >= 2) {
-      const char sh = tok[1];
-      const std::string_view rest = tok.substr(2);
+      const char short_opt = tok[1];
+      const std::string_view rest_sv = tok.substr(2);
       auto require_value_short = [&](char opt) -> std::string_view {
-        if (!rest.empty()) {
-          return rest;
+        if (!rest_sv.empty()) {
+          return rest_sv;
         }
         if (i + 1 < num && argv[i + 1] != nullptr) {
           ++i;
           return to_sv(argv[i]);
         }
-        std::cerr << "lemondb: warning: missing value for -" << opt << '\n';
+        warn_missing(std::string("-") + std::string(1, opt));
         return {};
       };
 
-      if (sh == 'l') {
-        const auto v = require_value_short('l');
-        if (!v.empty()) {
-          out.listen.assign(v);
+      if (short_opt == 'l') {
+        const auto value_req = require_value_short('l');
+        if (!value_req.empty()) {
+          out.listen.assign(value_req);
         }
-      } else if (sh == 't') {
-        const auto v = require_value_short('t');
-        if (!v.empty()) {
-          int64_t parsed{};
-          auto res = std::from_chars(v.data(), v.data() + v.size(), parsed, 10);
-          if (res.ec == std::errc{} && res.ptr == v.data() + v.size()) {
-            out.threads = parsed;
+      } else if (short_opt == 't') {
+        const auto value_req = require_value_short('t');
+        if (!value_req.empty()) {
+          if (auto parsed = parse_int64_sv(value_req)) {
+            out.threads = *parsed;
           } else {
-            std::cerr << "lemondb: warning: invalid value for -t " << v << '\n';
+            std::cerr << "lemondb: warning: invalid value for -t " << value_req
+                      << '\n';
           }
         }
       } else {
-        std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
+        warn_unknown(tok);
       }
       continue;
     }
 
-    std::cerr << "lemondb: warning: unknown argument " << tok << '\n';
+    warn_unknown(tok);
   }
   return out;
 }
