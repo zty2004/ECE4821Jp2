@@ -2,6 +2,7 @@
 // Created by liu on 18-10-21.
 //
 
+#include <bits/getopt_ext.h>
 #include <getopt.h> // NOLINT(misc-include-cleaner)
 
 #include <cstdint>
@@ -18,18 +19,16 @@
 #include "query/QueryParser.h"
 #include "query/QueryResult.h"
 
-namespace {
 struct ParsedArgs {
   std::string listen;
   int64_t threads = 0;
-} parsedArgs; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-} // anonymous namespace
+};
 
-void parseArgs(
-    int argc,
-    char *argv
-        []) { // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+auto parseArgs(int argc,
+               char *argv[])
+    -> ParsedArgs { // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
   constexpr int base_ten = 10;
+  ParsedArgs args{};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays,misc-include-cleaner)
   const option longOpts[] = {
       {"listen", required_argument, nullptr,
@@ -44,10 +43,10 @@ void parseArgs(
   while ((opt = getopt_long(argc, argv, shortOpts, longOpts, &longIndex)) !=
          -1) {
     if (opt == 'l') {
-      parsedArgs.listen = optarg; // NOLINT(misc-include-cleaner)
+      args.listen = optarg; // NOLINT(misc-include-cleaner)
     } else if (opt == 't') {
-      parsedArgs.threads = std::strtoll(
-          optarg, nullptr, base_ten); // NOLINT(misc-include-cleaner)
+      args.threads = std::strtoll(optarg, nullptr,
+                                  base_ten); // NOLINT(misc-include-cleaner)
     } else {
       std::cerr
           << "lemondb: warning: unknown argument "
@@ -55,6 +54,7 @@ void parseArgs(
           << longOpts[longIndex].name << '\n';
     }
   }
+  return args;
 }
 
 auto extractQueryString(std::istream &input_stream) -> std::string {
@@ -75,8 +75,7 @@ auto main(int argc, char *argv[]) -> int {
   // Assume only C++ style I/O is used in lemondb
   // Do not use printf/fprintf in <cstdio> with this line
   std::ios_base::sync_with_stdio(false);
-
-  parseArgs(argc, argv);
+  const ParsedArgs parsedArgs = parseArgs(argc, argv);
 
   std::ifstream fin;
   if (!parsedArgs.listen.empty()) {
