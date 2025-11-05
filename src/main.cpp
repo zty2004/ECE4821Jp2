@@ -3,6 +3,7 @@
 //
 
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -59,6 +60,50 @@ struct ParsedArgs {
   int64_t threads = 0;
 };
 
+inline void handle_long_option(size_t &index, std::span<char *> argv,
+                               size_t num, std::string_view token,
+                               ParsedArgs &out) {
+  const std::string_view rest = token.substr(2);
+  const size_t eq_pos = rest.find('=');
+  const std::string_view name = rest.substr(0, eq_pos);
+  std::string_view value_sv;
+  bool has_value = false;
+  if (eq_pos != std::string_view::npos) {
+    value_sv = rest.substr(eq_pos + 1);
+    has_value = true;
+  }
+
+  auto require_value = [&](std::string_view optname) -> std::string_view {
+    if (has_value) {
+      return value_sv;
+    }
+    if (index + 1 < num && argv[index + 1] != nullptr) {
+      ++index;
+      return to_sv(argv[index]);
+    }
+    warn_missing(std::string("--") + std::string(optname));
+    return {};
+  };
+
+  if (name == "listen") {
+    const auto value_req = require_value("listen");
+    if (!value_req.empty()) {
+      out.listen.assign(value_req);
+    }
+  } else if (name == "threads") {
+    const auto value_req = require_value("threads");
+    if (!value_req.empty()) {
+      if (auto parsed = parse_int64_sv(value_req)) {
+        out.threads = *parsed;
+      } else {
+        warn_invalid_threads(value_req);
+      }
+    }
+  } else {
+    warn_unknown(std::string("--") + std::string(name));
+  }
+}
+
 auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
   ParsedArgs out{};
   const auto num = static_cast<size_t>(argc);
@@ -75,45 +120,7 @@ auto parseArgs(std::span<char *> argv, int argc) -> ParsedArgs {
 
     // Long options: --name or --name=value
     if (tok.starts_with("--")) {
-      const std::string_view rest = tok.substr(2);
-      const size_t eq_pos = rest.find('=');
-      const std::string_view name = rest.substr(0, eq_pos);
-      std::string_view value_sv;
-      bool has_value = false;
-      if (eq_pos != std::string_view::npos) {
-        value_sv = rest.substr(eq_pos + 1);
-        has_value = true;
-      }
-
-      auto require_value = [&](std::string_view optname) -> std::string_view {
-        if (has_value) {
-          return value_sv;
-        }
-        if (i + 1 < num && argv[i + 1] != nullptr) {
-          ++i;
-          return to_sv(argv[i]);
-        }
-        warn_missing(std::string("--") + std::string(optname));
-        return {};
-      };
-
-      if (name == "listen") {
-        const auto value_req = require_value("listen");
-        if (!value_req.empty()) {
-          out.listen.assign(value_req);
-        }
-      } else if (name == "threads") {
-        const auto value_req = require_value("threads");
-        if (!value_req.empty()) {
-          if (auto parsed = parse_int64_sv(value_req)) {
-            out.threads = *parsed;
-          } else {
-            warn_invalid_threads(value_req);
-          }
-        }
-      } else {
-        warn_unknown(std::string("--") + std::string(name));
-      }
+      handle_long_option(i, argv, num, tok, out);
       continue;
     }
 
