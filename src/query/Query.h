@@ -40,7 +40,7 @@ public:
 
   virtual std::string toString() = 0;
 
-  [[nodiscard]] const std::string &getTargetTable() const noexcept {
+  [[nodiscard]] auto table() const -> const std::string & {
     return targetTable;
   }
 
