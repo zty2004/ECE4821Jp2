@@ -15,18 +15,14 @@ class QueryResult;
 struct ScheduledItem {
   std::uint64_t seq = 0; // global submission sequence
   QueryPriority priority = QueryPriority::NORMAL;
-  std::uint64_t enqueueTick = 0; // logical time when enqueued
-
   std::string tableId;                // table name or "__control__"
   std::string filePath;               // optional for LOAD/DUMP
   std::uint64_t dependsOnFileSeq = 0; // 0 means no dependency
-
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise; // result promise
+  bool droppedFlag = false;                           // dropped mark
 
-  bool droppedFlag = false; // dropped mark
-
-  ScheduledItem() noexcept = default;
+  ScheduledItem() noexcept = default; // NOLINT
   ~ScheduledItem() = default;
   ScheduledItem(ScheduledItem &&) noexcept = default;
   ScheduledItem &operator=(ScheduledItem &&) noexcept = default; // NOLINT

@@ -12,4 +12,4 @@ struct TableQueue {
   std::deque<ScheduledItem> queue;
 };
 
-#endif // SR{}C_SCHEDULER_TABLEQUEUE_H_
+#endif // SRC_SCHEDULER_TABLEQUEUE_H_
