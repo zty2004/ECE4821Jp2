@@ -18,6 +18,11 @@ public:
   DumpTableQuery(std::string table, std::string filename)
       : Query(std::move(table)), fileName(std::move(filename)) {}
 
+  // Accessor for scheduler/helpers
+  [[nodiscard]] auto filename() const -> const std::string & {
+    return fileName;
+  }
+
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
