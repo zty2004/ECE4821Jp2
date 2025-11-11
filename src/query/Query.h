@@ -44,6 +44,12 @@ public:
     return targetTable;
   }
 
+  // Virtual accessor for an associated file path (LOAD/DUMP)
+  [[nodiscard]] virtual auto filePath() const -> const std::string & {
+    static const std::string kEmptyFilePath;
+    return kEmptyFilePath;
+  }
+
   virtual ~Query() = default;
 };
 

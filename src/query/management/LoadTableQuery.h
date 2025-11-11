@@ -18,8 +18,8 @@ public:
   explicit LoadTableQuery(std::string table, std::string fileName)
       : Query(std::move(table)), fileName(std::move(fileName)) {}
 
-  // Accessor for scheduler/helpers
-  [[nodiscard]] auto filename() const -> const std::string & {
+  // Override Query::filePath for scheduler/helpers
+  [[nodiscard]] auto filePath() const -> const std::string & override {
     return fileName;
   }
 
