@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "Query.h"
-#include "QueryPriority.h"
+#include "./Query.h"
+#include "./QueryPriority.h"
 
 // Resolve a queue routing id for a query
 // - If query has a concrete table name then return it
