@@ -30,11 +30,11 @@ public:
 
   void waitAll();
 
-  std::vector<QueryResult::Ptr> getResultsInOrder();
+  auto getResultsInOrder() -> std::vector<QueryResult::Ptr>;
 
 private:
-  OpKind determineOpKind(Query &query);
-  std::string extractTableName(const Query &query);
+  auto determineOpKind(Query &query) -> OpKind;
+  auto extractTableName(const Query &query) -> std::string;
   void resultCallback(std::size_t orderIndex, QueryResult::Ptr result);
 
   std::unique_ptr<LockManager> lockMgr_;

@@ -3,10 +3,7 @@
 //
 
 #include "Runtime.h"
-#include "../query/QueryResult.h"
-#include "LockManager.h"
-#include "PopUpExecutor.h"
-#include "SimplePQManager.h"
+
 #include <chrono>
 #include <cstddef>
 #include <memory>
@@ -16,22 +13,31 @@
 #include <utility>
 #include <vector>
 
+#include "../query/Query.h"
+#include "../query/QueryResult.h"
+#include "LockManager.h"
+#include "PopUpExecutor.h"
+#include "QueryTask.h"
+#include "SimplePQManager.h"
+
+constexpr int kWaitIntervalMs = 10;
+
 Runtime::Runtime(std::size_t maxThreads)
     : lockMgr_(std::make_unique<LockManager>()),
       pqMgr_(std::make_unique<SimplePQManager>()) {
   (void)maxThreads; // TODO: Pass to PopUpExecutor when configurable
 
-  auto cb = [this](std::size_t idx, QueryResult::Ptr res) {
+  auto callback = [this](std::size_t idx, QueryResult::Ptr res) {
     resultCallback(idx, std::move(res));
   };
 
-  executor_ = std::make_unique<PopUpExecutor>(*lockMgr_, *pqMgr_, cb);
+  executor_ = std::make_unique<PopUpExecutor>(*lockMgr_, *pqMgr_, callback);
 }
 
 Runtime::~Runtime() { waitAll(); }
 
-OpKind Runtime::determineOpKind(Query &query) {
-  std::string typeName = query.toString();
+auto Runtime::determineOpKind(Query &query) -> OpKind {
+  const std::string typeName = query.toString();
 
   if (typeName.find("SELECT") != std::string::npos ||
       typeName.find("COUNT") != std::string::npos ||
@@ -47,23 +53,23 @@ OpKind Runtime::determineOpKind(Query &query) {
   return OpKind::Write;
 }
 
-std::string Runtime::extractTableName(const Query &query) {
+auto Runtime::extractTableName(const Query &query) -> std::string {
   return query.getTargetTable();
 }
 
 void Runtime::resultCallback(std::size_t orderIndex, QueryResult::Ptr result) {
-  std::scoped_lock lk(resultMtx_);
+  const std::scoped_lock<std::mutex> lock(resultMtx_);
   results_[orderIndex] = std::move(result);
 }
 
 void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
-  std::string table = extractTableName(*query);
-  OpKind kind = determineOpKind(*query);
+  const std::string table = extractTableName(*query);
+  const OpKind kind = determineOpKind(*query);
 
   QueryTask task(table, kind, std::move(query), orderIndex);
 
   {
-    std::scoped_lock lk(resultMtx_);
+    const std::scoped_lock<std::mutex> lock(resultMtx_);
     totalSubmitted_++;
   }
 
@@ -72,10 +78,10 @@ void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
 
 void Runtime::waitAll() {
   while (true) {
-    std::size_t completed;
-    std::size_t total;
+    std::size_t completed = 0;
+    std::size_t total = 0;
     {
-      std::scoped_lock lk(resultMtx_);
+      const std::scoped_lock<std::mutex> lock(resultMtx_);
       completed = results_.size();
       total = totalSubmitted_;
     }
@@ -84,14 +90,14 @@ void Runtime::waitAll() {
       break;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(kWaitIntervalMs));
   }
 
   executor_->stop();
 }
 
-std::vector<QueryResult::Ptr> Runtime::getResultsInOrder() {
-  std::scoped_lock lk(resultMtx_);
+auto Runtime::getResultsInOrder() -> std::vector<QueryResult::Ptr> {
+  const std::scoped_lock<std::mutex> lock(resultMtx_);
   std::vector<QueryResult::Ptr> ordered;
   ordered.reserve(results_.size());
 
