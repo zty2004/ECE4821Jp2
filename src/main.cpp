@@ -49,7 +49,6 @@ inline void warn_invalid_threads(std::string_view value) {
   std::cerr << "lemondb: warning: invalid value for --threads " << value
             << '\n';
 }
-#endif
 
 inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
   int64_t parsed{};
@@ -61,6 +60,7 @@ inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
   }
   return std::nullopt;
 }
+#endif
 
 struct ParsedArgs {
   std::string listen;
