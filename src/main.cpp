@@ -284,9 +284,7 @@ auto run(std::span<char *> argv, int argc) -> int {
       if (runtime) {
         // Multi-threaded execution
         runtime->submitQuery(std::move(query), counter);
-      }
-#endif
-      if (!runtime) {
+      } else {
         // Single-threaded execution
         result = query->execute();
         std::cout << ++counter << "\n";
@@ -304,6 +302,24 @@ auto run(std::span<char *> argv, int argc) -> int {
           std::cerr << "QUERY FAILED:\n\t" << *result;
         }
       }
+#else
+      // Single-threaded execution (ENABLE_RUNTIME not defined)
+      result = query->execute();
+      std::cout << ++counter << "\n";
+      if (result->success()) {
+        if (result->display()) {
+          std::cout << *result;
+        } else {
+#ifndef NDEBUG
+          std::cout.flush();
+          std::cerr << *result;
+#endif
+        }
+      } else {
+        std::cout.flush();
+        std::cerr << "QUERY FAILED:\n\t" << *result;
+      }
+#endif
     } catch (const std::ios_base::failure &) {
       // End of input
       break;
