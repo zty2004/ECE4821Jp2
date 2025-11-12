@@ -44,3 +44,49 @@ void Runtime::resultCallback(std::size_t orderIndex, QueryResult::Ptr result) {
   std::scoped_lock lk(resultMtx_);
   results_[orderIndex] = std::move(result);
 }
+
+void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
+  std::string table = extractTableName(*query);
+  OpKind kind = determineOpKind(*query);
+
+  QueryTask task(table, kind, std::move(query), orderIndex);
+
+  {
+    std::scoped_lock lk(resultMtx_);
+    totalSubmitted_++;
+  }
+
+  executor_->submit(std::move(task));
+}
+
+void Runtime::waitAll() {
+  while (true) {
+    std::size_t completed;
+    std::size_t total;
+    {
+      std::scoped_lock lk(resultMtx_);
+      completed = results_.size();
+      total = totalSubmitted_;
+    }
+
+    if (completed >= total && total > 0) {
+      break;
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  executor_->stop();
+}
+
+std::vector<QueryResult::Ptr> Runtime::getResultsInOrder() {
+  std::scoped_lock lk(resultMtx_);
+  std::vector<QueryResult::Ptr> ordered;
+  ordered.reserve(results_.size());
+
+  for (auto &[idx, result] : results_) {
+    ordered.push_back(std::move(result));
+  }
+
+  return ordered;
+}
