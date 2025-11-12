@@ -1,0 +1,46 @@
+//
+// Runtime
+//
+
+#ifndef SRC_RUNTIME_RUNTIME_H_
+#define SRC_RUNTIME_RUNTIME_H_
+
+#include "../query/Query.h"
+#include "../query/QueryResult.h"
+#include "LockManager.h"
+#include "PopUpExecutor.h"
+#include "SimplePQManager.h"
+#include <map>
+#include <memory>
+#include <mutex>
+#include <vector>
+
+class Runtime {
+public:
+  explicit Runtime(std::size_t maxThreads = 8);
+  ~Runtime();
+
+  Runtime(const Runtime &) = delete;
+  Runtime &operator=(const Runtime &) = delete;
+
+  void submitQuery(Query::Ptr query, std::size_t orderIndex);
+
+  void waitAll();
+
+  std::vector<QueryResult::Ptr> getResultsInOrder();
+
+private:
+  OpKind determineOpKind(Query &query);
+  std::string extractTableName(const Query &query);
+  void resultCallback(std::size_t orderIndex, QueryResult::Ptr result);
+
+  std::unique_ptr<LockManager> lockMgr_;
+  std::unique_ptr<SimplePQManager> pqMgr_;
+  std::unique_ptr<PopUpExecutor> executor_;
+
+  std::mutex resultMtx_;
+  std::map<std::size_t, QueryResult::Ptr> results_;
+  std::size_t totalSubmitted_{0};
+};
+
+#endif // SRC_RUNTIME_RUNTIME_H_
