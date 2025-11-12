@@ -58,3 +58,69 @@ void PopUpExecutor::stop() {
   }
   threads_.clear();
 }
+
+void PopUpExecutor::runOne(QueryTask t) {
+  auto table = t.table;
+
+  if (t.kind == OpKind::Write) {
+    if (t.attempts == 0) {
+      lm_.writerIntentBegin(table);
+    }
+
+    if (lm_.tryLockX(table)) {
+      executeWrite(t);
+      lm_.unlockX(table);
+      lm_.writerIntentEnd(table);
+      return;
+    }
+
+    t.attempts++;
+    pqm_.requeueFront(std::move(t));
+    return;
+  }
+
+  if (!lm_.canAdmitShared(table)) {
+    t.attempts++;
+    pqm_.requeueBack(std::move(t));
+    return;
+  }
+
+  if (lm_.tryLockS(table)) {
+    executeRead(t);
+    lm_.unlockS(table);
+    return;
+  }
+
+  t.attempts++;
+  pqm_.requeueBack(std::move(t));
+}
+
+void PopUpExecutor::executeRead(QueryTask &t) {
+  try {
+    QueryResult::Ptr result = t.query->execute();
+    resultCb_(t.orderIndex, std::move(result));
+  } catch (const std::exception &e) {
+    auto errorResult = std::make_unique<ErrorMsgResult>(
+        "READ", t.table, std::string("Exception: ") + e.what());
+    resultCb_(t.orderIndex, std::move(errorResult));
+  } catch (...) {
+    auto errorResult = std::make_unique<ErrorMsgResult>(
+        "READ", t.table, "Unknown exception occurred");
+    resultCb_(t.orderIndex, std::move(errorResult));
+  }
+}
+
+void PopUpExecutor::executeWrite(QueryTask &t) {
+  try {
+    QueryResult::Ptr result = t.query->execute();
+    resultCb_(t.orderIndex, std::move(result));
+  } catch (const std::exception &e) {
+    auto errorResult = std::make_unique<ErrorMsgResult>(
+        "WRITE", t.table, std::string("Exception: ") + e.what());
+    resultCb_(t.orderIndex, std::move(errorResult));
+  } catch (...) {
+    auto errorResult = std::make_unique<ErrorMsgResult>(
+        "WRITE", t.table, "Unknown exception occurred");
+    resultCb_(t.orderIndex, std::move(errorResult));
+  }
+}
