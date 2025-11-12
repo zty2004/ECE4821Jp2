@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@focs
+      - name: Fetch the submodule
+        run: |
+          git submodule update --init --recursive
       - name: Run joj3
         run: |
           sudo -E -u tt joj3 -conf-root /home/tt/.config/joj/projects/p2/push          
