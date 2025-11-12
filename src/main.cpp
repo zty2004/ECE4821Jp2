@@ -18,6 +18,11 @@
 #include <string_view>
 #include <system_error>
 
+#ifdef ENABLE_RUNTIME
+#include "runtime/Runtime.h"
+#include <thread>
+#endif
+
 #include "query/Query.h"
 #include "query/QueryBuilders.h"
 #include "query/QueryParser.h"
@@ -39,10 +44,12 @@ inline void warn_missing(std::string_view opt) {
   std::cerr << "lemondb: warning: missing value for " << opt << '\n';
 }
 
+#ifdef ENABLE_RUNTIME
 inline void warn_invalid_threads(std::string_view value) {
   std::cerr << "lemondb: warning: invalid value for --threads " << value
             << '\n';
 }
+#endif
 
 inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
   int64_t parsed{};
@@ -57,7 +64,9 @@ inline auto parse_int64_sv(std::string_view sv) -> std::optional<int64_t> {
 
 struct ParsedArgs {
   std::string listen;
+#ifdef ENABLE_RUNTIME
   int64_t threads = 0;
+#endif
 };
 
 inline void handle_long_option(size_t *index, std::span<char *> argv,
@@ -90,6 +99,7 @@ inline void handle_long_option(size_t *index, std::span<char *> argv,
     if (!value_req.empty()) {
       out->listen.assign(value_req);
     }
+#ifdef ENABLE_RUNTIME
   } else if (name == "threads") {
     const auto value_req = require_value("threads");
     if (!value_req.empty()) {
@@ -99,6 +109,7 @@ inline void handle_long_option(size_t *index, std::span<char *> argv,
         warn_invalid_threads(value_req);
       }
     }
+#endif
   } else {
     warn_unknown(std::string("--") + std::string(name));
   }
@@ -127,6 +138,7 @@ inline void handle_short_option(size_t *index, std::span<char *> argv,
     if (!value_req.empty()) {
       out->listen.assign(value_req);
     }
+#ifdef ENABLE_RUNTIME
   } else if (short_opt == 't') {
     const auto value_req = require_value_short('t');
     if (!value_req.empty()) {
@@ -137,6 +149,7 @@ inline void handle_short_option(size_t *index, std::span<char *> argv,
                   << '\n';
       }
     }
+#endif
   } else {
     warn_unknown(token);
   }
@@ -221,23 +234,41 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
 #endif
 
+#ifdef ENABLE_RUNTIME
   if (parsedArgs.threads < 0) {
     std::cerr << "lemondb: error: threads num can not be negative value "
               << parsedArgs.threads << '\n';
     exit(-1);
-  } else if (parsedArgs.threads == 0) {
-    // @TODO Auto detect the thread num
-    std::cerr << "lemondb: info: auto detect thread num" << '\n';
-  } else {
-    std::cerr << "lemondb: info: running in " << parsedArgs.threads
-              << " threads" << '\n';
   }
+
+  // Determine thread count
+  size_t numThreads = 1;
+  if (parsedArgs.threads == 0) {
+    numThreads = std::thread::hardware_concurrency();
+    if (numThreads == 0)
+      numThreads = 4;
+    std::cerr << "lemondb: info: auto detected " << numThreads << " threads"
+              << '\n';
+  } else {
+    numThreads = static_cast<size_t>(parsedArgs.threads);
+    std::cerr << "lemondb: info: running in " << numThreads << " threads"
+              << '\n';
+  }
+#endif
 
   QueryParser parser;
 
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Debug)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(ManageTable)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Complex)>());
+
+#ifdef ENABLE_RUNTIME
+  // Use runtime if threads > 1
+  std::unique_ptr<Runtime> runtime;
+  if (numThreads > 1) {
+    runtime = std::make_unique<Runtime>(numThreads);
+  }
+#endif
 
   size_t counter = 0;
 
@@ -247,8 +278,50 @@ auto run(std::span<char *> argv, int argc) -> int {
       // REPL: Read-Evaluate-Print-Loop
       std::string const queryStr = extractQueryString(input_stream);
       Query::Ptr query = parser.parseQuery(queryStr);
-      QueryResult::Ptr result = query->execute();
-      std::cout << ++counter << "\n";
+
+      QueryResult::Ptr result;
+#ifdef ENABLE_RUNTIME
+      if (runtime) {
+        // Multi-threaded execution
+        runtime->submitQuery(std::move(query), counter);
+      } else
+#endif
+      {
+        // Single-threaded execution
+        result = query->execute();
+        std::cout << ++counter << "\n";
+        if (result->success()) {
+          if (result->display()) {
+            std::cout << *result;
+          } else {
+#ifndef NDEBUG
+            std::cout.flush();
+            std::cerr << *result;
+#endif
+          }
+        } else {
+          std::cout.flush();
+          std::cerr << "QUERY FAILED:\n\t" << *result;
+        }
+      }
+    } catch (const std::ios_base::failure &) {
+      // End of input
+      break;
+    } catch (const std::exception &exception_obj) {
+      std::cout.flush();
+      std::cerr << exception_obj.what() << '\n';
+    }
+  }
+
+#ifdef ENABLE_RUNTIME
+  // If using runtime, wait for all queries and output results
+  if (runtime) {
+    runtime->waitAll();
+    auto results = runtime->getResultsInOrder();
+
+    for (size_t i = 0; i < results.size(); ++i) {
+      std::cout << (i + 1) << "\n";
+      const auto &result = results[i];
       if (result->success()) {
         if (result->display()) {
           std::cout << *result;
@@ -262,14 +335,9 @@ auto run(std::span<char *> argv, int argc) -> int {
         std::cout.flush();
         std::cerr << "QUERY FAILED:\n\t" << *result;
       }
-    } catch (const std::ios_base::failure &) {
-      // End of input
-      break;
-    } catch (const std::exception &exception_obj) {
-      std::cout.flush();
-      std::cerr << exception_obj.what() << '\n';
     }
   }
+#endif
 
   return 0;
 }
