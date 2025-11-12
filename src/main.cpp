@@ -30,7 +30,9 @@
 
 namespace {
 // constants and small helpers for argument parsing
+#ifdef ENABLE_RUNTIME
 constexpr int dec = 10;
+#endif
 
 inline auto to_sv(char *param) -> std::string_view {
   return (param != nullptr) ? std::string_view(param) : std::string_view();
