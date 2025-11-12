@@ -8,54 +8,54 @@
 #include <mutex>
 
 LockManager::Entry &LockManager::entry(const TableId &id) {
-  std::scoped_lock lk(mapMtx_);
-  auto it = map_.find(id);
-  if (it == map_.end()) {
-    it = map_.emplace(id, std::make_unique<Entry>()).first;
+  const std::scoped_lock<std::mutex> lock(mapMtx_);
+  auto iter = map_.find(id);
+  if (iter == map_.end()) {
+    iter = map_.emplace(id, std::make_unique<Entry>()).first;
   }
-  return *it->second;
+  return *iter->second;
 }
 
 bool LockManager::tryLockS(const TableId &id) {
-  auto &e = entry(id);
-  return e.rw.try_lock_shared();
+  auto &entry_ref = entry(id);
+  return entry_ref.rw.try_lock_shared();
 }
 
 void LockManager::unlockS(const TableId &id) {
-  auto &e = entry(id);
-  e.rw.unlock_shared();
+  auto &entry_ref = entry(id);
+  entry_ref.rw.unlock_shared();
 }
 
 bool LockManager::tryLockX(const TableId &id) {
-  auto &e = entry(id);
-  return e.rw.try_lock();
+  auto &entry_ref = entry(id);
+  return entry_ref.rw.try_lock();
 }
 
 void LockManager::unlockX(const TableId &id) {
-  auto &e = entry(id);
-  e.rw.unlock();
+  auto &entry_ref = entry(id);
+  entry_ref.rw.unlock();
 }
 
 void LockManager::writerIntentBegin(const TableId &id) {
-  auto &e = entry(id);
-  e.waiting_writers.fetch_add(1, std::memory_order_release);
+  auto &entry_ref = entry(id);
+  entry_ref.waiting_writers.fetch_add(1, std::memory_order_release);
 }
 
 void LockManager::writerIntentEnd(const TableId &id) {
-  auto &e = entry(id);
-  e.waiting_writers.fetch_sub(1, std::memory_order_release);
+  auto &entry_ref = entry(id);
+  entry_ref.waiting_writers.fetch_sub(1, std::memory_order_release);
 }
 
 bool LockManager::canAdmitShared(const TableId &id) const noexcept {
   const Entry *found = [&]() -> const Entry * {
-    std::scoped_lock lk(mapMtx_);
-    if (auto it = map_.find(id); it != map_.end()) {
-      return it->second.get();
+    const std::scoped_lock<std::mutex> lock(mapMtx_);
+    if (auto iter = map_.find(id); iter != map_.end()) {
+      return iter->second.get();
     }
     return nullptr;
   }();
 
-  if (!found) {
+  if (found == nullptr) {
     return true;
   }
 

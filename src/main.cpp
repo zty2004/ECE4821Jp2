@@ -2,22 +2,16 @@
 // Created by liu on 18-10-21.
 //
 
-#include <charconv>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <memory>
-#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
-#include <system_error>
-#include <utility>
 
 #ifdef ENABLE_RUNTIME
 #include <thread>
@@ -290,9 +284,9 @@ auto run(std::span<char *> argv, int argc) -> int {
       if (runtime) {
         // Multi-threaded execution
         runtime->submitQuery(std::move(query), counter);
-      } else
+      }
 #endif
-      {
+      if (!runtime) {
         // Single-threaded execution
         result = query->execute();
         std::cout << ++counter << "\n";
