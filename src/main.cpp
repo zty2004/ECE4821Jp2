@@ -17,9 +17,9 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 #ifdef ENABLE_RUNTIME
-#include "runtime/Runtime.h"
 #include <thread>
 #endif
 
@@ -27,6 +27,10 @@
 #include "query/QueryBuilders.h"
 #include "query/QueryParser.h"
 #include "query/QueryResult.h"
+
+#ifdef ENABLE_RUNTIME
+#include "runtime/Runtime.h"
+#endif
 
 namespace {
 // constants and small helpers for argument parsing
@@ -244,7 +248,7 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
 
   // Determine thread count
-  size_t numThreads = 1;
+  size_t numThreads;
   if (parsedArgs.threads == 0) {
     numThreads = std::thread::hardware_concurrency();
     if (numThreads == 0)

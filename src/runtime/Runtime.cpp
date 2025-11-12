@@ -3,8 +3,18 @@
 //
 
 #include "Runtime.h"
+#include "../query/QueryResult.h"
+#include "LockManager.h"
+#include "PopUpExecutor.h"
+#include "SimplePQManager.h"
 #include <chrono>
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 Runtime::Runtime(std::size_t maxThreads)
     : lockMgr_(std::make_unique<LockManager>()),

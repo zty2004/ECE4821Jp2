@@ -7,9 +7,11 @@
 #ifndef SRC_RUNTIME_PRIORITYQUEUEMANAGER_H_
 #define SRC_RUNTIME_PRIORITYQUEUEMANAGER_H_
 
-#include "QueryTask.h"
 #include <concepts>
 #include <optional>
+#include <utility>
+
+#include "QueryTask.h"
 
 template <class PQ>
 concept TablePriorityQueue = requires(PQ pq, QueryTask t) {

@@ -5,15 +5,18 @@
 #ifndef SRC_RUNTIME_RUNTIME_H_
 #define SRC_RUNTIME_RUNTIME_H_
 
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "LockManager.h"
 #include "PopUpExecutor.h"
 #include "SimplePQManager.h"
-#include <map>
-#include <memory>
-#include <mutex>
-#include <vector>
 
 class Runtime {
 public:

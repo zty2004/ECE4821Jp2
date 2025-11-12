@@ -5,16 +5,19 @@
 #ifndef SRC_RUNTIME_POPUPEXECUTOR_H_
 #define SRC_RUNTIME_POPUPEXECUTOR_H_
 
-#include "LockManager.h"
-#include "PriorityQueueManager.h"
-#include "QueryTask.h"
 #include <atomic>
 #include <condition_variable>
+#include <cstddef>
 #include <deque>
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
+
+#include "LockManager.h"
+#include "PriorityQueueManager.h"
+#include "QueryTask.h"
 
 class PopUpExecutor {
 public:

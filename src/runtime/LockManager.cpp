@@ -3,6 +3,9 @@
 //
 
 #include "LockManager.h"
+#include <atomic>
+#include <memory>
+#include <mutex>
 
 LockManager::Entry &LockManager::entry(const TableId &id) {
   std::scoped_lock lk(mapMtx_);

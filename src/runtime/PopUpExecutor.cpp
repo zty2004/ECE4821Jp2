@@ -4,7 +4,14 @@
 
 #include "PopUpExecutor.h"
 #include "../query/QueryResult.h"
+#include "QueryTask.h"
+#include <atomic>
+#include <cstddef>
 #include <exception>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <utility>
 
 bool PopUpExecutor::tryPop(QueryTask &out) {
   std::lock_guard lk(qMtx_);

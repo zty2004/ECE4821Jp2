@@ -5,11 +5,13 @@
 #ifndef SRC_RUNTIME_QUERYTASK_H_
 #define SRC_RUNTIME_QUERYTASK_H_
 
-#include "../query/Query.h"
-#include "../query/QueryResult.h"
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
+
+#include "../query/Query.h"
+#include "../query/QueryResult.h"
 
 using TableId = std::string;
 
@@ -17,7 +19,7 @@ enum class OpKind { Read, Write };
 
 struct QueryTask {
   TableId table;
-  OpKind kind;
+  OpKind kind = OpKind::Read;
   Query::Ptr query;
   std::uint32_t attempts = 0;
   std::size_t orderIndex = 0;
