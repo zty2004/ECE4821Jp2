@@ -40,6 +40,10 @@ public:
 
   virtual std::string toString() = 0;
 
+  [[nodiscard]] const std::string &getTargetTable() const noexcept {
+    return targetTable;
+  }
+
   virtual ~Query() = default;
 };
 
