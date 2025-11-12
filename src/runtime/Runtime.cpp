@@ -9,6 +9,7 @@
 Runtime::Runtime(std::size_t maxThreads)
     : lockMgr_(std::make_unique<LockManager>()),
       pqMgr_(std::make_unique<SimplePQManager>()) {
+  (void)maxThreads; // TODO: Pass to PopUpExecutor when configurable
 
   auto cb = [this](std::size_t idx, QueryResult::Ptr res) {
     resultCallback(idx, std::move(res));
