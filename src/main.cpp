@@ -199,6 +199,7 @@ auto extractQueryString(std::istream &input_stream) -> std::string {
   }
 }
 
+// NOLINTNEXTLINE(readability-function-size)
 auto run(std::span<char *> argv, int argc) -> int {
   // Assume only C++ style I/O is used in lemondb
   // Do not use printf/fprintf in <cstdio> with this line
