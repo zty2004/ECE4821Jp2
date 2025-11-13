@@ -33,19 +33,19 @@ private:
 public:
   void testDuplicate(const std::string &tableName);
 
-  Table &registerTable(Table::Ptr &&table);
+  auto registerTable(Table::Ptr &&table) -> Table &;
 
   void dropTable(const std::string &tableName);
 
   void printAllTable();
 
-  Table &operator[](const std::string &tableName);
+  auto operator[](const std::string &tableName) -> Table &;
 
-  const Table &operator[](const std::string &tableName) const;
+  auto operator[](const std::string &tableName) const -> const Table &;
 
-  Database &operator=(const Database &) = delete;
+  auto operator=(const Database &) -> Database & = delete;
 
-  Database &operator=(Database &&) = delete;
+  auto operator=(Database &&) -> Database & = delete;
 
   Database(const Database &) = delete;
 
@@ -53,12 +53,12 @@ public:
 
   ~Database() = default;
 
-  static Database &getInstance();
+  static auto getInstance() -> Database &;
 
   void updateFileTableName(const std::string &fileName,
                            const std::string &tableName);
 
-  std::string getFileTableName(const std::string &fileName);
+  auto getFileTableName(const std::string &fileName) -> std::string;
 
   /**
    * Load a table from an input stream (i.e., a file)
@@ -66,8 +66,8 @@ public:
    * @param source
    * @return reference of loaded table
    */
-  static Table &loadTableFromStream(std::istream &input_stream,
-                                    const std::string &source = "");
+  static auto loadTableFromStream(std::istream &input_stream,
+                                  const std::string &source = "") -> Table &;
 
   static void exit();
 };
