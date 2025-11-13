@@ -16,7 +16,7 @@
 #include "../utils/formatter.h"
 #include "../utils/uexception.h"
 
-#define _DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field)                             \
+#define DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field)                              \
   do {                                                                         \
     try {                                                                      \
       auto &index = table->fieldMap.at(field);                                 \
@@ -27,7 +27,7 @@
     }                                                                          \
   } while (0)
 
-#define _DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index)                            \
+#define DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index)                             \
   do {                                                                         \
     try {                                                                      \
       return it->datum.at(index);                                              \
@@ -38,15 +38,15 @@
 
 class Table {
 public:
-  typedef std::string KeyType;
-  typedef std::string FieldNameType;
-  typedef size_t FieldIndex;
-  typedef int ValueType;
+  using KeyType = std::string;
+  using FieldNameType = std::string;
+  using FieldIndex = size_t;
+  using ValueType = int;
   static constexpr const ValueType ValueTypeMax =
       std::numeric_limits<ValueType>::max();
   static constexpr const ValueType ValueTypeMin =
       std::numeric_limits<ValueType>::min();
-  typedef size_t SizeType;
+  using SizeType = size_t;
 
 private:
   /** A row in the table */
@@ -63,23 +63,20 @@ private:
     Datum(Datum &&) noexcept = default;
     Datum &operator=(Datum &&) noexcept = default;
 
+    ~Datum() = default;
+
     explicit Datum(const SizeType &size) : datum(size, ValueType()) {}
 
     template <class ValueTypeContainer>
-    explicit Datum(const KeyType &key, const ValueTypeContainer &datum) {
-      this->key = key;
-      this->datum = datum;
-    }
+    explicit Datum(const KeyType &key, const ValueTypeContainer &datum)
+        : key(key), datum(datum) {}
 
-    explicit Datum(const KeyType &key,
-                   std::vector<ValueType> &&datum) noexcept {
-      this->key = key;
-      this->datum = std::move(datum);
-    }
+    explicit Datum(const KeyType &key, std::vector<ValueType> &&datum) noexcept
+        : key(key), datum(std::move(datum)) {}
   };
 
-  typedef std::vector<Datum>::iterator DataIterator;
-  typedef std::vector<Datum>::const_iterator ConstDataIterator;
+  using DataIterator = std::vector<Datum>::iterator;
+  using ConstDataIterator = std::vector<Datum>::const_iterator;
 
   /** The fields, ordered as defined in fieldMap */
   std::vector<FieldNameType> fields;
@@ -95,7 +92,7 @@ private:
   std::string tableName;
 
 public:
-  typedef std::unique_ptr<Table> Ptr;
+  using Ptr = std::unique_ptr<Table>;
 
   /**
    * A proxy class that provides abstraction on internal Implementation.
@@ -112,10 +109,10 @@ public:
     Table *table;
 
   public:
-    typedef std::unique_ptr<ObjectImpl> Ptr;
+    using Ptr = std::unique_ptr<ObjectImpl>;
 
-    ObjectImpl(Iterator datumIt, const Table *t)
-        : it(datumIt), table(const_cast<Table *>(t)) {}
+    ObjectImpl(Iterator datumIt, const Table *table_ptr)
+        : it(datumIt), table(const_cast<Table *>(table_ptr)) {}
 
     ObjectImpl(const ObjectImpl &) = default;
 
@@ -144,24 +141,24 @@ public:
      * faster now)
      */
     VType &operator[](const FieldNameType &field) const {
-      _DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
+      DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
     }
 
     VType &operator[](const FieldIndex &index) const {
-      _DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
+      DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
     }
 
     VType &get(const FieldNameType &field) const {
-      _DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
+      DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
     }
 
     VType &get(const FieldIndex &index) const {
-      _DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
+      DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
     }
   };
 
-  typedef ObjectImpl<DataIterator, ValueType> Object;
-  typedef ObjectImpl<ConstDataIterator, const ValueType> ConstObject;
+  using Object = ObjectImpl<DataIterator, ValueType>;
+  using ConstObject = ObjectImpl<ConstDataIterator, const ValueType>;
 
   /**
    * A proxy class that provides iteration on the table
@@ -183,8 +180,8 @@ public:
     using iterator_concept = std::random_access_iterator_tag;
     // See https://stackoverflow.com/questions/37031805/
 
-    IteratorImpl(DatumIterator datumIt, const Table *t)
-        : it(datumIt), table(t) {}
+    IteratorImpl(DatumIterator datumIt, const Table *table_ptr)
+        : it(datumIt), table(table_ptr) {}
 
     IteratorImpl() = default;
 
@@ -225,13 +222,13 @@ public:
 
     IteratorImpl &operator--() { return --it, *this; }
 
-    const IteratorImpl operator++(int) {
+    IteratorImpl operator++(int) {
       auto retVal = IteratorImpl(*this);
       ++it;
       return retVal;
     }
 
-    const IteratorImpl operator--(int) {
+    IteratorImpl operator--(int) {
       auto retVal = IteratorImpl(*this);
       --it;
       return retVal;
@@ -262,8 +259,8 @@ public:
     }
   };
 
-  typedef IteratorImpl<Object, decltype(data.begin())> Iterator;
-  typedef IteratorImpl<ConstObject, decltype(data.cbegin())> ConstIterator;
+  using Iterator = IteratorImpl<Object, decltype(data.begin())>;
+  using ConstIterator = IteratorImpl<ConstObject, decltype(data.cbegin())>;
 
 private:
   static ConstObject::Ptr createProxy(ConstDataIterator it,
@@ -425,13 +422,13 @@ std::ostream &operator<<(std::ostream &os, const Table &table);
 template <class FieldIDContainer>
 Table::Table(const std::string &name, const FieldIDContainer &fields)
     : fields(fields.cbegin(), fields.cend()), tableName(name) {
-  SizeType i = 0;
+  SizeType fieldIndex = 0;
   for (const auto &fieldName : fields) {
     if (fieldName == "KEY") {
       throw MultipleKey("Error creating table \"" + name +
                         "\": Multiple KEY field.");
     }
-    fieldMap.emplace(fieldName, i++);
+    fieldMap.emplace(fieldName, fieldIndex++);
   }
 }
 
