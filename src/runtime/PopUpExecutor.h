@@ -31,12 +31,15 @@ public:
   ~PopUpExecutor() { stop(); }
 
   PopUpExecutor(const PopUpExecutor &) = delete;
-  PopUpExecutor &operator=(const PopUpExecutor &) = delete;
+  auto operator=(const PopUpExecutor &) -> PopUpExecutor & = delete;
 
-  void submit(QueryTask t);
+  PopUpExecutor(PopUpExecutor &&) = delete;
+  auto operator=(PopUpExecutor &&) -> PopUpExecutor & = delete;
+
+  void submit(QueryTask task);
   void stop();
 
-  [[nodiscard]] std::size_t activeCount() const noexcept {
+  [[nodiscard]] auto activeCount() const noexcept -> std::size_t {
     return active_.load(std::memory_order_relaxed);
   }
 
@@ -55,12 +58,12 @@ private:
   std::atomic<std::size_t> active_{0};
   std::atomic<bool> stopping_{false};
 
-  bool tryPop(QueryTask &out);
+  auto tryPop(QueryTask &out) -> bool;
   void maybeGrow();
   void workerLoop();
-  void runOne(QueryTask t);
-  void executeRead(QueryTask &t);
-  void executeWrite(QueryTask &t);
+  void runOne(QueryTask task);
+  void executeRead(QueryTask &task);
+  void executeWrite(QueryTask &task);
 };
 
 #endif  // SRC_RUNTIME_POPUPEXECUTOR_H_
