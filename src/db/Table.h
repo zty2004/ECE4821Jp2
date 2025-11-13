@@ -16,6 +16,7 @@
 #include "../utils/formatter.h"
 #include "../utils/uexception.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
 #define DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field)                              \
   do {                                                                         \
     try {                                                                      \
@@ -35,6 +36,7 @@
       throw TableFieldNotFound(R"(Field index ? out of range.)"_f % (index));  \
     }                                                                          \
   } while (0)
+// NOLINTEND(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
 
 class Table {
 public:
@@ -51,28 +53,35 @@ public:
 private:
   /** A row in the table */
   struct Datum {
+  private:
     /** Unique key of this datum */
     KeyType key;
     /** The values in the order of fields */
     std::vector<ValueType> datum;
 
+  public:
+    friend class Table;
+    template <class Iterator, class VType> friend class ObjectImpl;
+    friend auto operator<<(std::ostream &os, const Table &table)
+        -> std::ostream &;
+
     Datum() = default;
 
     Datum(const Datum &) = default;
-    Datum &operator=(const Datum &) = default;
+    auto operator=(const Datum &) -> Datum & = default;
     Datum(Datum &&) noexcept = default;
-    Datum &operator=(Datum &&) noexcept = default;
+    auto operator=(Datum &&) noexcept -> Datum & = default;
 
     ~Datum() = default;
 
     explicit Datum(const SizeType &size) : datum(size, ValueType()) {}
 
     template <class ValueTypeContainer>
-    explicit Datum(const KeyType &key, const ValueTypeContainer &datum)
-        : key(key), datum(datum) {}
+    explicit Datum(KeyType key, const ValueTypeContainer &datum)
+        : key(std::move(key)), datum(datum) {}
 
-    explicit Datum(const KeyType &key, std::vector<ValueType> &&datum) noexcept
-        : key(key), datum(std::move(datum)) {}
+    explicit Datum(KeyType key, std::vector<ValueType> &&datum) noexcept
+        : key(std::move(key)), datum(std::move(datum)) {}
   };
 
   using DataIterator = std::vector<Datum>::iterator;
@@ -106,25 +115,27 @@ public:
 
     /** Not const because key can be updated */
     Iterator it;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     Table *table;
 
   public:
     using Ptr = std::unique_ptr<ObjectImpl>;
 
     ObjectImpl(Iterator datumIt, const Table *table_ptr)
-        : it(datumIt), table(const_cast<Table *>(table_ptr)) {}
+        : it(datumIt), table(const_cast<Table *>(table_ptr)) {
+    }  // NOLINT(cppcoreguidelines-pro-type-const-cast)
 
     ObjectImpl(const ObjectImpl &) = default;
 
     ObjectImpl(ObjectImpl &&) noexcept = default;
 
-    ObjectImpl &operator=(const ObjectImpl &) = default;
+    auto operator=(const ObjectImpl &) -> ObjectImpl & = default;
 
-    ObjectImpl &operator=(ObjectImpl &&) noexcept = default;
+    auto operator=(ObjectImpl &&) noexcept -> ObjectImpl & = default;
 
     ~ObjectImpl() = default;
 
-    const KeyType &key() const { return it->key; }
+    [[nodiscard]] auto key() const -> const KeyType & { return it->key; }
 
     void setKey(KeyType key) {
       auto keyMapIt = table->keyMap.find(it->key);
@@ -140,19 +151,23 @@ public:
      * accessed frequently (the implement is improved so that index is actually
      * faster now)
      */
-    VType &operator[](const FieldNameType &field) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+    auto operator[](const FieldNameType &field) const -> VType & {
       DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
     }
 
-    VType &operator[](const FieldIndex &index) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+    auto operator[](const FieldIndex &index) const -> VType & {
       DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
     }
 
-    VType &get(const FieldNameType &field) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+    [[nodiscard]] auto get(const FieldNameType &field) const -> VType & {
       DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
     }
 
-    VType &get(const FieldIndex &index) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+    [[nodiscard]] auto get(const FieldIndex &index) const -> VType & {
       DBTABLE_ACCESS_WITH_INDEX_EXCEPTION(index);
     }
   };
@@ -189,72 +204,78 @@ public:
 
     IteratorImpl(IteratorImpl &&) noexcept = default;
 
-    IteratorImpl &operator=(const IteratorImpl &) = default;
+    auto operator=(const IteratorImpl &) -> IteratorImpl & = default;
 
-    IteratorImpl &operator=(IteratorImpl &&) noexcept = default;
+    auto operator=(IteratorImpl &&) noexcept -> IteratorImpl & = default;
 
     ~IteratorImpl() = default;
 
-    pointer operator->() { return createProxy(it, table); }
+    auto operator->() -> pointer { return createProxy(it, table); }
 
     // *Note: Directly build an Obj instead of Proxy, need further test
-    reference operator*() { return ObjType(it, table); }
+    auto operator*() -> reference { return ObjType(it, table); }
 
-    IteratorImpl operator+(difference_type n) const {
+    auto operator+(difference_type n) const -> IteratorImpl {
       return IteratorImpl(it + n, table);
     }
 
-    IteratorImpl operator-(difference_type n) const {
+    auto operator-(difference_type n) const -> IteratorImpl {
       return IteratorImpl(it - n, table);
     }
 
-    difference_type operator-(const IteratorImpl &other) const {
+    auto operator-(const IteratorImpl &other) const -> difference_type {
       return this->it - other.it;
     }
 
-    reference operator[](difference_type n) const { return *(*this + n); }
+    auto operator[](difference_type n) const -> reference {
+      return *(*this + n);
+    }
 
-    IteratorImpl &operator+=(difference_type n) { return it += n, *this; }
+    auto operator+=(difference_type n) -> IteratorImpl & {
+      return it += n, *this;
+    }
 
-    IteratorImpl &operator-=(difference_type n) { return it -= n, *this; }
+    auto operator-=(difference_type n) -> IteratorImpl & {
+      return it -= n, *this;
+    }
 
-    IteratorImpl &operator++() { return ++it, *this; }
+    auto operator++() -> IteratorImpl & { return ++it, *this; }
 
-    IteratorImpl &operator--() { return --it, *this; }
+    auto operator--() -> IteratorImpl & { return --it, *this; }
 
-    IteratorImpl operator++(int) {
+    auto operator++(int) -> IteratorImpl {
       auto retVal = IteratorImpl(*this);
       ++it;
       return retVal;
     }
 
-    IteratorImpl operator--(int) {
+    auto operator--(int) -> IteratorImpl {
       auto retVal = IteratorImpl(*this);
       --it;
       return retVal;
     }
 
-    bool operator==(const IteratorImpl &other) const {
+    auto operator==(const IteratorImpl &other) const -> bool {
       return this->it == other.it;
     }
 
-    bool operator!=(const IteratorImpl &other) const {
+    auto operator!=(const IteratorImpl &other) const -> bool {
       return this->it != other.it;
     }
 
-    bool operator<=(const IteratorImpl &other) const {
+    auto operator<=(const IteratorImpl &other) const -> bool {
       return this->it <= other.it;
     }
 
-    bool operator>=(const IteratorImpl &other) const {
+    auto operator>=(const IteratorImpl &other) const -> bool {
       return this->it >= other.it;
     }
 
-    bool operator<(const IteratorImpl &other) const {
+    auto operator<(const IteratorImpl &other) const -> bool {
       return this->it < other.it;
     }
 
-    bool operator>(const IteratorImpl &other) const {
+    auto operator>(const IteratorImpl &other) const -> bool {
       return this->it > other.it;
     }
   };
@@ -263,12 +284,12 @@ public:
   using ConstIterator = IteratorImpl<ConstObject, decltype(data.cbegin())>;
 
 private:
-  static ConstObject::Ptr createProxy(ConstDataIterator it,
-                                      const Table *table) {
+  static auto createProxy(ConstDataIterator it, const Table *table)
+      -> ConstObject::Ptr {
     return std::make_unique<ConstObject>(it, table);
   }
 
-  static Object::Ptr createProxy(DataIterator it, const Table *table) {
+  static auto createProxy(DataIterator it, const Table *table) -> Object::Ptr {
     return std::make_unique<Object>(it, table);
   }
 
@@ -300,7 +321,7 @@ public:
    * @param field
    * @return fieldIndex
    */
-  FieldIndex getFieldIndex(const FieldNameType &field) const;
+  auto getFieldIndex(const FieldNameType &field) const -> FieldIndex;
 
   /**
    * Insert a row of data by its key
@@ -315,7 +336,7 @@ public:
    * @param key
    * @return true if the row was deleted, false if key doesn't exist
    */
-  bool deleteByIndex(const KeyType &key);
+  auto deleteByIndex(const KeyType &key) -> bool;
 
   /**
    * Duplicate a row by source key to a destination key.
@@ -324,21 +345,21 @@ public:
    * @return true if duplicated successfully, false if src not found or dst
    * already exists
    */
-  bool duplicateByKey(const KeyType &src, const KeyType &dst);
+  auto duplicateByKey(const KeyType &src, const KeyType &dst) -> bool;
 
   /**
    * Access the value according to the key
    * @param key
    * @return the Object that KEY = key, or nullptr if key doesn't exist
    */
-  Object::Ptr operator[](const KeyType &key);
+  auto operator[](const KeyType &key) -> Object::Ptr;
 
   /**
    * Const access the value according to the key
    * @param key
    * @return the ConstObject that KEY = key, or nullptr if key doesn't exist
    */
-  ConstObject::Ptr operator[](const KeyType &key) const;
+  auto operator[](const KeyType &key) const -> ConstObject::Ptr;
 
   /**
    * Set the name of the table
@@ -353,31 +374,35 @@ public:
    * Get the name of the table
    * @return
    */
-  const std::string &name() const { return this->tableName; }
+  [[nodiscard]] auto name() const -> const std::string & {
+    return this->tableName;
+  }
 
   /**
    * Return whether the table is empty
    * @return
    */
-  bool empty() const { return this->data.empty(); }
+  [[nodiscard]] auto empty() const -> bool { return this->data.empty(); }
 
   /**
    * Return the num of data stored in the table
    * @return
    */
-  size_t size() const { return this->data.size(); }
+  [[nodiscard]] auto size() const -> size_t { return this->data.size(); }
 
   /**
    * Return the fields in the table
    * @return
    */
-  const std::vector<FieldNameType> &field() const { return this->fields; }
+  [[nodiscard]] auto field() const -> const std::vector<FieldNameType> & {
+    return this->fields;
+  }
 
   /**
    * Clear all content in the table
    * @return rows affected
    */
-  size_t clear() {
+  auto clear() -> size_t {
     auto result = keyMap.size();
     data.clear();
     keyMap.clear();
@@ -388,25 +413,25 @@ public:
    * Get a begin iterator similar to the standard iterator
    * @return begin iterator
    */
-  Iterator begin() noexcept { return {data.begin(), this}; }
+  auto begin() noexcept -> Iterator { return {data.begin(), this}; }
 
   /**
    * Get a end iterator similar to the standard iterator
    * @return end iterator
    */
-  Iterator end() noexcept { return {data.end(), this}; }
+  auto end() noexcept -> Iterator { return {data.end(), this}; }
 
   /**
    * Get a const begin iterator similar to the standard iterator
    * @return const begin iterator
    */
-  ConstIterator begin() const noexcept { return {data.cbegin(), this}; }
+  auto begin() const noexcept -> ConstIterator { return {data.cbegin(), this}; }
 
   /**
    * Get a const end iterator similar to the standard iterator
    * @return const end iterator
    */
-  ConstIterator end() const noexcept { return {data.cend(), this}; }
+  auto end() const noexcept -> ConstIterator { return {data.cend(), this}; }
 
   /**
    * Overload the << operator for complete print of the table
@@ -414,10 +439,11 @@ public:
    * @param table
    * @return the origin ostream
    */
-  friend std::ostream &operator<<(std::ostream &os, const Table &table);
+  friend auto operator<<(std::ostream &os, const Table &table)
+      -> std::ostream &;
 };
 
-std::ostream &operator<<(std::ostream &os, const Table &table);
+auto operator<<(std::ostream &os, const Table &table) -> std::ostream &;
 
 template <class FieldIDContainer>
 Table::Table(const std::string &name, const FieldIDContainer &fields)
