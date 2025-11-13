@@ -20,18 +20,21 @@ public:
   ~LockManager() = default;
 
   LockManager(const LockManager &) = delete;
-  LockManager &operator=(const LockManager &) = delete;
+  auto operator=(const LockManager &) -> LockManager & = delete;
 
-  [[nodiscard]] bool tryLockS(const TableId &id);
+  LockManager(LockManager &&) = delete;
+  auto operator=(LockManager &&) -> LockManager & = delete;
+
+  [[nodiscard]] auto tryLockS(const TableId &id) -> bool;
   void unlockS(const TableId &id);
 
-  [[nodiscard]] bool tryLockX(const TableId &id);
+  [[nodiscard]] auto tryLockX(const TableId &id) -> bool;
   void unlockX(const TableId &id);
 
   void writerIntentBegin(const TableId &id);
   void writerIntentEnd(const TableId &id);
 
-  [[nodiscard]] bool canAdmitShared(const TableId &id) const noexcept;
+  [[nodiscard]] auto canAdmitShared(const TableId &id) const noexcept -> bool;
 
 private:
   struct Entry {
@@ -39,7 +42,7 @@ private:
     std::atomic<int> waiting_writers{0};
   };
 
-  Entry &entry(const TableId &id);
+  auto entry(const TableId &id) -> Entry &;
 
   mutable std::mutex mapMtx_;
   std::unordered_map<TableId, std::unique_ptr<Entry>> map_;
