@@ -14,28 +14,37 @@ struct TokenizedQueryString {
 
 class QueryBuilder {
 public:
-  typedef std::unique_ptr<QueryBuilder> Ptr;
+  using Ptr = std::unique_ptr<QueryBuilder>;
 
-  virtual Query::Ptr
-  tryExtractQuery(const TokenizedQueryString &queryString) = 0;
+  virtual auto tryExtractQuery(const TokenizedQueryString &queryString)
+      -> Query::Ptr = 0;
   virtual void setNext(Ptr &&builder) = 0;
   virtual void clear() = 0;
 
+  QueryBuilder() = default;
+  QueryBuilder(const QueryBuilder &) = delete;
+  auto operator=(const QueryBuilder &) -> QueryBuilder & = delete;
+  QueryBuilder(QueryBuilder &&) = delete;
+  auto operator=(QueryBuilder &&) -> QueryBuilder & = delete;
   virtual ~QueryBuilder() = default;
 };
 
 class QueryParser {
-  QueryBuilder::Ptr first;  // An owning pointer
-  QueryBuilder *last;       // None owning reference
+  QueryBuilder::Ptr first;       // An owning pointer
+  QueryBuilder *last = nullptr;  // None owning reference
 
-  static TokenizedQueryString
-  tokenizeQueryString(const std::string &queryString);
+  static auto tokenizeQueryString(const std::string &queryString)
+      -> TokenizedQueryString;
 
 public:
-  Query::Ptr parseQuery(const std::string &queryString);
+  auto parseQuery(const std::string &queryString) -> Query::Ptr;
   void registerQueryBuilder(QueryBuilder::Ptr &&qBuilder);
 
   QueryParser();
+  QueryParser(const QueryParser &) = delete;
+  auto operator=(const QueryParser &) -> QueryParser & = delete;
+  QueryParser(QueryParser &&) = delete;
+  auto operator=(QueryParser &&) -> QueryParser & = delete;
   ~QueryParser() = default;
 };
 

@@ -13,48 +13,60 @@
 #include "../db/Table.h"
 #include "QueryParser.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define QueryBuilder(name) name##QueryBuilder
 
 #define QueryBuilderClass(name)                                                \
   class QueryBuilder(name) : public QueryBuilder {                             \
-    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        ->Query::Ptr override;                                                 \
   }
 
 #define BasicQueryBuilderClass(name)                                           \
   class QueryBuilder(name) : public BasicQueryBuilder {                        \
-    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        ->Query::Ptr override;                                                 \
   }
 
 #define ComplexQueryBuilderClass(name)                                         \
   class QueryBuilder(name) : public ComplexQueryBuilder {                      \
-    Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        ->Query::Ptr override;                                                 \
   }
+// NOLINTEND(cppcoreguidelines-macro-usage)
 
 class FailedQueryBuilder : public QueryBuilder {
 public:
-  static QueryBuilder::Ptr getDefault() {
+  static auto getDefault() -> QueryBuilder::Ptr {
     return std::make_unique<FailedQueryBuilder>();
   }
 
-  Query::Ptr tryExtractQuery(const TokenizedQueryString &q) final {
-    throw QueryBuilderMatchFailed(q.rawQeuryString);
+  auto tryExtractQuery(const TokenizedQueryString &query) -> Query::Ptr final {
+    throw QueryBuilderMatchFailed(query.rawQeuryString);
   }
 
-  void setNext(QueryBuilder::Ptr &&) final {}
+  void setNext(QueryBuilder::Ptr && /* builder */) final {}
 
   void clear() override {}
 
+  FailedQueryBuilder() = default;
+  FailedQueryBuilder(const FailedQueryBuilder &) = delete;
+  auto operator=(const FailedQueryBuilder &) -> FailedQueryBuilder & = delete;
+  FailedQueryBuilder(FailedQueryBuilder &&) = delete;
+  auto operator=(FailedQueryBuilder &&) -> FailedQueryBuilder & = delete;
   ~FailedQueryBuilder() override = default;
 };
 
 class BasicQueryBuilder : public QueryBuilder {
 protected:
-  QueryBuilder::Ptr nextBuilder;
+  QueryBuilder::Ptr
+      nextBuilder;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
 public:
   void setNext(Ptr &&builder) override { nextBuilder = std::move(builder); }
 
-  Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override {
+  auto tryExtractQuery(const TokenizedQueryString &query)
+      -> Query::Ptr override {
     return nextBuilder->tryExtractQuery(query);
   }
 
@@ -62,14 +74,21 @@ public:
 
   void clear() override { nextBuilder->clear(); }
 
+  BasicQueryBuilder(const BasicQueryBuilder &) = delete;
+  auto operator=(const BasicQueryBuilder &) -> BasicQueryBuilder & = delete;
+  BasicQueryBuilder(BasicQueryBuilder &&) = delete;
+  auto operator=(BasicQueryBuilder &&) -> BasicQueryBuilder & = delete;
   ~BasicQueryBuilder() override = default;
 };
 
 class ComplexQueryBuilder : public BasicQueryBuilder {
 protected:
-  std::string targetTable;
-  std::vector<std::string> operandToken;
-  std::vector<QueryCondition> conditionToken;
+  std::string
+      targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<std::string>
+      operandToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<QueryCondition>
+      conditionToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
   virtual void parseToken(const TokenizedQueryString &query);
 
@@ -83,10 +102,10 @@ private:
 public:
   void clear() override;
 
-public:
   // Used as a debugging function.
   // Prints the parsed information
-  Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;
+  auto tryExtractQuery(const TokenizedQueryString &query)
+      -> Query::Ptr override;
 };
 
 // Transparant builder
