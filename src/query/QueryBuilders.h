@@ -45,6 +45,7 @@ public:
     throw QueryBuilderMatchFailed(query.rawQeuryString);
   }
 
+  // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
   void setNext(QueryBuilder::Ptr && /* builder */) final {}
 
   void clear() override {}
