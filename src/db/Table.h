@@ -320,7 +320,8 @@ public:
    * @param field
    * @return fieldIndex
    */
-  auto getFieldIndex(const FieldNameType &field) const -> FieldIndex;
+  [[nodiscard]] auto getFieldIndex(const FieldNameType &field) const
+      -> FieldIndex;
 
   /**
    * Insert a row of data by its key
@@ -424,13 +425,17 @@ public:
    * Get a const begin iterator similar to the standard iterator
    * @return const begin iterator
    */
-  auto begin() const noexcept -> ConstIterator { return {data.cbegin(), this}; }
+  [[nodiscard]] auto begin() const noexcept -> ConstIterator {
+    return {data.cbegin(), this};
+  }
 
   /**
    * Get a const end iterator similar to the standard iterator
    * @return const end iterator
    */
-  auto end() const noexcept -> ConstIterator { return {data.cend(), this}; }
+  [[nodiscard]] auto end() const noexcept -> ConstIterator {
+    return {data.cend(), this};
+  }
 
   /**
    * Overload the << operator for complete print of the table
