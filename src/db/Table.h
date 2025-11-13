@@ -115,15 +115,14 @@ public:
 
     /** Not const because key can be updated */
     Iterator it;
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     Table *table;
 
   public:
     using Ptr = std::unique_ptr<ObjectImpl>;
 
     ObjectImpl(Iterator datumIt, const Table *table_ptr)
-        : it(datumIt), table(const_cast<Table *>(table_ptr)) {
-    }  // NOLINT(cppcoreguidelines-pro-type-const-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        : it(datumIt), table(const_cast<Table *>(table_ptr)) {}
 
     ObjectImpl(const ObjectImpl &) = default;
 
