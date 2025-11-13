@@ -40,4 +40,4 @@ inline auto operator""_f(const char *str, size_t /*length*/) -> std::string {
   return std::string{str};
 }
 
-#endif // SRC_UTILS_FORMATTER_H_
+#endif  // SRC_UTILS_FORMATTER_H_

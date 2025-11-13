@@ -57,4 +57,4 @@ public:
                               qString) {}
 };
 
-#endif // SRC_UTILS_UEXCEPTION_H_
+#endif  // SRC_UTILS_UEXCEPTION_H_
