@@ -16,35 +16,38 @@ public:
   ~SimplePQManager() override = default;
 
   SimplePQManager(const SimplePQManager &) = delete;
-  SimplePQManager &operator=(const SimplePQManager &) = delete;
+  auto operator=(const SimplePQManager &) -> SimplePQManager & = delete;
 
-  [[nodiscard]] PickResult tryPickNext() override {
-    std::scoped_lock lk(mtx_);
+  SimplePQManager(SimplePQManager &&) = delete;
+  auto operator=(SimplePQManager &&) -> SimplePQManager & = delete;
+
+  [[nodiscard]] auto tryPickNext() -> PickResult override {
+    const std::scoped_lock lock(mtx_);
     if (queue_.empty()) {
-      return PickResult();
+      return {};
     }
-    QueryTask t = std::move(queue_.front());
+    QueryTask task = std::move(queue_.front());
     queue_.pop_front();
-    return PickResult(std::move(t));
+    return PickResult(std::move(task));
   }
 
-  void requeueBack(QueryTask t) override {
-    std::scoped_lock lk(mtx_);
-    queue_.push_back(std::move(t));
+  void requeueBack(QueryTask task) override {
+    const std::scoped_lock lock(mtx_);
+    queue_.push_back(std::move(task));
   }
 
-  void requeueFront(QueryTask t) override {
-    std::scoped_lock lk(mtx_);
-    queue_.push_front(std::move(t));
+  void requeueFront(QueryTask task) override {
+    const std::scoped_lock lock(mtx_);
+    queue_.push_front(std::move(task));
   }
 
-  void push(QueryTask t) {
-    std::scoped_lock lk(mtx_);
-    queue_.push_back(std::move(t));
+  void push(QueryTask task) {
+    const std::scoped_lock lock(mtx_);
+    queue_.push_back(std::move(task));
   }
 
-  [[nodiscard]] std::size_t size() const {
-    std::scoped_lock lk(mtx_);
+  [[nodiscard]] auto size() const -> std::size_t {
+    const std::scoped_lock lock(mtx_);
     return queue_.size();
   }
 
