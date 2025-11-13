@@ -74,10 +74,17 @@ public:
   }
 
 protected:
+<<<<<<< HEAD
   std::string
       targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   int id =
       -1;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+=======
+  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::string targetTable;
+  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  int id = -1;
+>>>>>>> 7e2459b (test(cq): all [test])
 };
 
 class NopQuery : public Query {
@@ -107,11 +114,11 @@ public:
 
 protected:
   /** The field names in the first () */
-  std::vector<std::string>
-      operands;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<std::string> operands;
   /** The function used in where clause */
-  std::vector<QueryCondition>
-      condition;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<QueryCondition> condition;
 
   /**
    * init a fast condition according to the table
