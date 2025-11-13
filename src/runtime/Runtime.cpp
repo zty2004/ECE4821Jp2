@@ -36,6 +36,7 @@ Runtime::Runtime(std::size_t maxThreads)
 
 Runtime::~Runtime() { waitAll(); }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 auto Runtime::determineOpKind(Query &query) -> OpKind {
   const std::string typeName = query.toString();
 
@@ -53,6 +54,7 @@ auto Runtime::determineOpKind(Query &query) -> OpKind {
   return OpKind::Write;
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 auto Runtime::extractTableName(const Query &query) -> std::string {
   return query.getTargetTable();
 }
