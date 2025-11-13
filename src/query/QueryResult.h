@@ -20,6 +20,12 @@ public:
 
   virtual auto display() -> bool = 0;
 
+  // Rule of five
+  QueryResult() = default;
+  QueryResult(const QueryResult &) = delete;
+  auto operator=(const QueryResult &) -> QueryResult & = delete;
+  QueryResult(QueryResult &&) = delete;
+  auto operator=(QueryResult &&) -> QueryResult & = delete;
   virtual ~QueryResult() = default;
 
   friend auto operator<<(std::ostream &os, const QueryResult &table)

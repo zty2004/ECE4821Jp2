@@ -49,15 +49,18 @@ struct QueryCondition {
 };
 
 class Query {
-protected:
-  std::string targetTable;
-  int id = -1;
-
 public:
   Query() = default;
 
   explicit Query(std::string targetTable)
       : targetTable(std::move(targetTable)) {}
+
+  // Rule of five
+  Query(const Query &) = delete;
+  auto operator=(const Query &) -> Query & = delete;
+  Query(Query &&) = delete;
+  auto operator=(Query &&) -> Query & = delete;
+  virtual ~Query() = default;
 
   using Ptr = std::unique_ptr<Query>;
 
@@ -69,6 +72,7 @@ public:
     return targetTable;
   }
 
+<<<<<<< HEAD
   // Virtual accessor for an associated file path (LOAD/DUMP)
   [[nodiscard]] virtual auto filePath() const -> const std::string & {
     static const std::string kEmptyFilePath;
@@ -81,6 +85,13 @@ public:
   }
 
   virtual ~Query() = default;
+=======
+protected:
+  std::string
+      targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  int id =
+      -1;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+>>>>>>> 1523128 (fix: Query.h, QueryResult.h clang-tidy)
 };
 
 class NopQuery : public Query {
@@ -100,14 +111,21 @@ public:
 };
 
 class ComplexQuery : public Query {
-protected:
-  /** The field names in the first () */
-  std::vector<std::string> operands;
-  /** The function used in where clause */
-  std::vector<QueryCondition> condition;
-
 public:
   using Ptr = std::unique_ptr<ComplexQuery>;
+
+  ComplexQuery(std::string targetTable, std::vector<std::string> operands,
+               std::vector<QueryCondition> condition)
+      : Query(std::move(targetTable)), operands(std::move(operands)),
+        condition(std::move(condition)) {}
+
+protected:
+  /** The field names in the first () */
+  std::vector<std::string>
+      operands;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  /** The function used in where clause */
+  std::vector<QueryCondition>
+      condition;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
   /**
    * init a fast condition according to the table
@@ -142,11 +160,6 @@ public:
       const Table &table,
       const std::function<void(bool, Table::ConstObject::Ptr &&)> &function)
       -> bool;
-
-  ComplexQuery(std::string targetTable, std::vector<std::string> operands,
-               std::vector<QueryCondition> condition)
-      : Query(std::move(targetTable)), operands(std::move(operands)),
-        condition(std::move(condition)) {}
 
   /** Get operands in the query */
   // cppcheck-suppress unusedFunction
