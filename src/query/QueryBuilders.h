@@ -19,19 +19,19 @@
 #define QueryBuilderClass(name)                                                \
   class QueryBuilder(name) : public QueryBuilder {                             \
     auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        ->Query::Ptr override;                                                 \
+        -> Query::Ptr override;                                                \
   }
 
 #define BasicQueryBuilderClass(name)                                           \
   class QueryBuilder(name) : public BasicQueryBuilder {                        \
     auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        ->Query::Ptr override;                                                 \
+        -> Query::Ptr override;                                                \
   }
 
 #define ComplexQueryBuilderClass(name)                                         \
   class QueryBuilder(name) : public ComplexQueryBuilder {                      \
     auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        ->Query::Ptr override;                                                 \
+        -> Query::Ptr override;                                                \
   }
 // NOLINTEND(cppcoreguidelines-macro-usage)
 

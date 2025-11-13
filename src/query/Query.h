@@ -86,11 +86,6 @@ public:
     return std::make_unique<NullQueryResult>();
   }
 
-  [[nodiscard]] auto type() const noexcept -> QueryType override {
-    return QueryType::Nop;
-  }
-
-  // cppcheck-suppress unusedFunction
   [[maybe_unused]] auto toString() -> std::string override {
     return "QUERY = NOOP";
   }

@@ -365,7 +365,6 @@ public:
    * Set the name of the table
    * @param name
    */
-  // cppcheck-suppress unusedFunction
   [[maybe_unused]] void setName(std::string name) {
     this->tableName = std::move(name);
   }
