@@ -14,7 +14,7 @@
 #include "PopUpExecutor.h"
 #include "QueryTask.h"
 
-bool PopUpExecutor::tryPop(QueryTask &out) {
+auto PopUpExecutor::tryPop(QueryTask &out) -> bool {
   const std::lock_guard lock(qMtx_);
   if (ready_.empty()) {
     return false;
