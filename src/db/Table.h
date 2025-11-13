@@ -81,7 +81,7 @@ private:
         : key(std::move(key)), datum(datum) {}
 
     template <class K>
-    explicit Datum(K &&key, std::vector<ValueType> &&datum) noexcept
+    explicit Datum(K &&key, std::vector<ValueType> &&datum)
         : key(std::forward<K>(key)), datum(std::move(datum)) {}
   };
 
