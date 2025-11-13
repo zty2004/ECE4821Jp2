@@ -72,4 +72,4 @@ public:
   static void exit();
 };
 
-#endif // SRC_DB_DATABASE_H_
+#endif  // SRC_DB_DATABASE_H_

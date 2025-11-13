@@ -435,4 +435,4 @@ Table::Table(const std::string &name, const FieldIDContainer &fields)
   }
 }
 
-#endif // SRC_DB_TABLE_H_
+#endif  // SRC_DB_TABLE_H_

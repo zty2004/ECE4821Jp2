@@ -149,13 +149,13 @@ auto Database::loadTableFromStream(std::istream &input_stream,
     throw LoadFromStreamException(errString + "Missing or invalid KEY field.");
   }
 
-  fields.erase(fields.begin()); // Remove leading key
+  fields.erase(fields.begin());  // Remove leading key
   auto table = std::make_unique<Table>(tableName, fields);
 
   Table::SizeType lineCount = 2;
   while (std::getline(input_stream, line)) {
     if (line.empty()) {
-      break; // Read to an empty line
+      break;  // Read to an empty line
     }
     lineCount++;
     sstream.clear();
