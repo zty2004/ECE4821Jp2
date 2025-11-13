@@ -124,9 +124,9 @@ public:
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         : it(datumIt), table(const_cast<Table *>(table_ptr)) {}
 
-    ObjectImpl(const ObjectImpl &) = default;
+    ObjectImpl(const ObjectImpl &other) = default;
 
-    ObjectImpl(ObjectImpl &&) noexcept = default;
+    ObjectImpl(ObjectImpl &&other) noexcept = default;
 
     auto operator=(const ObjectImpl &) -> ObjectImpl & = default;
 
