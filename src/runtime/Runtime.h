@@ -20,11 +20,15 @@
 
 class Runtime {
 public:
-  explicit Runtime(std::size_t maxThreads = 8);
+  static constexpr std::size_t kDefaultMaxThreads = 8;
+  explicit Runtime(std::size_t maxThreads = kDefaultMaxThreads);
   ~Runtime();
 
   Runtime(const Runtime &) = delete;
-  Runtime &operator=(const Runtime &) = delete;
+  auto operator=(const Runtime &) -> Runtime & = delete;
+
+  Runtime(Runtime &&) = delete;
+  auto operator=(Runtime &&) -> Runtime & = delete;
 
   void submitQuery(Query::Ptr query, std::size_t orderIndex);
 
