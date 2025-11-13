@@ -6,11 +6,9 @@
 #ifndef SRC_RUNTIME_SIMPLEPQMANAGER_H_
 #define SRC_RUNTIME_SIMPLEPQMANAGER_H_
 
+#include "PriorityQueueManager.h"
 #include <deque>
 #include <mutex>
-#include <utility>
-
-#include "PriorityQueueManager.h"
 
 class SimplePQManager : public PriorityQueueManager {
 public:

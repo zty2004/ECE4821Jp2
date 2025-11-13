@@ -80,8 +80,8 @@ private:
     explicit Datum(KeyType key, const ValueTypeContainer &datum)
         : key(std::move(key)), datum(datum) {}
 
-    explicit Datum(const KeyType &key, std::vector<ValueType> &&datum) noexcept
-        : key(key), datum(std::move(datum)) {}
+    explicit Datum(KeyType key, std::vector<ValueType> &&datum) noexcept
+        : key(std::move(key)), datum(std::move(datum)) {}
   };
 
   using DataIterator = std::vector<Datum>::iterator;

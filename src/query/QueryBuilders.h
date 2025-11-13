@@ -60,8 +60,8 @@ public:
 
 class BasicQueryBuilder : public QueryBuilder {
 protected:
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  QueryBuilder::Ptr nextBuilder;
+  QueryBuilder::Ptr
+      nextBuilder;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
 public:
   void setNext(Ptr &&builder) override { nextBuilder = std::move(builder); }
@@ -84,12 +84,12 @@ public:
 
 class ComplexQueryBuilder : public BasicQueryBuilder {
 protected:
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::string targetTable;
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<std::string> operandToken;
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<QueryCondition> conditionToken;
+  std::string
+      targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<std::string>
+      operandToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  std::vector<QueryCondition>
+      conditionToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
   virtual void parseToken(const TokenizedQueryString &query);
 

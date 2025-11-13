@@ -12,7 +12,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #ifdef ENABLE_RUNTIME
 #include <thread>
