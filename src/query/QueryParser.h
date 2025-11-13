@@ -25,8 +25,8 @@ public:
 };
 
 class QueryParser {
-  QueryBuilder::Ptr first; // An owning pointer
-  QueryBuilder *last;      // None owning reference
+  QueryBuilder::Ptr first;  // An owning pointer
+  QueryBuilder *last;       // None owning reference
 
   static TokenizedQueryString
   tokenizeQueryString(const std::string &queryString);
@@ -39,4 +39,4 @@ public:
   ~QueryParser() = default;
 };
 
-#endif // SRC_QUERY_QUERYPARSER_H_
+#endif  // SRC_QUERY_QUERYPARSER_H_

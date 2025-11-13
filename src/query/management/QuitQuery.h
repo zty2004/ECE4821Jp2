@@ -24,4 +24,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_MANAGEMENT_QUITQUERY_H_
+#endif  // SRC_QUERY_MANAGEMENT_QUITQUERY_H_

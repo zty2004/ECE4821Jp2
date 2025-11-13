@@ -24,4 +24,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_DATA_MAXQUERY_H_
+#endif  // SRC_QUERY_DATA_MAXQUERY_H_

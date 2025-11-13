@@ -27,4 +27,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_DATA_SUBQUERY_H_
+#endif  // SRC_QUERY_DATA_SUBQUERY_H_

@@ -25,4 +25,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_DATA_SUMQUERY_H_
+#endif  // SRC_QUERY_DATA_SUMQUERY_H_

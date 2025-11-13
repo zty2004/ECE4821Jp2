@@ -25,4 +25,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_DATA_SELECTQUERY_H_
+#endif  // SRC_QUERY_DATA_SELECTQUERY_H_

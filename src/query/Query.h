@@ -162,4 +162,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_QUERY_H_
+#endif  // SRC_QUERY_QUERY_H_

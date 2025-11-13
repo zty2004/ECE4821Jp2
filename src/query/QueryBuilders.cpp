@@ -165,7 +165,7 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
 
   auto iter = query.token.cbegin();
   auto end = query.token.cend();
-  iter += 1; // Take to args;
+  iter += 1;  // Take to args;
   if (iter == query.token.end()) {
     throw IllFormedQuery("Missing FROM clause");
   }
@@ -179,7 +179,7 @@ void ComplexQueryBuilder::parseToken(const TokenizedQueryString &query) {
     throw IllFormedQuery("Missing targed table");
   }
   this->targetTable = *iter;
-  if (++iter == end) { // the "WHERE" clause is ommitted
+  if (++iter == end) {  // the "WHERE" clause is ommitted
     return;
   }
   if (*iter != "WHERE") {

@@ -21,4 +21,4 @@ public:
   }
 };
 
-#endif // SRC_QUERY_DATA_COUNTQUERY_H_
+#endif  // SRC_QUERY_DATA_COUNTQUERY_H_

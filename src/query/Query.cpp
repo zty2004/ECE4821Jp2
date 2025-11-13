@@ -62,7 +62,7 @@ auto ComplexQuery::initCondition(const Table &table)
         cond.comp = std::less_equal<>();
         break;
       default:
-        assert(0); // should never be here
+        assert(0);  // should never be here
       }
     }
   }

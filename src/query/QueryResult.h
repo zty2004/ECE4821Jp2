@@ -119,4 +119,4 @@ protected:
   }
 };
 
-#endif // SRC_QUERY_QUERYRESULT_H_
+#endif  // SRC_QUERY_QUERYRESULT_H_

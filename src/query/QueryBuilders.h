@@ -105,4 +105,4 @@ BasicQueryBuilderClass(ManageTable);
 // ComplexQueryBuilderClass(Insert);
 // ComplexQueryBuilderClass(Delete);
 
-#endif // SRC_QUERY_QUERYBUILDERS_H_
+#endif  // SRC_QUERY_QUERYBUILDERS_H_
