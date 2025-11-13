@@ -14,29 +14,39 @@
 #include "QueryTask.h"
 
 template <class PQ>
-concept TablePriorityQueue = requires(PQ pq, QueryTask t) {
-  { pq.push(std::move(t)) } -> std::same_as<void>;
-  { pq.tryPop(t) } -> std::same_as<bool>;
+concept TablePriorityQueue = requires(PQ pq, QueryTask task) {
+  { pq.push(std::move(task)) } -> std::same_as<void>;
+  { pq.tryPop(task) } -> std::same_as<bool>;
   { pq.empty() } -> std::same_as<bool>;
   { pq.size() } -> std::convertible_to<std::size_t>;
 };
 
 struct PickResult {
+  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   bool ok;
   QueryTask task;
+  // NOLINTEND(misc-non-private-member-variables-in-classes)
 
-  PickResult() : ok(false), task() {}
-  explicit PickResult(QueryTask t) : ok(true), task(std::move(t)) {}
+  PickResult() : ok(false) {}
+  explicit PickResult(QueryTask taskArg) : ok(true), task(std::move(taskArg)) {}
 };
 
 class PriorityQueueManager {
 public:
+  PriorityQueueManager() = default;
   virtual ~PriorityQueueManager() = default;
 
-  [[nodiscard]] virtual PickResult tryPickNext() = 0;
+  PriorityQueueManager(const PriorityQueueManager &) = delete;
+  auto operator=(const PriorityQueueManager &)
+      -> PriorityQueueManager & = delete;
 
-  virtual void requeueBack(QueryTask t) = 0;
-  virtual void requeueFront(QueryTask t) = 0;
+  PriorityQueueManager(PriorityQueueManager &&) = delete;
+  auto operator=(PriorityQueueManager &&) -> PriorityQueueManager & = delete;
+
+  [[nodiscard]] virtual auto tryPickNext() -> PickResult = 0;
+
+  virtual void requeueBack(QueryTask task) = 0;
+  virtual void requeueFront(QueryTask task) = 0;
 };
 
 #endif  // SRC_RUNTIME_PRIORITYQUEUEMANAGER_H_
