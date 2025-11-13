@@ -72,26 +72,11 @@ public:
     return targetTable;
   }
 
-<<<<<<< HEAD
-  // Virtual accessor for an associated file path (LOAD/DUMP)
-  [[nodiscard]] virtual auto filePath() const -> const std::string & {
-    static const std::string kEmptyFilePath;
-    return kEmptyFilePath;
-  }
-
-  [[nodiscard]] virtual auto newTable() const -> const std::string & {
-    static const std::string kEmptyTableName;
-    return kEmptyTableName;
-  }
-
-  virtual ~Query() = default;
-=======
 protected:
   std::string
       targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   int id =
       -1;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
->>>>>>> 1523128 (fix: Query.h, QueryResult.h clang-tidy)
 };
 
 class NopQuery : public Query {
