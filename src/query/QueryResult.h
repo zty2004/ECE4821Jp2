@@ -28,8 +28,8 @@ public:
   auto operator=(QueryResult &&) -> QueryResult & = delete;
   virtual ~QueryResult() = default;
 
-  friend auto operator<<(std::ostream &os, const QueryResult &table)
-      -> std::ostream &;
+  friend auto operator<<(std::ostream &os,
+                         const QueryResult &table) -> std::ostream &;
 
 protected:
   virtual auto output(std::ostream &os) const -> std::ostream & = 0;
