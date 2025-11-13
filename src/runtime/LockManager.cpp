@@ -7,7 +7,7 @@
 #include <memory>
 #include <mutex>
 
-LockManager::Entry &LockManager::entry(const TableId &id) {
+auto LockManager::entry(const TableId &id) -> LockManager::Entry & {
   const std::scoped_lock<std::mutex> lock(mapMtx_);
   auto iter = map_.find(id);
   if (iter == map_.end()) {
@@ -16,7 +16,7 @@ LockManager::Entry &LockManager::entry(const TableId &id) {
   return *iter->second;
 }
 
-bool LockManager::tryLockS(const TableId &id) {
+auto LockManager::tryLockS(const TableId &id) -> bool {
   auto &entry_ref = entry(id);
   return entry_ref.rw.try_lock_shared();
 }
@@ -26,7 +26,7 @@ void LockManager::unlockS(const TableId &id) {
   entry_ref.rw.unlock_shared();
 }
 
-bool LockManager::tryLockX(const TableId &id) {
+auto LockManager::tryLockX(const TableId &id) -> bool {
   auto &entry_ref = entry(id);
   return entry_ref.rw.try_lock();
 }
@@ -46,7 +46,7 @@ void LockManager::writerIntentEnd(const TableId &id) {
   entry_ref.waiting_writers.fetch_sub(1, std::memory_order_release);
 }
 
-bool LockManager::canAdmitShared(const TableId &id) const noexcept {
+auto LockManager::canAdmitShared(const TableId &id) const noexcept -> bool {
   const Entry *found = [&]() -> const Entry * {
     const std::scoped_lock<std::mutex> lock(mapMtx_);
     if (auto iter = map_.find(id); iter != map_.end()) {
