@@ -16,8 +16,8 @@ class QueryBuilder {
 public:
   using Ptr = std::unique_ptr<QueryBuilder>;
 
-  virtual auto
-  tryExtractQuery(const TokenizedQueryString &queryString) -> Query::Ptr = 0;
+  virtual auto tryExtractQuery(const TokenizedQueryString &queryString)
+      -> Query::Ptr = 0;
   virtual void setNext(Ptr &&builder) = 0;
   virtual void clear() = 0;
 
@@ -33,8 +33,8 @@ class QueryParser {
   QueryBuilder::Ptr first;       // An owning pointer
   QueryBuilder *last = nullptr;  // None owning reference
 
-  static auto
-  tokenizeQueryString(const std::string &queryString) -> TokenizedQueryString;
+  static auto tokenizeQueryString(const std::string &queryString)
+      -> TokenizedQueryString;
 
 public:
   auto parseQuery(const std::string &queryString) -> Query::Ptr;

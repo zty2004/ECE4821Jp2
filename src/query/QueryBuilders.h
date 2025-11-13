@@ -18,20 +18,20 @@
 
 #define QueryBuilderClass(name)                                                \
   class QueryBuilder(name) : public QueryBuilder {                             \
-    auto tryExtractQuery(                                                      \
-        const TokenizedQueryString &query) -> Query::Ptr override;             \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        -> Query::Ptr override;                                                \
   }
 
 #define BasicQueryBuilderClass(name)                                           \
   class QueryBuilder(name) : public BasicQueryBuilder {                        \
-    auto tryExtractQuery(                                                      \
-        const TokenizedQueryString &query) -> Query::Ptr override;             \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        -> Query::Ptr override;                                                \
   }
 
 #define ComplexQueryBuilderClass(name)                                         \
   class QueryBuilder(name) : public ComplexQueryBuilder {                      \
-    auto tryExtractQuery(                                                      \
-        const TokenizedQueryString &query) -> Query::Ptr override;             \
+    auto tryExtractQuery(const TokenizedQueryString &query)                    \
+        -> Query::Ptr override;                                                \
   }
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
@@ -65,8 +65,8 @@ protected:
 public:
   void setNext(Ptr &&builder) override { nextBuilder = std::move(builder); }
 
-  auto
-  tryExtractQuery(const TokenizedQueryString &query) -> Query::Ptr override {
+  auto tryExtractQuery(const TokenizedQueryString &query)
+      -> Query::Ptr override {
     return nextBuilder->tryExtractQuery(query);
   }
 
@@ -100,8 +100,8 @@ public:
 
   // Used as a debugging function.
   // Prints the parsed information
-  auto
-  tryExtractQuery(const TokenizedQueryString &query) -> Query::Ptr override;
+  auto tryExtractQuery(const TokenizedQueryString &query)
+      -> Query::Ptr override;
 };
 
 // Transparant builder

@@ -37,8 +37,8 @@ public:
   virtual ~PriorityQueueManager() = default;
 
   PriorityQueueManager(const PriorityQueueManager &) = delete;
-  auto
-  operator=(const PriorityQueueManager &) -> PriorityQueueManager & = delete;
+  auto operator=(const PriorityQueueManager &)
+      -> PriorityQueueManager & = delete;
 
   PriorityQueueManager(PriorityQueueManager &&) = delete;
   auto operator=(PriorityQueueManager &&) -> PriorityQueueManager & = delete;
