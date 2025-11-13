@@ -74,10 +74,8 @@ public:
   }
 
 protected:
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::string targetTable;
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  int id = -1;
+  std::string targetTable;  // NOLINT
+  int id = -1;              // NOLINT
 };
 
 class NopQuery : public Query {
@@ -102,11 +100,9 @@ public:
 
 protected:
   /** The field names in the first () */
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<std::string> operands;
-  /** The function used in where clause *1/
-  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<QueryCondition> condition;
+  std::vector<std::string> operands;  // NOLINT
+  /** The function used in where clause */
+  std::vector<QueryCondition> condition;  // NOLINT
 
   /**
    * init a fast condition according to the table
@@ -144,8 +140,8 @@ protected:
 
   /** Get operands in the query */
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] [[maybe_unused]] auto getOperands() const
-      -> const std::vector<std::string> & {
+  [[nodiscard]] [[maybe_unused]] auto
+  getOperands() const -> const std::vector<std::string> & {
     return operands;
   }
 

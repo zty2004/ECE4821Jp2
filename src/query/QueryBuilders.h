@@ -18,20 +18,20 @@
 
 #define QueryBuilderClass(name)                                                \
   class QueryBuilder(name) : public QueryBuilder {                             \
-    auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        -> Query::Ptr override;                                                \
+    auto tryExtractQuery(                                                      \
+        const TokenizedQueryString &query) -> Query::Ptr override;             \
   }
 
 #define BasicQueryBuilderClass(name)                                           \
   class QueryBuilder(name) : public BasicQueryBuilder {                        \
-    auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        -> Query::Ptr override;                                                \
+    auto tryExtractQuery(                                                      \
+        const TokenizedQueryString &query) -> Query::Ptr override;             \
   }
 
 #define ComplexQueryBuilderClass(name)                                         \
   class QueryBuilder(name) : public ComplexQueryBuilder {                      \
-    auto tryExtractQuery(const TokenizedQueryString &query)                    \
-        -> Query::Ptr override;                                                \
+    auto tryExtractQuery(                                                      \
+        const TokenizedQueryString &query) -> Query::Ptr override;             \
   }
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
@@ -60,14 +60,13 @@ public:
 
 class BasicQueryBuilder : public QueryBuilder {
 protected:
-  QueryBuilder::Ptr
-      nextBuilder;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+  QueryBuilder::Ptr nextBuilder;  // NOLINT
 
 public:
   void setNext(Ptr &&builder) override { nextBuilder = std::move(builder); }
 
-  auto tryExtractQuery(const TokenizedQueryString &query)
-      -> Query::Ptr override {
+  auto
+  tryExtractQuery(const TokenizedQueryString &query) -> Query::Ptr override {
     return nextBuilder->tryExtractQuery(query);
   }
 
@@ -84,13 +83,9 @@ public:
 
 class ComplexQueryBuilder : public BasicQueryBuilder {
 protected:
-  std::string
-      targetTable;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<std::string>
-      operandToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-  std::vector<QueryCondition>
-      conditionToken;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
-
+  std::string targetTable;                     // NOLINT
+  std::vector<std::string> operandToken;       // NOLINT
+  std::vector<QueryCondition> conditionToken;  // NOLINT
   virtual void parseToken(const TokenizedQueryString &query);
 
 private:
@@ -105,8 +100,8 @@ public:
 
   // Used as a debugging function.
   // Prints the parsed information
-  auto tryExtractQuery(const TokenizedQueryString &query)
-      -> Query::Ptr override;
+  auto
+  tryExtractQuery(const TokenizedQueryString &query) -> Query::Ptr override;
 };
 
 // Transparant builder
