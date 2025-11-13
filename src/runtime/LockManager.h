@@ -45,4 +45,4 @@ private:
   std::unordered_map<TableId, std::unique_ptr<Entry>> map_;
 };
 
-#endif // SRC_RUNTIME_LOCKMANAGER_H_
+#endif  // SRC_RUNTIME_LOCKMANAGER_H_

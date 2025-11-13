@@ -53,4 +53,4 @@ private:
   std::deque<QueryTask> queue_;
 };
 
-#endif // SRC_RUNTIME_SIMPLEPQMANAGER_H_
+#endif  // SRC_RUNTIME_SIMPLEPQMANAGER_H_

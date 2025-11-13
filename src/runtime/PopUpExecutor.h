@@ -63,4 +63,4 @@ private:
   void executeWrite(QueryTask &t);
 };
 
-#endif // SRC_RUNTIME_POPUPEXECUTOR_H_
+#endif  // SRC_RUNTIME_POPUPEXECUTOR_H_

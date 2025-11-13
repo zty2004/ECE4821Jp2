@@ -46,4 +46,4 @@ private:
   std::size_t totalSubmitted_{0};
 };
 
-#endif // SRC_RUNTIME_RUNTIME_H_
+#endif  // SRC_RUNTIME_RUNTIME_H_

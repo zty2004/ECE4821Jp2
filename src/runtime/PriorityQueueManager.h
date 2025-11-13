@@ -39,4 +39,4 @@ public:
   virtual void requeueFront(QueryTask t) = 0;
 };
 
-#endif // SRC_RUNTIME_PRIORITYQUEUEMANAGER_H_
+#endif  // SRC_RUNTIME_PRIORITYQUEUEMANAGER_H_

@@ -36,4 +36,4 @@ struct QueryTask {
   QueryTask &operator=(const QueryTask &) = delete;
 };
 
-#endif // SRC_RUNTIME_QUERYTASK_H_
+#endif  // SRC_RUNTIME_QUERYTASK_H_
