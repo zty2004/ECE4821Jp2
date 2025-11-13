@@ -14,39 +14,40 @@
 
 class QueryResult {
 public:
-  typedef std::unique_ptr<QueryResult> Ptr;
+  using Ptr = std::unique_ptr<QueryResult>;
 
-  virtual bool success() = 0;
+  virtual auto success() -> bool = 0;
 
-  virtual bool display() = 0;
+  virtual auto display() -> bool = 0;
 
   virtual ~QueryResult() = default;
 
-  friend std::ostream &operator<<(std::ostream &os, const QueryResult &table);
+  friend auto operator<<(std::ostream &os, const QueryResult &table)
+      -> std::ostream &;
 
 protected:
-  virtual std::ostream &output(std::ostream &os) const = 0;
+  virtual auto output(std::ostream &os) const -> std::ostream & = 0;
 };
 
 class FailedQueryResult : public QueryResult {
-  const std::string data;
+  std::string data;
 
 public:
-  bool success() override { return false; }
+  auto success() -> bool override { return false; }
 
-  bool display() override { return false; }
+  auto display() -> bool override { return false; }
 };
 
 class SucceededQueryResult : public QueryResult {
 public:
-  bool success() override { return true; }
-  bool display() override { return true; }
+  auto success() -> bool override { return true; }
+  auto display() -> bool override { return true; }
 };
 
 class NullQueryResult : public SucceededQueryResult {
 public:
 protected:
-  std::ostream &output(std::ostream &os) const override { return os; }
+  auto output(std::ostream &os) const -> std::ostream & override { return os; }
 };
 
 class ErrorMsgResult : public FailedQueryResult {
@@ -63,7 +64,7 @@ public:
   }
 
 protected:
-  std::ostream &output(std::ostream &os) const override {
+  auto output(std::ostream &os) const -> std::ostream & override {
     return os << msg << "\n";
   }
 };
@@ -77,20 +78,20 @@ public:
   }
 
   explicit SuccessMsgResult(const std::vector<int> &results) {
-    std::stringstream ss;
-    ss << "ANSWER = ( ";
+    std::stringstream string_stream;
+    string_stream << "ANSWER = ( ";
     for (auto result : results) {
-      ss << result << " ";
+      string_stream << result << " ";
     }
-    ss << ")";
-    this->msg = ss.str();
+    string_stream << ")";
+    this->msg = string_stream.str();
   }
 
   explicit SuccessMsgResult(const char *qname) {
     this->msg = R"(Query "?" success.)"_f % qname;
   }
 
-  explicit SuccessMsgResult(const std::string &msg) { this->msg = msg; }
+  explicit SuccessMsgResult(std::string msg) : msg(std::move(msg)) {}
 
   SuccessMsgResult(const char *qname, const std::string &msg) {
     this->msg = R"(Query "?" success : ?)"_f % qname % msg;
@@ -102,19 +103,19 @@ public:
   }
 
 protected:
-  std::ostream &output(std::ostream &os) const override {
+  auto output(std::ostream &os) const -> std::ostream & override {
     return os << msg << "\n";
   }
 };
 
 class RecordCountResult : public SucceededQueryResult {
-  const int affectedRows;
+  int affectedRows;
 
 public:
   explicit RecordCountResult(int count) : affectedRows(count) {}
 
 protected:
-  std::ostream &output(std::ostream &os) const override {
+  auto output(std::ostream &os) const -> std::ostream & override {
     return os << "Affected ? rows."_f % affectedRows << "\n";
   }
 };
