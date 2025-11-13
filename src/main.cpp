@@ -357,7 +357,7 @@ auto run(std::span<char *> argv, int argc) -> int {
 
   return 0;
 }
-} // anonymous namespace
+}  // anonymous namespace
 
 auto main(int argc, char *argv[]) -> int {
   try {
