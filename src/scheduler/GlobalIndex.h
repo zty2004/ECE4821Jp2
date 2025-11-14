@@ -26,8 +26,8 @@ public:
   static constexpr std::uint64_t kFairnessQuantum = 64; // can be modified
 
   void upsert(TableQueue *tableQ, QueryPriority priorityLevel,
-              std::uint64_t enqueueTick, std::uint64_t headSeq); // NOLINT
-  bool pickBest(TableQueue *&outTableQ);                         // NOLINT
+              std::uint64_t enqueueTick, std::uint64_t headSeq);
+  auto pickBest(TableQueue *&outTableQ) -> bool;
 
   [[nodiscard]] auto empty() const -> bool { return heap_.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return heap_.size(); }
