@@ -1,10 +1,11 @@
+#include "GlobalIndex.h"
+
 #include <cstdint>
 
 #include "../query/QueryPriority.h"
-#include "GlobalIndex.h"
 #include "TableQueue.h"
 
-// Upsert: push a new Key with incremented version to invalidate older entries.
+// Push a new Key with incremented version to invalidate older entries.
 void GlobalIndex::upsert(TableQueue *tableQ, QueryPriority priorityLevel,
                          std::uint64_t enqueueTick, std::uint64_t headSeq) {
   if (tableQ == nullptr) {
@@ -19,7 +20,7 @@ void GlobalIndex::upsert(TableQueue *tableQ, QueryPriority priorityLevel,
                 .version = ver});
 }
 
-// PickBest: discard stale heap entries until a current one surfaces.
+// Discard stale heap entries until a current one surfaces.
 auto GlobalIndex::pickBest(TableQueue *&outTableQ) -> bool {
   while (!heap.empty()) {
     const Key &top = heap.top();

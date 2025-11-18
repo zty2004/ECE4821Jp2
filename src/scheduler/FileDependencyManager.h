@@ -28,21 +28,14 @@ public:
     LoadNode() : filePath(), dependsOn(0), item() {}
   };
 
-  // Register a scheduled operation for filePath with global seq
-  // Returns the previous scheduled seq as dependency seq
   auto markScheduled(const std::string &filePath,
                      std::uint64_t seq) -> std::uint64_t;
 
-  // Record a waiting LOAD node for its target file
   void addLoadWait(LoadNode &&node);
 
-  // Notify that file operation with seq completed
-  // Update the completed record
-  // Return the LoadNodes that became ready
   auto notifyFileCompleted(const std::string &filePath,
                            std::uint64_t seq) -> std::vector<LoadNode>;
 
-  // Return last completed seq for a file
   [[nodiscard]] auto
   lastCompletedFor(const std::string &filePath) const -> std::uint64_t;
 

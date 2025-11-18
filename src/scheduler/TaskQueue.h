@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include "FileDependencyManager.h"
 #include "ScheduledItem.h"
 
 class Query;
@@ -43,9 +44,11 @@ private:
 
   // TODO: Map of tableId -> TableQueue
   // TODO: Consider std::unordered_map<std::string, TableQueue>
-  // TODO: FileResourceManager instance
   // TODO: loadQueue: FIFO of ready LOAD items
   // TODO: GlobalIndex
+
+  // FDM instance for per-file dependency management
+  FileDependencyManager fileDeps;
 };
 
 #endif // SRC_SCHEDULER_TASKQUEUE_H_
