@@ -10,26 +10,26 @@ void GlobalIndex::upsert(TableQueue *tableQ, QueryPriority priorityLevel,
   if (tableQ == nullptr) {
     return;
   }
-  auto &ver = latestVersion_[tableQ];
+  auto &ver = latestVersion[tableQ];
   ++ver; // update & record version
-  heap_.push(Key{.pri = priorityLevel,
-                 .stamp = enqueueTick,
-                 .headSeq = headSeq,
-                 .tbl = tableQ,
-                 .version = ver});
+  heap.push(Key{.pri = priorityLevel,
+                .stamp = enqueueTick,
+                .headSeq = headSeq,
+                .tbl = tableQ,
+                .version = ver});
 }
 
 // PickBest: discard stale heap entries until a current one surfaces.
 auto GlobalIndex::pickBest(TableQueue *&outTableQ) -> bool {
-  while (!heap_.empty()) {
-    const Key &top = heap_.top();
-    auto versionIt = latestVersion_.find(top.tbl);
-    if (versionIt == latestVersion_.end() || versionIt->second != top.version) {
-      heap_.pop();
+  while (!heap.empty()) {
+    const Key &top = heap.top();
+    auto versionIt = latestVersion.find(top.tbl);
+    if (versionIt == latestVersion.end() || versionIt->second != top.version) {
+      heap.pop();
       continue;
     }
     outTableQ = top.tbl;
-    heap_.pop();
+    heap.pop();
     return true;
   }
   outTableQ = nullptr;

@@ -38,12 +38,12 @@ public:
 
 private:
   // Data member
-  std::uint64_t nextSeq_ = 0;
-  std::uint64_t fetchTick_ = 0;
+  std::uint64_t nextSeq = 0;
+  std::uint64_t fetchTick = 0;
 
   // TODO: Map of tableId -> TableQueue
   // TODO: Consider std::unordered_map<std::string, TableQueue>
-  // TODO: waitingFileQueries: filePath -> list of LOAD items waiting
+  // TODO: FileResourceManager instance
   // TODO: loadQueue: FIFO of ready LOAD items
   // TODO: GlobalIndex
 };

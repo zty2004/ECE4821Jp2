@@ -29,8 +29,8 @@ public:
               std::uint64_t enqueueTick, std::uint64_t headSeq);
   auto pickBest(TableQueue *&outTableQ) -> bool;
 
-  [[nodiscard]] auto empty() const -> bool { return heap_.empty(); }
-  [[nodiscard]] auto size() const -> std::size_t { return heap_.size(); }
+  [[nodiscard]] auto empty() const -> bool { return heap.empty(); }
+  [[nodiscard]] auto size() const -> std::size_t { return heap.size(); }
 
 private:
   struct Key {
@@ -54,8 +54,8 @@ private:
       return leftKey.headSeq > rightKey.headSeq; // smaller headSeq first
     }
   };
-  std::priority_queue<Key, std::vector<Key>, KeyCmp> heap_;
-  std::unordered_map<TableQueue *, std::uint64_t> latestVersion_;
+  std::priority_queue<Key, std::vector<Key>, KeyCmp> heap;
+  std::unordered_map<TableQueue *, std::uint64_t> latestVersion;
 };
 
 #endif // SRC_SCHEDULER_GLOBALINDEX_H_
