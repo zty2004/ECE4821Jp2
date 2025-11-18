@@ -62,8 +62,8 @@ private:
   public:
     friend class Table;
     template <class Iterator, class VType> friend class ObjectImpl;
-    friend auto operator<<(std::ostream &os, const Table &table)
-        -> std::ostream &;
+    friend auto operator<<(std::ostream &os,
+                           const Table &table) -> std::ostream &;
 
     Datum() = default;
 
@@ -284,8 +284,8 @@ public:
   using ConstIterator = IteratorImpl<ConstObject, decltype(data.cbegin())>;
 
 private:
-  static auto createProxy(ConstDataIterator it, const Table *table)
-      -> ConstObject::Ptr {
+  static auto createProxy(ConstDataIterator it,
+                          const Table *table) -> ConstObject::Ptr {
     return std::make_unique<ConstObject>(it, table);
   }
 
@@ -321,8 +321,8 @@ public:
    * @param field
    * @return fieldIndex
    */
-  [[nodiscard]] auto getFieldIndex(const FieldNameType &field) const
-      -> FieldIndex;
+  [[nodiscard]] auto
+  getFieldIndex(const FieldNameType &field) const -> FieldIndex;
 
   /**
    * Insert a row of data by its key
@@ -443,8 +443,8 @@ public:
    * @param table
    * @return the origin ostream
    */
-  friend auto operator<<(std::ostream &os, const Table &table)
-      -> std::ostream &;
+  friend auto operator<<(std::ostream &os,
+                         const Table &table) -> std::ostream &;
 };
 
 auto operator<<(std::ostream &os, const Table &table) -> std::ostream &;

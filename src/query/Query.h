@@ -140,8 +140,8 @@ protected:
 
   /** Get operands in the query */
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] [[maybe_unused]] auto getOperands() const
-      -> const std::vector<std::string> & {
+  [[nodiscard]] [[maybe_unused]] auto
+  getOperands() const -> const std::vector<std::string> & {
     return operands;
   }
 

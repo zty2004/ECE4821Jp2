@@ -40,8 +40,8 @@ public:
   void stop();
 
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] [[maybe_unused]] auto activeCount() const noexcept
-      -> std::size_t {
+  [[nodiscard]] [[maybe_unused]] auto
+  activeCount() const noexcept -> std::size_t {
     return active_.load(std::memory_order_relaxed);
   }
 
