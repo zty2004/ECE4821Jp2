@@ -14,6 +14,33 @@
 #include "../db/Table.h"
 #include "QueryResult.h"
 
+// Unified fine-grained query taxonomy for scheduling & helpers.
+// Each concrete Query subclass overrides type() to return its stable tag.
+// Adding a new query now only requires overriding type(); no centralized map.
+enum class QueryType : std::uint8_t {
+  Load,
+  Dump,
+  Drop,
+  Truncate,
+  CopyTable,
+  List,
+  Quit,
+  PrintTable,
+  Insert,
+  Update,
+  Select,
+  Delete,
+  Duplicate,
+  Count,
+  Sum,
+  Min,
+  Max,
+  Add,
+  Sub,
+  Swap,
+  Nop,
+};
+
 struct QueryCondition {
   std::string field;
   size_t fieldId;
@@ -40,6 +67,10 @@ public:
 
   virtual std::string toString() = 0;
 
+  [[nodiscard]] virtual auto type() const noexcept -> QueryType {
+    return QueryType::Nop;
+  }
+
   [[nodiscard]] auto table() const -> const std::string & {
     return targetTable;
   }
@@ -57,6 +88,10 @@ class NopQuery : public Query {
 public:
   QueryResult::Ptr execute() override {
     return std::make_unique<NullQueryResult>();
+  }
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Nop;
   }
 
   // cppcheck-suppress unusedFunction

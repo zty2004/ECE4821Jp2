@@ -1,10 +1,9 @@
 #ifndef SRC_QUERY_QUERYPRIORITY_H_
 #define SRC_QUERY_QUERYPRIORITY_H_
 
+#include "Query.h"
 #include <cstdint>
 #include <string>
-
-class Query;
 
 // Scheduling priority for Cross-table usgae
 enum class QueryPriority : std::uint8_t {
@@ -14,8 +13,21 @@ enum class QueryPriority : std::uint8_t {
   LOW // reserved
 };
 
-// Classify a query to a priority
-auto classifyPriority(const Query &query) -> QueryPriority;
+// Classify a query type to a priority
+inline auto classifyPriority(QueryType qt) -> QueryPriority {
+  switch (qt) {
+  case QueryType::Quit:
+    return QueryPriority::SYSTEM_HIGH;
+  case QueryType::Load:
+  case QueryType::Dump:
+  case QueryType::Drop:
+  case QueryType::Truncate:
+  case QueryType::CopyTable:
+    return QueryPriority::HIGH;
+  default:
+    return QueryPriority::NORMAL;
+  }
+}
 
 // Special control pseudo table for commands without a concrete table name
 inline auto controlTableId() -> const std::string & {

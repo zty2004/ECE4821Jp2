@@ -19,4 +19,7 @@ inline auto extractFilePath(const Query &query) -> std::string {
   return query.filePath();
 }
 
+// Get the type of queries
+inline auto queryType(const Query &query) -> QueryType { return query.type(); }
+
 #endif // SRC_QUERY_QUERYHELPERS_H_
