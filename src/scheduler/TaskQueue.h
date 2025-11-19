@@ -2,6 +2,7 @@
 #define SRC_SCHEDULER_TASKQUEUE_H_
 
 #include <cstdint>
+#include <deque>
 #include <future>
 #include <memory>
 #include <string>
@@ -44,8 +45,10 @@ private:
 
   // TODO: Map of tableId -> TableQueue
   // TODO: Consider std::unordered_map<std::string, TableQueue>
-  // TODO: loadQueue: FIFO of ready LOAD items
   // TODO: GlobalIndex
+
+  // loadQueue: FIFO of ready LOAD items
+  std::deque<FileDependencyManager::LoadNode> loadQueue;
 
   // FDM instance for per-file dependency management
   FileDependencyManager fileDeps;
