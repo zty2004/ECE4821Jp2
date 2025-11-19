@@ -12,6 +12,21 @@
 #include "FileDependencyManager.h"
 #include "ScheduledItem.h"
 
+// Executable task given to workers
+struct ExecutableTask {
+  std::uint64_t seq = 0;
+  std::unique_ptr<Query> query;
+  std::promise<std::unique_ptr<QueryResult>> promise;
+  std::function<std::unique_ptr<QueryResult>()> execOverride; // preset function
+  std::function<void()> onCompleted; // callback closure
+
+  ExecutableTask() = default;
+  ExecutableTask(ExecutableTask &&) noexcept = default;
+  ExecutableTask &operator=(ExecutableTask &&) noexcept = default; // NOLINT
+  ExecutableTask(const ExecutableTask &) = delete;
+  ExecutableTask &operator=(const ExecutableTask &) = delete; // NOLINT
+};
+
 class Query;
 class QueryResult;
 
@@ -30,7 +45,7 @@ public:
       -> std::future<std::unique_ptr<QueryResult>>;
 
   // Fetch next executable task, Returns false if no task is ready
-  auto fetchNext(ScheduledItem &out) -> bool;
+  auto fetchNext(ExecutableTask &out) -> bool;
 
   // Called after LOAD finished
   // Marks tasks with seq < registerSeq as dropped, then upsert
