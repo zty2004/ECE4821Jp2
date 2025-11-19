@@ -19,6 +19,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Select;
+  }
 };
 
 #endif // SRC_QUERY_DATA_SELECTQUERY_H_
