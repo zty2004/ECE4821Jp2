@@ -1,10 +1,12 @@
 #ifndef SRC_SCHEDULER_TASKQUEUE_H_
 #define SRC_SCHEDULER_TASKQUEUE_H_
 
+#include <atomic>
 #include <cstdint>
 #include <deque>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "FileDependencyManager.h"
@@ -40,8 +42,25 @@ public:
 
 private:
   // Data member
-  std::uint64_t nextSeq = 0;
-  std::uint64_t fetchTick = 0;
+  std::mutex mu;
+  std::atomic<std::uint64_t> fetchTick{0};
+  std::atomic<std::uint64_t> submitted{0};
+  std::atomic<std::uint64_t> running{0};
+  std::atomic<std::uint64_t> completed{0};
+
+  struct Stats {
+    std::uint64_t fetchTick{0};
+    std::uint64_t submitted{0};
+    std::uint64_t running{0};
+    std::uint64_t completed{0};
+  };
+
+  [[nodiscard]] auto stats() const -> Stats {
+    return Stats{.fetchTick = fetchTick.load(std::memory_order_relaxed),
+                 .submitted = submitted.load(std::memory_order_relaxed),
+                 .running = running.load(std::memory_order_relaxed),
+                 .completed = completed.load(std::memory_order_relaxed)};
+  }
 
   // TODO: Map of tableId -> TableQueue
   // TODO: Consider std::unordered_map<std::string, TableQueue>
