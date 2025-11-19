@@ -17,6 +17,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::CopyTable;
+  }
 };
 
 #endif // SRC_QUERY_MANAGEMENT_COPYTABLEQUERY_H_

@@ -18,6 +18,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Quit;
+  }
 };
 
 #endif // SRC_QUERY_MANAGEMENT_QUITQUERY_H_

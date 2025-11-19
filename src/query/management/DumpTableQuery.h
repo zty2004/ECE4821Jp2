@@ -26,6 +26,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Dump;
+  }
 };
 
 #endif // SRC_QUERY_MANAGEMENT_DUMPTABLEQUERY_H_

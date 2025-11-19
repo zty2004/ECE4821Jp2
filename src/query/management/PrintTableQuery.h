@@ -18,6 +18,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::PrintTable;
+  }
 };
 
 #endif // SRC_QUERY_MANAGEMENT_PRINTTABLEQUERY_H_

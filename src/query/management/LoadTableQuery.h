@@ -26,6 +26,10 @@ public:
   auto execute() -> QueryResult::Ptr override;
 
   auto toString() -> std::string override;
+
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Load;
+  }
 };
 
 #endif // SRC_QUERY_MANAGEMENT_LOADTABLEQUERY_H_
