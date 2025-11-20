@@ -264,6 +264,24 @@ auto run(std::span<char *> argv, int argc) -> int {
 
       // Check if this is a LISTEN query - handle it specially
       auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+      if (listenQuery != nullptr) {
+        // LISTEN query changes the input stream, so handle it directly
+        const std::string &newFileName = listenQuery->getFileName();
+
+        // Try to open the new file
+        std::ifstream newFin(newFileName);
+        if (!newFin.is_open()) {
+          std::cout << ++counter << "\n";
+          std::cout.flush();
+          std::cerr << "Error: could not open " << newFileName << "\n";
+          continue;  // Continue with current input stream
+        }
+
+        // Switch the input stream to the new file
+        fin.close();
+        fin = std::move(newFin);
+        input_stream.rdbuf(fin.rdbuf());
+      }
 
       // Regular query execution
       QueryResult::Ptr result;
