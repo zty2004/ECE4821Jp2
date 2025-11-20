@@ -21,6 +21,7 @@ struct ExecutableTask {
   std::function<void()> onCompleted; // callback closure
 
   ExecutableTask() = default;
+  ~ExecutableTask() = default;
   ExecutableTask(ExecutableTask &&) noexcept = default;
   ExecutableTask &operator=(ExecutableTask &&) noexcept = default; // NOLINT
   ExecutableTask(const ExecutableTask &) = delete;
