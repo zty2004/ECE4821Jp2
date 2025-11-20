@@ -11,8 +11,10 @@
 
 #include <array>
 #include <cstddef>
-#include <functional>
 #include <queue>
+
+// just to erase red cross
+struct ExecutableTask {};
 
 #ifdef __cpp_lib_jthread
 /**
@@ -32,7 +34,7 @@ using thread_t = std::thread;
 template <std::size_t PoolSize> class Threadpool {
 private:
   static constexpr std::size_t thread_count = PoolSize;
-  std::queue<std::function<void()>> tasks;
+  std::queue<ExecutableTask> tasks;
   std::array<thread_t, PoolSize> threads;
   bool stop_pool = false;
 
