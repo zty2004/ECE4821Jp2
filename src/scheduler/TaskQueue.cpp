@@ -35,8 +35,13 @@ auto TaskQueue::registerTask(std::unique_ptr<Query> query)
   auto fut = item.promise.get_future();
   submitted.fetch_add(1, std::memory_order_relaxed);
 
-  const bool isLoad = (queryType(*item.query) == QueryType::Load);
-  if (isLoad) {
+  QueryType const qtype = queryType(*item.query);
+  if (qtype == QueryType::Quit || qtype == QueryType::List) {
+    barriers.emplace_back(std::move(item));
+    return fut;
+  }
+
+  if (qtype == QueryType::Load) {
     FileDependencyManager::LoadNode loadNode; // manual populate
     loadNode.filePath = item.filePath;
     loadNode.dependsOn = 0; // TODO: markScheduled

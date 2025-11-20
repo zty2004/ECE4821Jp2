@@ -11,8 +11,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "../query/QueryHelpers.h"
-#include "../query/QueryPriority.h"
 #include "FileDependencyManager.h"
 #include "GlobalIndex.h"
 #include "ScheduledItem.h"
@@ -88,9 +86,16 @@ private:
 
   // loadQueue: FIFO of ready LOAD items
   std::deque<FileDependencyManager::LoadNode> loadQueue;
+  bool loadBlocked = false; // whether LoadQueue blocked by barrier
 
   // FDM instance for per-file dependency management
   FileDependencyManager fileDeps;
+
+  // Barrier structures for QUIT/LIST queries
+  std::deque<ScheduledItem> barriers;
+  std::deque<TableQueue *> waitingTables; // tables blocked by current barrier
+
+  bool quitFlag = false; // whether QUIT is fetched
 };
 
 #endif // SRC_SCHEDULER_TASKQUEUE_H_

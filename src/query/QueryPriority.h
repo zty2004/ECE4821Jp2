@@ -7,7 +7,7 @@
 
 // Scheduling priority for Cross-table usgae
 enum class QueryPriority : std::uint8_t {
-  SYSTEM_HIGH,
+  SYSTEM_HIGH, // NEVER USED, placeholder
   HIGH,
   NORMAL,
   LOW // reserved
@@ -17,6 +17,7 @@ enum class QueryPriority : std::uint8_t {
 inline auto classifyPriority(QueryType qt) -> QueryPriority {
   switch (qt) {
   case QueryType::Quit:
+  case QueryType::List:
     return QueryPriority::SYSTEM_HIGH;
   case QueryType::Load:
   case QueryType::Dump:
