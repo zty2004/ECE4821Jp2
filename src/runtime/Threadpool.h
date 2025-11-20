@@ -9,15 +9,17 @@
 
 #define __cpp_lib_jthread
 
+#include "../query/Query.h"
+#include "../query/QueryResult.h"
 #include "LockManager.h"
 #include <array>
 #include <cstddef>
+#include <future>
 #include <queue>
 #include <utility>
 
 // just to erase red cross
 struct ExecutableTask {
-  /*
   std::uint64_t seq = 0;
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
@@ -31,13 +33,12 @@ struct ExecutableTask {
   ExecutableTask &operator=(ExecutableTask &&) noexcept = default;  // NOLINT
   ExecutableTask(const ExecutableTask &) = delete;
   ExecutableTask &operator=(const ExecutableTask &) = delete;  // NOLINT
-  */
 };
 
 class TaskQueue {
 public:
   auto fetchNext(ExecutableTask &out) -> bool;
-}
+};
 
 #ifdef __cpp_lib_jthread
 /**
@@ -120,7 +121,6 @@ private:
   void work() {
     ExecutableTask task;
     bool has_task = false;
-
     {
       std::unique_lock<std::mutex> lock(local_mutex_);
 
@@ -134,7 +134,7 @@ private:
         for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
           ExecutableTask tmp;
           if (task_queue_.fetchNext(tmp)) {
-            batch.emplace_back(tmp);
+            batch.push_back(std::move(tmp));
           } else {
             break;
           }
@@ -142,12 +142,12 @@ private:
 
         lock.lock();
         for (auto &tmp : batch) {
-          local_queue_.push(tmp);
+          local_queue_.push(std::move(tmp));
         }
       }
 
       if (!local_queue_.empty()) {
-        task = local_queue_.front();
+        task = std::move(local_queue_.front());
         local_queue_.pop();
         has_task = true;
       }
@@ -157,6 +157,24 @@ private:
       execute_with_table_lock(task);
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
+
+  void run_logic(ExecutableTask &task) {
+    try {
+      std::unique_ptr<QueryResult> res;
+      if (task.execOverride) {
+        res = task.execOverride();
+      }
+      task.promise.set_value(std::move(res));
+    } catch (...) {
+      try {
+        task.promise.set_exception(std::current_exception());
+      } catch (...) {
+      }
+    }
+    if (task.onCompleted) {
+      task.onCompleted();
     }
   }
 };
