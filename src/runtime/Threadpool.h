@@ -59,9 +59,7 @@ public:
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
   auto operator=(Threadpool &&) -> Threadpool & = delete;
-  [[nodiscard]] auto get_thread_count() const -> size_t {
-    return this->threads.size();
-  }
+  [[nodiscard]] auto get_threadpool_size() const -> size_t { return PoolSize; }
 #ifdef __cpp_lib_jthread
   void worker(std::stop_token st) {}
 #else
