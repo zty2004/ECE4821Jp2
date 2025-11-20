@@ -9,13 +9,30 @@
 
 #define __cpp_lib_jthread
 
+#include "../query/Query.h"
 #include "LockManager.h"
 #include <array>
 #include <cstddef>
+#include <functional>
+#include <future>
 #include <queue>
 
 // just to erase red cross
-struct ExecutableTask {};
+struct ExecutableTask {
+  std::uint64_t seq = 0;
+  std::unique_ptr<Query> query;
+  std::promise<std::unique_ptr<QueryResult>> promise;
+  std::function<std::unique_ptr<QueryResult>()>
+      execOverride;                   // preset function
+  std::function<void()> onCompleted;  // callback closure
+
+  ExecutableTask() = default;
+  ~ExecutableTask() = default;
+  ExecutableTask(ExecutableTask &&) noexcept = default;
+  ExecutableTask &operator=(ExecutableTask &&) noexcept = default;  // NOLINT
+  ExecutableTask(const ExecutableTask &) = delete;
+  ExecutableTask &operator=(const ExecutableTask &) = delete;  // NOLINT
+};
 
 #ifdef __cpp_lib_jthread
 /**
@@ -23,7 +40,6 @@ struct ExecutableTask {};
  */
 #include <stop_token>
 #include <thread>
-#include <utility>
 using thread_t = std::jthread;
 #else
 /**
@@ -33,28 +49,7 @@ using thread_t = std::jthread;
 using thread_t = std::thread;
 #endif
 
-class QueueLockAdapter {
-public:
-  QueueLockAdapter(LockManager &lm, TableId id) : lm_(lm), id_(std::move(id)) {}
-  void lock() {
-    while (!lm_.tryLockX(id_)) {
-      std::this_thread::yield();
-    }
-  }
-
-  void unlock() { lm_.unlockX(id_); }
-
-private:
-  LockManager &lm_;
-  TableId id_;
-};
-
 template <std::size_t PoolSize> class Threadpool {
-private:
-  static constexpr std::size_t thread_count = PoolSize;
-  std::queue<ExecutableTask> tasks;
-  std::array<thread_t, PoolSize> threads;
-  bool stop_pool = false;
 
 public:
   Threadpool() {
@@ -85,6 +80,12 @@ public:
 #else
   void worker() {}
 #endif
+
+private:
+  static constexpr std::size_t thread_count = PoolSize;
+  std::queue<ExecutableTask> tasks;
+  std::array<thread_t, PoolSize> threads;
+  bool stop_pool = false;
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
