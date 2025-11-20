@@ -94,6 +94,20 @@ private:
 
   std::array<thread_t, PoolSize> threads;
   std::atomic<bool> stop_flag_{false};
+
+#ifdef __cpp_lib_jthread
+  void worker_loop(const std::stop_token &st) {
+    while (!st.stop_requested()) {
+      work();
+    }
+  }
+#else
+  void worker_loop() {
+    while (!stop_flag_.load(std::memory_order_acquire)) {
+      work();
+    }
+  }
+#endif
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
