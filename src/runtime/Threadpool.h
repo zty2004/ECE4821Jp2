@@ -9,6 +9,7 @@
 
 #define __cpp_lib_jthread
 
+#include "LockManager.h"
 #include <array>
 #include <cstddef>
 #include <queue>
@@ -22,6 +23,7 @@ struct ExecutableTask {};
  */
 #include <stop_token>
 #include <thread>
+#include <utility>
 using thread_t = std::jthread;
 #else
 /**
@@ -30,6 +32,22 @@ using thread_t = std::jthread;
 #include <thread>
 using thread_t = std::thread;
 #endif
+
+class QueueLockAdapter {
+public:
+  QueueLockAdapter(LockManager &lm, TableId id) : lm_(lm), id_(std::move(id)) {}
+  void lock() {
+    while (!lm_.tryLockX(id_)) {
+      std::this_thread::yield();
+    }
+  }
+
+  void unlock() { lm_.unlockX(id_); }
+
+private:
+  LockManager &lm_;
+  TableId id_;
+};
 
 template <std::size_t PoolSize> class Threadpool {
 private:
