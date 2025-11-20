@@ -9,16 +9,14 @@
 
 #define __cpp_lib_jthread
 
-#include "../query/Query.h"
 #include "LockManager.h"
 #include <array>
 #include <cstddef>
-#include <functional>
-#include <future>
 #include <queue>
 
 // just to erase red cross
 struct ExecutableTask {
+  /*
   std::uint64_t seq = 0;
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
@@ -32,7 +30,10 @@ struct ExecutableTask {
   ExecutableTask &operator=(ExecutableTask &&) noexcept = default;  // NOLINT
   ExecutableTask(const ExecutableTask &) = delete;
   ExecutableTask &operator=(const ExecutableTask &) = delete;  // NOLINT
+  */
 };
+
+class TaskQueue;
 
 #ifdef __cpp_lib_jthread
 /**
@@ -52,12 +53,16 @@ using thread_t = std::thread;
 template <std::size_t PoolSize> class Threadpool {
 
 public:
-  Threadpool() {
+  static constexpr size_t FETCH_BATCH_SIZE = 16;  // Fetch 16 tasks each time
+
+  Threadpool(LockManager &lm, TaskQueue &tq)
+      : lock_manager_(lm), task_queue_(tq) {
     for (std::size_t i = 0; i < PoolSize; ++i) {
 #ifdef __cpp_lib_jthread
-      threads[i] = thread_t([this](std::stop_token st) { this->worker(st); });
+      threads[i] =
+          thread_t([this](std::stop_token st) { this->worker_loop(st); });
 #else
-      threads[i] = thread_t([this] { this->worker(); });
+      threads[i] = thread_t([this] { this->worker_loop(); });
 #endif
     }
   }
@@ -74,18 +79,21 @@ public:
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
   auto operator=(Threadpool &&) -> Threadpool & = delete;
-  [[nodiscard]] auto get_threadpool_size() const -> size_t { return PoolSize; }
-#ifdef __cpp_lib_jthread
-  void worker(std::stop_token st) {}
-#else
-  void worker() {}
-#endif
+  [[nodiscard]] auto get_threadpool_size() const -> size_t {
+    return thread_count;
+  }
 
 private:
   static constexpr std::size_t thread_count = PoolSize;
-  std::queue<ExecutableTask> tasks;
+
+  LockManager &lock_manager_;
+  TaskQueue &task_queue_;
+
+  std::queue<ExecutableTask> local_queue_;
+  std::mutex local_mutex_;  // protect local_queue_
+
   std::array<thread_t, PoolSize> threads;
-  bool stop_pool = false;
+  std::atomic<bool> stop_flag_{false};
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
