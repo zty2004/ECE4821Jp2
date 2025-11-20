@@ -9,7 +9,10 @@
 
 #define __cpp_lib_jthread
 
+#include <array>
 #include <cstddef>
+#include <functional>
+#include <queue>
 
 #ifdef __cpp_lib_jthread
 /**
@@ -29,7 +32,9 @@ using thread_t = std::thread;
 template <std::size_t PoolSize> class Threadpool {
 private:
   static constexpr std::size_t thread_count = PoolSize;
+  std::queue<std::function<void()>> tasks;
   std::array<thread_t, PoolSize> threads;
+  bool stop_pool = false;
 
 public:
   Threadpool() {
@@ -41,6 +46,15 @@ public:
 #endif
     }
   }
+  ~Threadpool() {
+#ifndef __cpp_lib_jthread
+    for (auto &t : threads) {
+      if (t.joinable()) {
+        t.join();
+      }
+    }
+#endif
+  }
   Threadpool(const Threadpool &) = delete;
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
@@ -48,6 +62,11 @@ public:
   [[nodiscard]] auto get_thread_count() const -> size_t {
     return this->threads.size();
   }
+#ifdef __cpp_lib_jthread
+  void worker(std::stop_token st) {}
+#else
+  void worker() {}
+#endif
 #ifndef __cpp_lib_jthread
   /**
    * @brief Manually join all the threads. In C++17, we use std::thread which
