@@ -66,7 +66,9 @@ public:
 #endif
     }
   }
+
   ~Threadpool() {
+    stop_flag_.store(true);
 #ifndef __cpp_lib_jthread
     for (auto &t : threads) {
       if (t.joinable()) {
@@ -75,10 +77,12 @@ public:
     }
 #endif
   }
+
   Threadpool(const Threadpool &) = delete;
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
   auto operator=(Threadpool &&) -> Threadpool & = delete;
+
   [[nodiscard]] auto get_threadpool_size() const -> size_t {
     return thread_count;
   }
