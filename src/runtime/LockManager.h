@@ -6,6 +6,7 @@
 #define SRC_RUNTIME_LOCKMANAGER_H_
 
 #include <atomic>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -25,26 +26,22 @@ public:
   LockManager(LockManager &&) = delete;
   auto operator=(LockManager &&) -> LockManager & = delete;
 
-  [[nodiscard]] auto tryLockS(const TableId &id) -> bool;
+  // Blocking lock (traditional mutex-style)
+  void lockS(const TableId &id);
   void unlockS(const TableId &id);
 
-  [[nodiscard]] auto tryLockX(const TableId &id) -> bool;
+  void lockX(const TableId &id);
   void unlockX(const TableId &id);
-
-  void writerIntentBegin(const TableId &id);
-  void writerIntentEnd(const TableId &id);
-
-  [[nodiscard]] auto canAdmitShared(const TableId &id) const noexcept -> bool;
 
 private:
   struct Entry {
     // NOLINTBEGIN(misc-non-private-member-variables-in-classes,codequality-no-public-member-variables)
     mutable std::shared_mutex rw;
-    std::atomic<int> waiting_writers{0};
     // NOLINTEND(misc-non-private-member-variables-in-classes,codequality-no-public-member-variables)
   };
 
   auto entry(const TableId &id) -> Entry &;
+  auto entryConst(const TableId &id) const -> const Entry *;
 
   mutable std::mutex mapMtx_;
   std::unordered_map<TableId, std::unique_ptr<Entry>> map_;
