@@ -65,28 +65,6 @@ public:
 #else
   void worker() {}
 #endif
-#ifndef __cpp_lib_jthread
-  /**
-   * @brief Manually join all the threads. In C++17, we use std::thread which
-   * need manual joining.
-   */
-  void destroy_threads() {
-    {
-      const std::scoped_lock tasks_lock(tasks_mutex);
-      workers_running = false;
-    }
-    task_available_cv.notify_all();
-
-    // join all the threads
-    for (auto &t : threads) {
-      if (t.joinable()) {
-        t.join();
-      }
-    }
-
-    threads.clear();
-  }
-#endif
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
