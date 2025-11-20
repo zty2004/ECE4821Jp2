@@ -14,9 +14,7 @@
 #include "../db/Table.h"
 #include "QueryResult.h"
 
-// Unified fine-grained query taxonomy for scheduling & helpers.
-// Each concrete Query subclass overrides type() to return its stable tag.
-// Adding a new query now only requires overriding type(); no centralized map.
+// Type of Queries
 enum class QueryType : std::uint8_t {
   Load,
   Dump,

@@ -4,13 +4,19 @@
 #include <atomic>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <future>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
+#include "../query/QueryHelpers.h"
+#include "../query/QueryPriority.h"
 #include "FileDependencyManager.h"
+#include "GlobalIndex.h"
 #include "ScheduledItem.h"
+#include "TableQueue.h"
 
 // Executable task given to workers
 struct ExecutableTask {
@@ -34,8 +40,8 @@ class QueryResult;
 // TaskQueue public interface
 class TaskQueue {
 public:
-  TaskQueue();
-  ~TaskQueue();
+  TaskQueue() = default;
+  ~TaskQueue() = default;
   TaskQueue(const TaskQueue &) = delete;
   TaskQueue &operator=(const TaskQueue &) = delete; // NOLINT
   TaskQueue(TaskQueue &&) noexcept = delete;
@@ -51,10 +57,6 @@ public:
   // Called after LOAD finished
   // Marks tasks with seq < registerSeq as dropped, then upsert
   void completeLoad(const std::string &tableId, std::uint64_t loadSeq);
-
-  // File operation serialization forwarding hooks
-  void beginFileOp(const std::string &filePath, std::uint64_t seq);
-  void endFileOp(const std::string &filePath, std::uint64_t seq);
 
 private:
   // Data member
@@ -78,9 +80,11 @@ private:
                  .completed = completed.load(std::memory_order_relaxed)};
   }
 
-  // TODO: Map of tableId -> TableQueue
-  // TODO: Consider std::unordered_map<std::string, TableQueue>
-  // TODO: GlobalIndex
+  // Map of tableId -> TableQueue
+  std::unordered_map<std::string, TableQueue> tables;
+
+  // Cross-table selection structure
+  GlobalIndex globalIndex;
 
   // loadQueue: FIFO of ready LOAD items
   std::deque<FileDependencyManager::LoadNode> loadQueue;
