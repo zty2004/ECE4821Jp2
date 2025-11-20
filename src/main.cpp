@@ -19,6 +19,7 @@
 #include "query/QueryBuilders.h"
 #include "query/QueryParser.h"
 #include "query/QueryResult.h"
+#include "query/management/ListenQuery.h"
 #include "runtime/Runtime.h"
 
 namespace {
@@ -261,10 +262,14 @@ auto run(std::span<char *> argv, int argc) -> int {
       std::string const queryStr = extractQueryString(input_stream);
       Query::Ptr query = parser.parseQuery(queryStr);
 
+      // Check if this is a LISTEN query - handle it specially
+      auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+
+      // Regular query execution
       QueryResult::Ptr result;
       if (runtime) {
         // Multi-threaded execution
-        runtime->submitQuery(std::move(query), counter);
+        runtime->submitQuery(std::move(query), ++counter);
       } else {
         // Single-threaded execution
         result = query->execute();
