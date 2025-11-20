@@ -13,6 +13,7 @@
 #include <array>
 #include <cstddef>
 #include <queue>
+#include <utility>
 
 // just to erase red cross
 struct ExecutableTask {
@@ -33,7 +34,10 @@ struct ExecutableTask {
   */
 };
 
-class TaskQueue;
+class TaskQueue {
+public:
+  auto fetchNext(ExecutableTask &out) -> bool;
+}
 
 #ifdef __cpp_lib_jthread
 /**
@@ -112,6 +116,49 @@ private:
     }
   }
 #endif
+
+  void work() {
+    ExecutableTask task;
+    bool has_task = false;
+
+    {
+      std::unique_lock<std::mutex> lock(local_mutex_);
+
+      if (local_queue_.empty()) {
+        lock.unlock();  // unlock before doing batch fetch since it takes long
+                        // time
+
+        std::vector<ExecutableTask> batch;  // temporary task container
+        batch.reserve(FETCH_BATCH_SIZE);
+
+        for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
+          ExecutableTask tmp;
+          if (task_queue_.fetchNext(tmp)) {
+            batch.emplace_back(tmp);
+          } else {
+            break;
+          }
+        }
+
+        lock.lock();
+        for (auto &tmp : batch) {
+          local_queue_.push(tmp);
+        }
+      }
+
+      if (!local_queue_.empty()) {
+        task = local_queue_.front();
+        local_queue_.pop();
+        has_task = true;
+      }
+    }
+
+    if (has_task) {
+      execute_with_table_lock(task);
+    } else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
