@@ -32,6 +32,15 @@ private:
   std::array<thread_t, PoolSize> threads;
 
 public:
+  Threadpool() {
+    for (std::size_t i = 0; i < PoolSize; ++i) {
+#ifdef __cpp_lib_jthread
+      threads[i] = thread_t([this](std::stop_token st) { this->worker(st); });
+#else
+      threads[i] = thread_t([this] { this->worker(); });
+#endif
+    }
+  }
   Threadpool(const Threadpool &) = delete;
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
