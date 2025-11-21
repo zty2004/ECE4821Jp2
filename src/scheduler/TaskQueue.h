@@ -57,10 +57,6 @@ public:
   // Fetch next executable task, Returns false if no task is ready
   auto fetchNext(ExecutableTask &out) -> bool;
 
-  // Called after LOAD finished
-  // Marks tasks with seq < registerSeq as dropped, then upsert
-  void completeLoad(const std::string &tableId, std::uint64_t loadSeq);
-
 private:
   // Data member
   std::mutex mu;
@@ -104,6 +100,13 @@ private:
 
   // Internal helper to materialize ExecutableTask from a ScheduledItem
   void buildExecutableFromScheduled(ScheduledItem &src, ExecutableTask &dst);
+
+  // Completion actions
+  enum class CompletionAction : std::uint8_t { RegisterTable, UpdateDeps };
+  using ActionList = std::vector<CompletionAction>;
+
+  auto classifyActions(const ScheduledItem &item) -> ActionList;
+  void applyActions(const ActionList &actions, const ScheduledItem &item);
 };
 
 #endif // SRC_SCHEDULER_TASKQUEUE_H_
