@@ -71,3 +71,43 @@ template <std::size_t PoolSize> void Threadpool<PoolSize>::worker_loop() {
   }
 }
 #endif
+
+template <std::size_t PoolSize> void Threadpool<PoolSize>::work() {
+  ExecutableTask task;
+  bool has_task = false;
+  {
+    std::unique_lock<std::mutex> lock(local_mutex_);
+    if (local_queue_.empty()) {
+      lock.unlock();
+
+      std::vector<ExecutableTask> batch;
+      batch.reserve(FETCH_BATCH_SIZE);
+
+      for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
+        ExecutableTask tmp;
+        if (task_queue_.fetchNext(tmp)) {
+          batch.push_back(std::move(tmp));
+        } else {
+          break;
+        }
+      }
+
+      lock.lock();
+      for (auto &tmp : batch) {
+        local_queue_.emplace(std::move(tmp));
+      }
+    }
+
+    if (!local_queue_.empty()) {
+      task = std::move(local_queue_.front());
+      local_queue_.pop();
+      has_task = true;
+    }
+  }
+
+  if (has_task) {
+    executeTask(task);
+  } else {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+}
