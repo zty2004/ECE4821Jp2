@@ -15,4 +15,4 @@ struct TableQueue {
   [[nodiscard]] auto empty() const -> bool { return queue.empty(); }
 };
 
-#endif // SRC_SCHEDULER_TABLEQUEUE_H_
+#endif  // SRC_SCHEDULER_TABLEQUEUE_H_

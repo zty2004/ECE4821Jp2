@@ -36,22 +36,22 @@ using DependencyPayload =
 
 // One scheduled task (move-only)
 struct ScheduledItem {
-  std::uint64_t seq = 0; // global submission sequence
+  std::uint64_t seq = 0;  // global submission sequence
   QueryPriority priority = QueryPriority::NORMAL;
   std::string tableId;             // table name or "__control__"
   QueryType type = QueryType::Nop; // type of the query
   DependencyPayload depends{};     // default is std::monostate (no deps)
   std::unique_ptr<Query> query;
-  std::promise<std::unique_ptr<QueryResult>> promise; // result promise
-  bool droppedFlag = false;                           // dropped mark
+  std::promise<std::unique_ptr<QueryResult>> promise;  // result promise
+  bool droppedFlag = false;                            // dropped mark
 
-  ScheduledItem() noexcept = default; // NOLINT
+  ScheduledItem() noexcept = default;  // NOLINT
   ~ScheduledItem() = default;
   ScheduledItem(ScheduledItem &&) noexcept = default;
-  ScheduledItem &operator=(ScheduledItem &&) noexcept = default; // NOLINT
+  ScheduledItem &operator=(ScheduledItem &&) noexcept = default;  // NOLINT
 
   ScheduledItem(const ScheduledItem &) = delete;
-  ScheduledItem &operator=(const ScheduledItem &) = delete; // NOLINT
+  ScheduledItem &operator=(const ScheduledItem &) = delete;  // NOLINT
 };
 
-#endif // SRC_SCHEDULER_SCHEDULEDITEM_H_
+#endif  // SRC_SCHEDULER_SCHEDULEDITEM_H_

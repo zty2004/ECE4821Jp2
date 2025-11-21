@@ -22,7 +22,9 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
 
   if (quitFlag) {
     auto tmpPromise = std::promise<std::unique_ptr<QueryResult>>();
-    auto fut = tmpPromise.get_future();
+    auto fut =
+        tmpPromise
+            .get_future();  // TODO: input should be ParsedQuery with promise
     tmpPromise.set_value(std::make_unique<ErrorMsgResult>(
         "RegisterTask", "system", "quitFlag active: rejecting new task"));
     return fut;

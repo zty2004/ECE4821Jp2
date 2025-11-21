@@ -7,10 +7,10 @@
 
 // Scheduling priority for Cross-table usgae
 enum class QueryPriority : std::uint8_t {
-  SYSTEM_HIGH, // NEVER USED, placeholder
+  SYSTEM_HIGH,  // NEVER USED, placeholder
   HIGH,
   NORMAL,
-  LOW // reserved
+  LOW  // reserved
 };
 
 // Classify a query type to a priority
@@ -36,4 +36,4 @@ inline auto controlTableId() -> const std::string & {
   return pseudoId;
 }
 
-#endif // SRC_QUERY_QUERYPRIORITY_H_
+#endif  // SRC_QUERY_QUERYPRIORITY_H_

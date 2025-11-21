@@ -30,4 +30,4 @@ inline auto queryType(const Query &query) -> QueryType { return query.type(); }
 // Get Query global sequence id
 inline auto getId(const Query &query) -> int { return query.id; }
 
-#endif // SRC_QUERY_QUERYHELPERS_H_
+#endif  // SRC_QUERY_QUERYHELPERS_H_

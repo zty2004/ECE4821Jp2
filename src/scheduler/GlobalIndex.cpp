@@ -12,7 +12,7 @@ void GlobalIndex::upsert(TableQueue *tableQ, QueryPriority priorityLevel,
     return;
   }
   auto &ver = latestVersion[tableQ];
-  ++ver; // update & record version
+  ++ver;  // update & record version
   heap.push(Key{.pri = priorityLevel,
                 .stamp = enqueueTick,
                 .headSeq = headSeq,

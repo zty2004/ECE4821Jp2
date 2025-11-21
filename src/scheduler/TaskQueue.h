@@ -33,8 +33,16 @@ struct ExecutableTask {
   QueryType type;
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
-  std::function<std::unique_ptr<QueryResult>()> execOverride; // preset function
-  std::function<void()> onCompleted; // callback closure
+  std::function<std::unique_ptr<QueryResult>()>
+      execOverride;                   // preset function
+  std::function<void()> onCompleted;  // callback closure
+
+  ExecutableTask() = default;
+  ~ExecutableTask() = default;
+  ExecutableTask(ExecutableTask &&) noexcept = default;
+  ExecutableTask &operator=(ExecutableTask &&) noexcept = default;  // NOLINT
+  ExecutableTask(const ExecutableTask &) = delete;
+  ExecutableTask &operator=(const ExecutableTask &) = delete;  // NOLINT
 };
 
 class Query;
@@ -46,9 +54,9 @@ public:
   TaskQueue() = default;
   ~TaskQueue() = default;
   TaskQueue(const TaskQueue &) = delete;
-  TaskQueue &operator=(const TaskQueue &) = delete; // NOLINT
+  TaskQueue &operator=(const TaskQueue &) = delete;  // NOLINT
   TaskQueue(TaskQueue &&) noexcept = delete;
-  TaskQueue &operator=(TaskQueue &&) noexcept = delete; // NOLINT
+  TaskQueue &operator=(TaskQueue &&) noexcept = delete;  // NOLINT
 
   // Register a task
   auto registerTask(ParsedQuery &&parsedQuery)
@@ -86,15 +94,15 @@ private:
   GlobalIndex globalIndex;
 
   // loadQueue: FIFO of ready LOAD items
-  std::deque<std::unique_ptr<ScheduledItem>> loadQueue;
-  bool loadBlocked = false; // whether LoadQueue blocked by barrier
+  std::deque<ScheduledItem> loadQueue;
+  bool loadBlocked = false;  // whether LoadQueue blocked by barrier
 
   // DM instance for dependency management
   DependencyManager depManager;
 
   // Barrier structures for QUIT/LIST queries
   std::deque<ScheduledItem> barriers;
-  std::deque<TableQueue *> waitingTables; // tables blocked by current barrier
+  std::deque<TableQueue *> waitingTables;  // tables blocked by current barrier
 
   bool quitFlag = false; // whether QUIT is fetched
 
@@ -109,4 +117,4 @@ private:
   void applyActions(const ActionList &actions, const ScheduledItem &item);
 };
 
-#endif // SRC_SCHEDULER_TASKQUEUE_H_
+#endif  // SRC_SCHEDULER_TASKQUEUE_H_
