@@ -8,7 +8,7 @@
 #include "Query.h"
 #include "QueryBuilders.h"
 
-QueryParser::QueryParser() : first(nullptr) {}
+QueryParser::QueryParser() : first(nullptr), last(nullptr) {}
 
 auto QueryParser::parseQuery(const std::string &queryString) -> Query::Ptr {
   if (first == nullptr) {
