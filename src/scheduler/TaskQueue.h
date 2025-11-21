@@ -12,10 +12,20 @@
 #include <unordered_map>
 
 #include "../query/Query.h"
-#include "FileDependencyManager.h"
+#include "DependencyManager.h"
 #include "GlobalIndex.h"
 #include "ScheduledItem.h"
 #include "TableQueue.h"
+
+// Parsed query needed from parser
+struct ParsedQuery {
+  std::uint64_t seq = 0; // global sequence of the query
+  std::string tableName; // name of the corresponding table
+  QueryType type;
+  QueryPriority priority;
+  std::unique_ptr<Query> query;
+  std::promise<std::unique_ptr<QueryResult>> promise;
+};
 
 // Executable task given to workers
 struct ExecutableTask {
@@ -25,13 +35,6 @@ struct ExecutableTask {
   std::promise<std::unique_ptr<QueryResult>> promise;
   std::function<std::unique_ptr<QueryResult>()> execOverride; // preset function
   std::function<void()> onCompleted; // callback closure
-
-  ExecutableTask() = default;
-  ~ExecutableTask() = default;
-  ExecutableTask(ExecutableTask &&) noexcept = default;
-  ExecutableTask &operator=(ExecutableTask &&) noexcept = default; // NOLINT
-  ExecutableTask(const ExecutableTask &) = delete;
-  ExecutableTask &operator=(const ExecutableTask &) = delete; // NOLINT
 };
 
 class Query;
@@ -48,7 +51,7 @@ public:
   TaskQueue &operator=(TaskQueue &&) noexcept = delete; // NOLINT
 
   // Register a task
-  auto registerTask(std::unique_ptr<Query> query)
+  auto registerTask(ParsedQuery &&parsedQuery)
       -> std::future<std::unique_ptr<QueryResult>>;
 
   // Fetch next executable task, Returns false if no task is ready
@@ -90,8 +93,8 @@ private:
   std::deque<ScheduledItem> loadQueue;
   bool loadBlocked = false; // whether LoadQueue blocked by barrier
 
-  // FDM instance for per-file dependency management
-  FileDependencyManager fileDeps;
+  // DM instance for dependency management
+  DependencyManager DepManager;
 
   // Barrier structures for QUIT/LIST queries
   std::deque<ScheduledItem> barriers;
