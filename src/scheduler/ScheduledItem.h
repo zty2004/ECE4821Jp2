@@ -17,6 +17,7 @@ struct ScheduledItem {
   QueryPriority priority = QueryPriority::NORMAL;
   std::string tableId;  // table name or "__control__"
   std::string filePath; // optional for LOAD/DUMP
+  QueryType type;       // type of the query
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise; // result promise
   bool droppedFlag = false;                           // dropped mark

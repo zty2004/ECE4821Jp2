@@ -25,23 +25,33 @@ auto TaskQueue::registerTask(std::unique_ptr<Query> query)
     throw std::invalid_argument("query id not assigned");
   }
 
+  if (quitFlag) {
+    auto tmpPromise = std::promise<std::unique_ptr<QueryResult>>();
+    auto fut =
+        tmpPromise
+            .get_future(); // TODO: input should be ParsedQuery with promise
+    tmpPromise.set_value(std::make_unique<ErrorMsgResult>(
+        "RegisterTask", "system", "quitFlag active: rejecting new task"));
+    return fut;
+  }
+
   ScheduledItem item;
   item.seq = static_cast<std::uint64_t>(getId(*query));
   item.priority = classifyPriority(queryType(*query));
   item.tableId = resolveTableId(*query);
   item.filePath = extractFilePath(*query);
+  item.type = queryType(*query);
   item.query = std::move(query);
 
   auto fut = item.promise.get_future();
   submitted.fetch_add(1, std::memory_order_relaxed);
 
-  QueryType const qtype = queryType(*item.query);
-  if (qtype == QueryType::Quit || qtype == QueryType::List) {
+  if (item.type == QueryType::Quit || item.type == QueryType::List) {
     barriers.emplace_back(std::move(item));
     return fut;
   }
 
-  if (qtype == QueryType::Load) {
+  if (item.type == QueryType::Load) {
     FileDependencyManager::LoadNode loadNode; // manual populate
     loadNode.filePath = item.filePath;
     loadNode.dependsOn = 0; // TODO: markScheduled
