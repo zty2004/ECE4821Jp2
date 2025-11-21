@@ -280,8 +280,30 @@ auto run(std::span<char *> argv, int argc) -> int {
         input_stream.rdbuf(fin.rdbuf());
       }
 
-      // Regular query execution - always use runtime
-      runtime.submitQuery(std::move(query), ++counter);
+      // Regular query execution
+      ++counter;
+
+      if (numThreads == 1) {
+        // Single-threaded: execute immediately and output
+        auto result = query->execute();
+        std::cout << counter << "\n";
+        if (result->success()) {
+          if (result->display()) {
+            std::cout << *result;
+          } else {
+#ifndef NDEBUG
+            std::cout.flush();
+            std::cerr << *result;
+#endif
+          }
+        } else {
+          std::cout.flush();
+          std::cerr << "QUERY FAILED:\n\t" << *result;
+        }
+      } else {
+        // Multi-threaded: submit to runtime
+        runtime.submitQuery(std::move(query), counter);
+      }
 
     } catch (const std::ios_base::failure &) {
       // End of input
@@ -292,25 +314,27 @@ auto run(std::span<char *> argv, int argc) -> int {
     }
   }
 
-  // Wait for all queries and output results
-  runtime.waitAll();
-  auto results = runtime.getResultsInOrder();
+  // Multi-threaded mode: wait for all queries and output results
+  if (numThreads > 1) {
+    runtime.waitAll();
+    auto results = runtime.getResultsInOrder();
 
-  for (size_t i = 0; i < results.size(); ++i) {
-    std::cout << (i + 1) << "\n";
-    const auto &result = results[i];
-    if (result->success()) {
-      if (result->display()) {
-        std::cout << *result;
-      } else {
+    for (size_t i = 0; i < results.size(); ++i) {
+      std::cout << (i + 1) << "\n";
+      const auto &result = results[i];
+      if (result->success()) {
+        if (result->display()) {
+          std::cout << *result;
+        } else {
 #ifndef NDEBUG
-        std::cout.flush();
-        std::cerr << *result;
+          std::cout.flush();
+          std::cerr << *result;
 #endif
+        }
+      } else {
+        std::cout.flush();
+        std::cerr << "QUERY FAILED:\n\t" << *result;
       }
-    } else {
-      std::cout.flush();
-      std::cerr << "QUERY FAILED:\n\t" << *result;
     }
   }
 
