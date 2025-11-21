@@ -111,3 +111,42 @@ template <std::size_t PoolSize> void Threadpool<PoolSize>::work() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 }
+
+template <std::size_t PoolSize>
+void Threadpool<PoolSize>::executeTask(ExecutableTask &task) {
+  if (!task.query) {
+    executeNull(task);
+    return;
+  }
+
+  const TableId tid = resolveTableId(*task.query);
+  const QueryKind kind = getQueryKind(queryType(*task.query));
+
+  try {
+    if (kind == QueryKind::Write) {
+      WriteGuard guard(lock_manager_, tid);
+      executeWrite(task);
+    } else if (kind == QueryKind::Read) {
+      ReadGuard guard(lock_manager_, tid);
+      executeRead(task);
+    } else {
+      executeNull(task);
+    }
+  } catch (...) {
+  }
+}
+
+template <std::size_t PoolSize>
+void Threadpool<PoolSize>::executeWrite(ExecutableTask &task) {
+  run_logic(task, "WRITE");
+}
+
+template <std::size_t PoolSize>
+void Threadpool<PoolSize>::executeRead(ExecutableTask &task) {
+  run_logic(task, "READ");
+}
+
+template <std::size_t PoolSize>
+void Threadpool<PoolSize>::executeNull(ExecutableTask &task) {
+  run_logic(task, "NULL");
+}
