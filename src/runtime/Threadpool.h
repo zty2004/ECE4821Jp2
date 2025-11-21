@@ -94,7 +94,13 @@ public:
 
 private:
   static constexpr std::size_t thread_count = PoolSize;
+  struct PooledTask {
+    ExecutableTask task;
+    int attempts = 0;
 
+    PooledTask() = default;
+    PooledTask(ExecutableTask &&t) : task(std::move(t)), attempts(0) {}
+  };
   LockManager &lock_manager_;
   TaskQueue &task_queue_;
 
