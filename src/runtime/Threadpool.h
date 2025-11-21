@@ -10,6 +10,7 @@
 #define __cpp_lib_jthread
 
 #include "../query/Query.h"
+#include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
 #include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
@@ -180,10 +181,10 @@ private:
       return;
     }
 
-    const TableId tid = task.query->getTargetTable();
-    const OpKind kind = task.query->kind;
+    const TableId tid = resolveTableId(*task.query);
+    const QueryType kind = task.query
 
-    try {
+                           try {
       if (kind == OpKind::Write) {
         WriteGuard guard(lock_manager_, tid);
         executeWrite(task);
