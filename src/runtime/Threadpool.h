@@ -39,37 +39,16 @@ template <std::size_t PoolSize> class Threadpool {
 public:
   static constexpr size_t FETCH_BATCH_SIZE = 16;  // Fetch 16 tasks each time
 
-  Threadpool(LockManager &lm, TaskQueue &tq)
-      : lock_manager_(lm), task_queue_(tq) {
-    for (std::size_t i = 0; i < PoolSize; ++i) {
-#ifdef __cpp_lib_jthread
-      threads[i] =
-          thread_t([this](std::stop_token st) { this->worker_loop(st); });
-#else
-      threads[i] = thread_t([this] { this->worker_loop(); });
-#endif
-    }
-  }
+  Threadpool(LockManager &lm, TaskQueue &tq);
 
-  ~Threadpool() {
-    stop_flag_.store(true);
-#ifndef __cpp_lib_jthread
-    for (auto &t : threads) {
-      if (t.joinable()) {
-        t.join();
-      }
-    }
-#endif
-  }
+  ~Threadpool();
 
   Threadpool(const Threadpool &) = delete;
   Threadpool(Threadpool &&) = delete;
   auto operator=(const Threadpool &) -> Threadpool & = delete;
   auto operator=(Threadpool &&) -> Threadpool & = delete;
 
-  [[nodiscard]] auto get_threadpool_size() const -> size_t {
-    return thread_count;
-  }
+  [[nodiscard]] auto get_threadpool_size() const -> size_t;
 
 private:
   static constexpr std::size_t thread_count = PoolSize;
