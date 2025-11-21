@@ -63,12 +63,9 @@ private:
 
   class WriteGuard {
   public:
-    WriteGuard(LockManager &lkm, TableId index)
-        : lm_(lkm), id_(std::move(index)) {
-      lm_.lockX(id_);
-    }
+    WriteGuard(LockManager &lkm, TableId index);
 
-    ~WriteGuard() { lm_.unlockX(id_); }
+    ~WriteGuard();
 
     WriteGuard(const WriteGuard &) = delete;
     auto operator=(const WriteGuard &) -> WriteGuard & = delete;
@@ -82,12 +79,9 @@ private:
 
   class ReadGuard {
   public:
-    ReadGuard(LockManager &lkm, TableId index)
-        : lm_(lkm), id_(std::move(index)) {
-      lm_.lockS(id_);
-    }
+    ReadGuard(LockManager &lkm, TableId index);
 
-    ~ReadGuard() { lm_.unlockS(id_); }
+    ~ReadGuard();
 
     ReadGuard(const ReadGuard &) = delete;
     auto operator=(const ReadGuard &) -> ReadGuard & = delete;
@@ -100,17 +94,9 @@ private:
   };
 
 #ifdef __cpp_lib_jthread
-  void worker_loop(const std::stop_token &st) {
-    while (!st.stop_requested()) {
-      work();
-    }
-  }
+  void worker_loop(const std::stop_token &st);
 #else
-  void worker_loop() {
-    while (!stop_flag_.load(std::memory_order_acquire)) {
-      work();
-    }
-  }
+  void worker_loop();
 #endif
 
   void work() {
