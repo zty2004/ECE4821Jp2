@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "../query/Query.h"
 #include "FileDependencyManager.h"
 #include "GlobalIndex.h"
 #include "ScheduledItem.h"
@@ -19,6 +20,7 @@
 // Executable task given to workers
 struct ExecutableTask {
   std::uint64_t seq = 0;
+  QueryType type;
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
   std::function<std::unique_ptr<QueryResult>()> execOverride; // preset function
