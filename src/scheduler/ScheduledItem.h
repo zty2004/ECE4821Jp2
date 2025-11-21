@@ -14,21 +14,21 @@ class Query;
 class QueryResult;
 
 struct LoadDeps {
-  std::uint64_t fileDependsOn = 0;
-  std::uint64_t tableDependsOn = 0;
+  std::uint64_t fileDependsOn{0};
+  std::uint64_t tableDependsOn{0};
   std::string filePath;
   std::vector<std::string> pendingTable;
 };
 struct DumpDeps {
-  std::uint64_t fileDependsOn = 0;
+  std::uint64_t fileDependsOn{0};
   std::string filePath;
 };
 struct DropDeps {
-  std::uint64_t tableDependsOn = 0;
+  std::uint64_t tableDependsOn{0};
 };
 struct CopyTableDeps {
-  std::uint64_t srcTableDependsOn = 0;
-  std::uint64_t dstTableDependsOn = 0;
+  std::uint64_t srcTableDependsOn{0};
+  std::uint64_t dstTableDependsOn{0};
 };
 using DependencyPayload =
     std::variant<std::monostate, LoadDeps, DumpDeps, DropDeps, CopyTableDeps>;

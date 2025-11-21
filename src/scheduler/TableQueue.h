@@ -7,8 +7,8 @@
 #include "./ScheduledItem.h"
 
 struct TableQueue {
-  bool registered = false;       // LOAD or not
-  std::uint64_t registerSeq = 0; // seq of LOAD
+  bool registered{false};       // LOAD or not
+  std::uint64_t registerSeq{0}; // seq of LOAD
   std::deque<ScheduledItem> queue;
 
   [[nodiscard]] auto size() const -> std::size_t { return queue.size(); }
