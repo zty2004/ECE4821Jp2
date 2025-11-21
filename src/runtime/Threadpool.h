@@ -125,16 +125,14 @@ private:
 #endif
 
   void work() {
-    ExecutableTask task;
+    PooledTask current_item;
     bool has_task = false;
     {
       std::unique_lock<std::mutex> lock(local_mutex_);
-
       if (local_queue_.empty()) {
-        lock.unlock();  // unlock before doing batch fetch since it takes long
-                        // time
+        lock.unlock();
 
-        std::vector<ExecutableTask> batch;  // temporary task container
+        std::vector<ExecutableTask> batch;
         batch.reserve(FETCH_BATCH_SIZE);
 
         for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
@@ -148,19 +146,25 @@ private:
 
         lock.lock();
         for (auto &tmp : batch) {
-          local_queue_.push(std::move(tmp));
+          local_queue_.emplace(std::move(tmp));
         }
       }
 
       if (!local_queue_.empty()) {
-        task = std::move(local_queue_.front());
+        current_item = std::move(local_queue_.front());
         local_queue_.pop();
         has_task = true;
       }
     }
 
     if (has_task) {
-      execute_with_table_lock(task);
+      if (!tryExecuteTask(current_item)) {
+        std::unique_lock<std::mutex> lock(local_mutex_);
+        local_queue_.push(std::move(current_item));
+        lock.unlock();
+
+        std::this_thread::yield();
+      }
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
