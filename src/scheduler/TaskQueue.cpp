@@ -119,6 +119,35 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
   return actions;
 }
 
+void TaskQueue::applyActions(const ActionList &actions,
+                             const ScheduledItem &item) {
+  for (auto act : actions) {
+    switch (act) {
+    case CompletionAction::RegisterTable: {
+      auto &tbl = tables[item.tableId];
+      if (!tbl.registered && !tbl.queue.empty()) {
+        tbl.registered = true;
+        tbl.registerSeq = item.seq;
+        for (auto &pending : tbl.queue) {
+          if (pending.seq < item.seq) {
+            pending.droppedFlag =
+                true; // mark the queries before registered as dropped
+          }
+        }
+        const ScheduledItem &head = tbl.queue.front();
+        globalIndex.upsert(&tbl, head.priority,
+                           fetchTick.load(std::memory_order_relaxed), head.seq);
+      }
+      break;
+    }
+    case CompletionAction::UpdateDeps: {
+      // TODO: integrate DM completion (notifyCompleted for file/table)
+      break;
+    }
+    }
+  }
+}
+
 // Refactored single-path fetchNext (reduced branching)
 auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   std::lock_guard<std::mutex> lock(mu);
