@@ -104,6 +104,66 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     break;
   }
 
+  // No candidate case
+  if (tableCand == nullptr && loadCand == nullptr) {
+    if (!barriers.empty()) {
+      ScheduledItem barrierItem = std::move(barriers.front());
+      barriers.pop_front();
+      if (barrierItem.type == QueryType::Quit) {
+        quitFlag = true;
+      }
+      buildExecutableFromScheduled(barrierItem, out);
+      running.fetch_add(1, std::memory_order_relaxed);
+      fetchTick.fetch_add(1, std::memory_order_relaxed);
+      // Reinsert stashed tables
+      for (auto *blocked : waitingTables) {
+        if (blocked != nullptr && !blocked->queue.empty()) {
+          const ScheduledItem &blockedHead = blocked->queue.front();
+          globalIndex.upsert(blocked, blockedHead.priority,
+                             fetchTick.load(std::memory_order_relaxed),
+                             blockedHead.seq);
+        }
+      }
+      waitingTables.clear();
+      loadBlocked = false;
+      return true;
+    }
+    return false;
+  }
+
+  // choose higher priority, then smaller seq
+  ScheduledItem *chosen = nullptr;
+  TableQueue *chosenTableQ = nullptr;
+  if (loadCand != nullptr && tableCand != nullptr) {
+    const bool preferLoad = (loadCand->priority < tableCand->priority) ||
+                            (loadCand->priority == tableCand->priority &&
+                             loadCand->seq < tableCand->seq);
+    chosen = preferLoad ? loadCand : tableCand;
+    if (!preferLoad) {
+      chosenTableQ = tableCandQ;
+    }
+  } else if (loadCand != nullptr) {
+    chosen = loadCand;
+  } else {
+    chosen = tableCand;
+    chosenTableQ = tableCandQ;
+  }
+
+  // Materialize and update structures
+  if (chosen == loadCand) {
+    buildExecutableFromScheduled(*chosen, out);
+    loadQueue.pop_front();
+  } else if (chosenTableQ != nullptr) {
+    buildExecutableFromScheduled(*chosen, out);
+    chosenTableQ->queue.pop_front();
+    if (!chosenTableQ->queue.empty()) {
+      const ScheduledItem &newHead = chosenTableQ->queue.front();
+      globalIndex.upsert(chosenTableQ, newHead.priority,
+                         fetchTick.load(std::memory_order_relaxed),
+                         newHead.seq);
+    }
+  }
+
   running.fetch_add(1, std::memory_order_relaxed);
   fetchTick.fetch_add(1, std::memory_order_relaxed);
   return true;
