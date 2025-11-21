@@ -103,29 +103,11 @@ private:
 
   void executeTask(ExecutableTask &task);
 
-  void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
-  void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
-  void executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }
+  void executeWrite(ExecutableTask &task);
+  void executeRead(ExecutableTask &task);
+  void executeNull(ExecutableTask &task);
 
-  void run_logic(ExecutableTask &task, const char *type) {
-    try {
-      std::unique_ptr<QueryResult> res;
-      if (task.execOverride) {
-        res = task.execOverride();
-      } else {
-        res = std::make_unique<QueryResult>(std::string(type) + " Result");
-      }
-      task.promise.set_value(std::move(res));
-    } catch (...) {
-      try {
-        task.promise.set_exception(std::current_exception());
-      } catch (...) {
-      }
-    }
-    if (task.onCompleted) {
-      task.onCompleted();
-    }
-  }
+  void run_logic(ExecutableTask &task, const char *type);
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
