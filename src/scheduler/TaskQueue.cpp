@@ -11,6 +11,7 @@
 
 #include "../db/Database.h"
 #include "../query/Query.h"
+#include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
 #include "ScheduledItem.h"
@@ -18,16 +19,18 @@
 auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
     -> std::future<std::unique_ptr<QueryResult>> {
   ParsedQuery prQuery = std::move(parsedQuery);
+
+  // Get future from the promise that Runtime created
+  auto fut = prQuery.promise.get_future();
+
   std::lock_guard<std::mutex> lock(mu);
 
   if (quitFlag) {
     auto tmpPromise = std::promise<std::unique_ptr<QueryResult>>();
-    auto fut =
-        tmpPromise
-            .get_future();  // TODO: input should be ParsedQuery with promise
+    auto tmpFut = tmpPromise.get_future();
     tmpPromise.set_value(std::make_unique<ErrorMsgResult>(
         "RegisterTask", "system", "quitFlag active: rejecting new task"));
-    return fut;
+    return tmpFut;
   }
 
   ScheduledItem item;
@@ -38,7 +41,6 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
   item.query = std::move(prQuery.query);
   item.promise = std::move(prQuery.promise);
 
-  auto fut = item.promise.get_future();
   submitted.fetch_add(1, std::memory_order_relaxed);
 
   if (item.type == QueryType::Quit || item.type == QueryType::List) {
