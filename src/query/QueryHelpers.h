@@ -6,6 +6,41 @@
 #include "./Query.h"
 #include "./QueryPriority.h"
 
+enum class QueryKind : std::uint8_t { Read, Write, Null };
+
+[[nodiscard]] constexpr auto getQueryKind(QueryType type) -> QueryKind {
+  switch (type) {
+  // --- Read Operations (S Lock) ---
+  case QueryType::Dump:
+  case QueryType::List:
+  case QueryType::PrintTable:
+  case QueryType::Select:
+  case QueryType::Count:
+  case QueryType::Sum:
+  case QueryType::Min:
+  case QueryType::Max:
+    return QueryKind::Read;
+
+  case QueryType::Load:
+  case QueryType::Drop:
+  case QueryType::Truncate:
+  case QueryType::CopyTable:
+  case QueryType::Insert:
+  case QueryType::Update:
+  case QueryType::Delete:
+  case QueryType::Duplicate:
+  case QueryType::Add:
+  case QueryType::Sub:
+  case QueryType::Swap:
+    return QueryKind::Write;
+
+  case QueryType::Quit:
+  case QueryType::Nop:
+  default:
+    return QueryKind::Null;
+  }
+}
+
 // Resolve a queue routing id for a query
 // - If query has a concrete table name then return it
 // - Otherwise route to control pseudo table "__control__"
