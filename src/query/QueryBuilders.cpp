@@ -31,7 +31,6 @@
 #include "management/DropTableQuery.h"
 #include "management/DumpTableQuery.h"
 #include "management/ListTableQuery.h"
-#include "management/ListenQuery.h"
 #include "management/LoadTableQuery.h"
 #include "management/PrintTableQuery.h"
 #include "management/QuitQuery.h"
@@ -73,9 +72,6 @@ auto ManageTableQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
     }
     if (query.token.front() == "TRUNCATE") {
       return std::make_unique<TruncateTableQuery>(query.token[1]);
-    }
-    if (query.token.front() == "LISTEN") {
-      return std::make_unique<ListenQuery>(query.token[1]);
     }
   }
   if (query.token.size() == 3) {
