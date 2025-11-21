@@ -1,7 +1,7 @@
 //
 // Threadpool
-// Accept one task from Manager, distribute it to a thread. This class focues on
-// thread management and synchronization.
+// When the threadpool has empty slot, it asks scheduler for tasks. This class
+// focues on thread management and synchronization.
 //
 
 #ifndef SRC_RUNTIME_THREADPOOL_H_
