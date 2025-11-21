@@ -12,11 +12,35 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
 
   if (item.type == QueryType::Load) {
     auto filePath = extractFilePath(*item.query);
-    auto res = markScheduledFile(filePath, seq, tag);
-    auto fileDependsOn = res.second;
-    res = markScheduledTable(tableId, seq, tag);
-    auto tableDependsOn = res.second;
-    item.depends = LoadDeps(fileDependsOn, tableDependsOn, filePath);
+    auto prevFile = markScheduledFile(filePath, seq, tag);
+    auto prevFileTag = prevFile.first;
+    auto prevFileSeq = prevFile.second;
+
+    auto completedIter = lastCompletedFile.find(filePath);
+    std::uint64_t const fileCompleted =
+        completedIter == lastCompletedFile.end() ? 0 : completedIter->second;
+
+    bool const pending =
+        (prevFileTag == QueryType::Dump && fileCompleted < prevFileSeq);
+
+    if (pending) {
+      // Pending LOAD
+      // Apply Nop to any tables currently marked Drop to enforce one-hop wait.
+      for (auto &entry : lastScheduledTable) {
+        if (entry.second.first == QueryType::Drop) {
+          entry.second.first = QueryType::Nop;
+          entry.second.second = seq;
+        }
+      }
+      // Record only file dependency, tableDependsOn left 0 (to be resolved
+      // after file complete)
+      item.depends = LoadDeps(prevFileSeq, 0, filePath);
+      return;
+    }
+
+    auto prevTable = markScheduledTable(tableId, seq, tag);
+    auto prevTableSeq = prevTable.second;
+    item.depends = LoadDeps(prevFileSeq, prevTableSeq, filePath);
     return;
   }
 
