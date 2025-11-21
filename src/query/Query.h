@@ -79,6 +79,12 @@ public:
     return kEmptyFilePath;
   }
 
+  // Virtual accessor for new table name (COPYTABLE)
+  [[nodiscard]] virtual auto newTable() const -> const std::string & {
+    static const std::string kEmptyNewTable;
+    return kEmptyNewTable;
+  }
+
   virtual ~Query() = default;
 };
 
