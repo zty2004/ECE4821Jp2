@@ -16,6 +16,7 @@
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "LockManager.h"
+#include "WorkerPool.h"
 
 class Runtime {
 public:
@@ -37,23 +38,15 @@ public:
   auto getResultsInOrder() -> std::vector<QueryResult::Ptr>;
 
 private:
-  [[nodiscard]] auto isSingleThreadMode() const noexcept -> bool {
-    return numThreads_ == 1;
-  }
-
   std::size_t numThreads_;
 
   std::unique_ptr<LockManager> lockMgr_;
-  // TODO: Add TaskQueue and WorkerPool when implemented
-  // std::unique_ptr<TaskQueue> taskQueue_;
-  // std::unique_ptr<WorkerPool> workers_;
+  std::unique_ptr<TaskQueue> taskQueue_;
+  std::unique_ptr<WorkerPool> workers_;
 
   std::mutex futuresMtx_;
 
-  // Single-threaded mode: store results directly
-  std::map<std::size_t, QueryResult::Ptr> results_;
-
-  // Multi-threaded mode: store futures
+  // Store futures for all submitted queries
   std::map<std::size_t, std::future<std::unique_ptr<QueryResult>>> futures_;
 
   std::size_t totalSubmitted_{0};
