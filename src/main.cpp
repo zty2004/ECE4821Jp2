@@ -186,6 +186,77 @@ auto extractQueryString(std::istream &input_stream) -> std::string {
   }
 }
 
+void outputQueryResult(size_t queryNum, const QueryResult::Ptr &result) {
+  std::cout << queryNum << "\n";
+  if (result->success()) {
+    if (result->display()) {
+      std::cout << *result;
+    } else {
+#ifndef NDEBUG
+      std::cout.flush();
+      std::cerr << *result;
+#endif
+    }
+  } else {
+    std::cout.flush();
+    std::cerr << "QUERY FAILED:\n\t" << *result;
+  }
+}
+
+void executeQueries(std::istream &input_stream, std::ifstream &fin,
+                    QueryParser &parser, Runtime &runtime, size_t numThreads) {
+  size_t counter = 0;
+
+  while (input_stream) {
+    try {
+      std::string const queryStr = extractQueryString(input_stream);
+      Query::Ptr query = parser.parseQuery(queryStr);
+
+      // Handle LISTEN query specially (changes input stream)
+      auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+      if (listenQuery != nullptr) {
+        const std::string &newFileName = listenQuery->getFileName();
+        std::ifstream newFin(newFileName);
+        if (!newFin.is_open()) {
+          std::cout << ++counter << "\n";
+          std::cout.flush();
+          std::cerr << "Error: could not open " << newFileName << "\n";
+          continue;
+        }
+        fin.close();
+        fin = std::move(newFin);
+        input_stream.rdbuf(fin.rdbuf());
+      }
+
+      ++counter;
+
+      if (numThreads == 1) {
+        // Single-threaded: execute and output immediately
+        auto result = query->execute();
+        outputQueryResult(counter, result);
+      } else {
+        // Multi-threaded: submit to runtime
+        runtime.submitQuery(std::move(query), counter);
+      }
+
+    } catch (const std::ios_base::failure &) {
+      break;  // End of input
+    } catch (const std::exception &exception_obj) {
+      std::cout.flush();
+      std::cerr << exception_obj.what() << '\n';
+    }
+  }
+
+  // Multi-threaded mode: wait and output all results
+  if (numThreads > 1) {
+    runtime.waitAll();
+    auto results = runtime.getResultsInOrder();
+    for (size_t i = 0; i < results.size(); ++i) {
+      outputQueryResult(i + 1, results[i]);
+    }
+  }
+}
+
 // NOLINTNEXTLINE(readability-function-size)
 auto run(std::span<char *> argv, int argc) -> int {
   // Assume only C++ style I/O is used in lemondb
@@ -242,101 +313,13 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
 
   QueryParser parser;
-
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Debug)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(ManageTable)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Complex)>());
 
-  // Always use Runtime (numThreads=1 means single-threaded mode)
   Runtime runtime(numThreads);
 
-  size_t counter = 0;
-
-  while (input_stream) {
-    try {
-      // A very standard REPL
-      // REPL: Read-Evaluate-Print-Loop
-      std::string const queryStr = extractQueryString(input_stream);
-      Query::Ptr query = parser.parseQuery(queryStr);
-
-      // Check if this is a LISTEN query - handle it specially
-      auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
-      if (listenQuery != nullptr) {
-        // LISTEN query changes the input stream, so handle it directly
-        const std::string &newFileName = listenQuery->getFileName();
-
-        // Try to open the new file
-        std::ifstream newFin(newFileName);
-        if (!newFin.is_open()) {
-          std::cout << ++counter << "\n";
-          std::cout.flush();
-          std::cerr << "Error: could not open " << newFileName << "\n";
-          continue;  // Continue with current input stream
-        }
-
-        // Switch the input stream to the new file
-        fin.close();
-        fin = std::move(newFin);
-        input_stream.rdbuf(fin.rdbuf());
-      }
-
-      // Regular query execution
-      ++counter;
-
-      if (numThreads == 1) {
-        // Single-threaded: execute immediately and output
-        auto result = query->execute();
-        std::cout << counter << "\n";
-        if (result->success()) {
-          if (result->display()) {
-            std::cout << *result;
-          } else {
-#ifndef NDEBUG
-            std::cout.flush();
-            std::cerr << *result;
-#endif
-          }
-        } else {
-          std::cout.flush();
-          std::cerr << "QUERY FAILED:\n\t" << *result;
-        }
-      } else {
-        // Multi-threaded: submit to runtime
-        runtime.submitQuery(std::move(query), counter);
-      }
-
-    } catch (const std::ios_base::failure &) {
-      // End of input
-      break;
-    } catch (const std::exception &exception_obj) {
-      std::cout.flush();
-      std::cerr << exception_obj.what() << '\n';
-    }
-  }
-
-  // Multi-threaded mode: wait for all queries and output results
-  if (numThreads > 1) {
-    runtime.waitAll();
-    auto results = runtime.getResultsInOrder();
-
-    for (size_t i = 0; i < results.size(); ++i) {
-      std::cout << (i + 1) << "\n";
-      const auto &result = results[i];
-      if (result->success()) {
-        if (result->display()) {
-          std::cout << *result;
-        } else {
-#ifndef NDEBUG
-          std::cout.flush();
-          std::cerr << *result;
-#endif
-        }
-      } else {
-        std::cout.flush();
-        std::cerr << "QUERY FAILED:\n\t" << *result;
-      }
-    }
-  }
+  executeQueries(input_stream, fin, parser, runtime, numThreads);
 
   return 0;
 }
