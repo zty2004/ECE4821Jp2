@@ -101,28 +101,7 @@ private:
 
   void work();
 
-  void executeTask(ExecutableTask &task) {
-    if (!task.query) {
-      executeNull(task);
-      return;
-    }
-
-    const TableId tid = resolveTableId(*task.query);
-    const QueryKind kind = getQueryKind(queryType(*task.query));
-
-    try {
-      if (kind == QueryKind::Write) {
-        WriteGuard guard(lock_manager_, tid);
-        executeWrite(task);
-      } else if (kind == QueryKind::Read) {
-        ReadGuard guard(lock_manager_, tid);
-        executeRead(task);
-      } else {
-        executeNull(task);
-      }
-    } catch (...) {
-    }
-  }
+  void executeTask(ExecutableTask &task);
 
   void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
   void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
