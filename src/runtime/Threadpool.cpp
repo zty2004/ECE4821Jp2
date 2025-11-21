@@ -156,7 +156,15 @@ void Threadpool::run_logic(ExecutableTask &task, const char * /*type*/) {
       // Promise already satisfied, ignore
     }
   }
+
+  // Always call onCompleted callback if present, even if execution failed
+  // Protect against exceptions in callback
   if (task.onCompleted) {
-    task.onCompleted();
+    try {
+      task.onCompleted();
+    } catch (...) {
+      // Callback should not throw, but protect against it anyway
+      // Log or handle the error if needed
+    }
   }
 }
