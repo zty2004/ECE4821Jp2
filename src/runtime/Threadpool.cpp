@@ -150,3 +150,24 @@ template <std::size_t PoolSize>
 void Threadpool<PoolSize>::executeNull(ExecutableTask &task) {
   run_logic(task, "NULL");
 }
+
+template <std::size_t PoolSize>
+void Threadpool<PoolSize>::run_logic(ExecutableTask &task, const char *type) {
+  try {
+    std::unique_ptr<QueryResult> res;
+    if (task.execOverride) {
+      res = task.execOverride();
+    } else {
+      res = std::make_unique<QueryResult>(std::string(type) + " Result");
+    }
+    task.promise.set_value(std::move(res));
+  } catch (...) {
+    try {
+      task.promise.set_exception(std::current_exception());
+    } catch (...) {
+    }
+  }
+  if (task.onCompleted) {
+    task.onCompleted();
+  }
+}
