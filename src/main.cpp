@@ -11,10 +11,12 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <span>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 #include "query/Query.h"
 #include "query/QueryBuilders.h"
@@ -203,47 +205,136 @@ void outputQueryResult(size_t queryNum, const QueryResult::Ptr &result) {
   }
 }
 
-void executeQueries(std::istream &input_stream, std::ifstream &fin,
-                    QueryParser &parser, Runtime &runtime, size_t numThreads) {
-  size_t counter = 0;
+// Process a single file and collect LISTEN queries
+struct FileProcessResult {
+  std::vector<Query::Ptr> queries;
+  std::vector<std::string> listenFiles;
+};
+
+auto processFile(const std::string &filename,
+                 QueryParser &parser) -> FileProcessResult {
+  FileProcessResult result;
+
+  std::ifstream fin(filename);
+  if (!fin.is_open()) {
+    std::cerr << "Error: could not open " << filename << "\n";
+    return result;
+  }
+
+  std::istream &input_stream = fin;
 
   while (input_stream) {
     try {
       std::string const queryStr = extractQueryString(input_stream);
       Query::Ptr query = parser.parseQuery(queryStr);
 
-      // Handle LISTEN query specially (changes input stream)
+      // Check if this is a LISTEN query
       auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
       if (listenQuery != nullptr) {
-        const std::string &newFileName = listenQuery->getFileName();
-        std::ifstream newFin(newFileName);
-        if (!newFin.is_open()) {
-          std::cout << ++counter << "\n";
-          std::cout.flush();
-          std::cerr << "Error: could not open " << newFileName << "\n";
-          continue;
-        }
-        fin.close();
-        fin = std::move(newFin);
-        input_stream.rdbuf(fin.rdbuf());
+        // Enqueue the listen file for later processing
+        result.listenFiles.push_back(listenQuery->getFileName());
       }
 
-      ++counter;
-
-      if (numThreads == 1) {
-        // Single-threaded: execute and output immediately
-        auto result = query->execute();
-        outputQueryResult(counter, result);
-      } else {
-        // Multi-threaded: submit to runtime
-        runtime.submitQuery(std::move(query), counter);
-      }
+      // Store all queries (including LISTEN)
+      result.queries.push_back(std::move(query));
 
     } catch (const std::ios_base::failure &) {
-      break;  // End of input
+      break;  // End of file
     } catch (const std::exception &exception_obj) {
       std::cout.flush();
       std::cerr << exception_obj.what() << '\n';
+    }
+  }
+
+  return result;
+}
+
+void executeQueries(std::istream &input_stream, std::ifstream &fin,
+                    QueryParser &parser, Runtime &runtime, size_t numThreads) {
+  size_t counter = 0;
+  std::queue<std::string> fileQueue;
+  std::vector<Query::Ptr> allQueries;
+
+  // BFS-style file traversal
+  // Process initial input (either from file or stdin)
+  bool isInitialFile = !fin.is_open();
+
+  if (isInitialFile) {
+    // Read from stdin - process inline
+    while (input_stream) {
+      try {
+        std::string const queryStr = extractQueryString(input_stream);
+        Query::Ptr query = parser.parseQuery(queryStr);
+
+        auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+        if (listenQuery != nullptr) {
+          fileQueue.push(listenQuery->getFileName());
+        }
+
+        allQueries.push_back(std::move(query));
+
+      } catch (const std::ios_base::failure &) {
+        break;
+      } catch (const std::exception &exception_obj) {
+        std::cout.flush();
+        std::cerr << exception_obj.what() << '\n';
+      }
+    }
+  } else {
+    // Read from file - use BFS
+    // Get initial filename from fin
+    // Note: We need to extract filename, but it's not stored in ifstream
+    // So we'll process the current stream first
+    while (input_stream) {
+      try {
+        std::string const queryStr = extractQueryString(input_stream);
+        Query::Ptr query = parser.parseQuery(queryStr);
+
+        auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+        if (listenQuery != nullptr) {
+          fileQueue.push(listenQuery->getFileName());
+        }
+
+        allQueries.push_back(std::move(query));
+
+      } catch (const std::ios_base::failure &) {
+        break;
+      } catch (const std::exception &exception_obj) {
+        std::cout.flush();
+        std::cerr << exception_obj.what() << '\n';
+      }
+    }
+  }
+
+  // Process queued files in BFS order
+  while (!fileQueue.empty()) {
+    std::string filename = fileQueue.front();
+    fileQueue.pop();
+
+    auto fileResult = processFile(filename, parser);
+
+    // Append queries from this file
+    allQueries.insert(allQueries.end(),
+                      std::make_move_iterator(fileResult.queries.begin()),
+                      std::make_move_iterator(fileResult.queries.end()));
+
+    // Enqueue any LISTEN files found
+    for (const auto &listenFile : fileResult.listenFiles) {
+      fileQueue.push(listenFile);
+    }
+  }
+
+  // Execute all queries in order
+  for (auto &query : allQueries) {
+    ++counter;
+
+    if (numThreads == 1) {
+      // Single-threaded: execute and output immediately
+      auto result = query->execute();
+      outputQueryResult(counter, result);
+    } else {
+      // Multi-threaded: submit to runtime
+      runtime.submitQuery(std::move(query), counter);
     }
   }
 
