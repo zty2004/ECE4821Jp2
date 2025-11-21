@@ -94,12 +94,20 @@ public:
 
 private:
   static constexpr std::size_t thread_count = PoolSize;
-  struct PooledTask {
-    ExecutableTask task;
-    int attempts = 0;
-
+  class PooledTask {
+  public:
     PooledTask() = default;
-    PooledTask(ExecutableTask &&t) : task(std::move(t)), attempts(0) {}
+    explicit PooledTask(ExecutableTask &&task) : task_(std::move(task)) {}
+
+    auto getTask() -> ExecutableTask & { return task_; }
+
+    [[nodiscard]] auto getAttempts() const -> int { return attempts_; }
+
+    void incrementAttempts() { attempts_++; }
+
+  private:
+    ExecutableTask task_;
+    int attempts_ = 0;
   };
   LockManager &lock_manager_;
   TaskQueue &task_queue_;
@@ -171,7 +179,7 @@ private:
   }
 
   auto tryExecuteTask(PooledTask &item) -> bool {
-    ExecutableTask &task = item.task;
+    ExecutableTask &task = item.getTask();
 
     if (!task.query) {
       executeGeneral(task);
@@ -182,7 +190,7 @@ private:
     // const OpKind kind = task.query->kind;
 
     if (kind == OpKind::Write) {
-      if (item.attempts == 0) {
+      if (item.getAttempts() == 0) {
         lock_manager_.writerIntentBegin(tid);
       }
 
@@ -193,13 +201,13 @@ private:
         return true;
       }
 
-      item.attempts++;
+      item.incrementAttempts();
       return false;
     }
 
     if (kind == OpKind::Read) {
       if (!lock_manager_.canAdmitShared(tid)) {
-        item.attempts++;
+        item.incrementAttempts();
         return false;
       }
 
@@ -209,7 +217,7 @@ private:
         return true;
       }
 
-      item.attempts++;
+      item.incrementAttempts();
       return false;
     }
 
