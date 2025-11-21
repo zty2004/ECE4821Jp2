@@ -11,6 +11,7 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
   const std::string &tableId = item.tableId;
 
   if (item.type == QueryType::Load) {
+    std::vector<std::string> pendingTables;
     auto filePath = extractFilePath(*item.query);
     auto prevFile = markScheduledFile(filePath, seq, tag);
     auto prevFileTag = prevFile.first;
@@ -25,22 +26,23 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
 
     if (pending) {
       // Pending LOAD
-      // Apply Nop to any tables currently marked Drop to enforce one-hop wait.
+      // Apply Nop to any tables currently marked Drop to enforce one-hop wait
       for (auto &entry : lastScheduledTable) {
         if (entry.second.first == QueryType::Drop) {
           entry.second.first = QueryType::Nop;
           entry.second.second = seq;
+          pendingTables.emplace_back(entry.first);
         }
       }
       // Record only file dependency, tableDependsOn left 0 (to be resolved
       // after file complete)
-      item.depends = LoadDeps(prevFileSeq, 0, filePath);
+      item.depends = LoadDeps(prevFileSeq, 0, filePath, pendingTables);
       return;
     }
 
     auto prevTable = markScheduledTable(tableId, seq, tag);
     auto prevTableSeq = prevTable.second;
-    item.depends = LoadDeps(prevFileSeq, prevTableSeq, filePath);
+    item.depends = LoadDeps(prevFileSeq, prevTableSeq, filePath, pendingTables);
     return;
   }
 
@@ -116,11 +118,11 @@ auto DependencyManager::notifyCompleted(
     return ready;
   }
   auto &heap = waitingIter->second;
-  if (!heap.empty()) {
+  while (!heap.empty()) {
     ScheduledItem const &waitItem = *heap.top();
     if (waitItem.type == QueryType::Load &&
         std::get<LoadDeps>(waitItem.depends).fileDependsOn < completedSeq) {
-      return ready;
+      break;
     }
     ready.push_back(heap.top());
     heap.pop();
@@ -133,8 +135,8 @@ auto DependencyManager::notifyCompleted(
 
 auto DependencyManager::lastCompletedFor(
     const DependencyType &type, const std::string &key) const -> std::uint64_t {
-  auto &lastCompleted = type == DependencyType::File ? lastCompletedFile[key]
-                                                     : lastCompletedTable[key];
-  auto iter = lastCompletedFile.find(key);
-  return iter == lastCompletedFile.end() ? 0 : iter->second;
+  const auto &lastCompletedMap =
+      type == DependencyType::File ? lastCompletedFile : lastCompletedTable;
+  auto iter = lastCompletedMap.find(key);
+  return iter == lastCompletedMap.end() ? 0 : iter->second;
 }

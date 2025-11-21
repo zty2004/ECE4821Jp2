@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include "../query/QueryPriority.h"
 
@@ -16,6 +17,7 @@ struct LoadDeps {
   std::uint64_t fileDependsOn = 0;
   std::uint64_t tableDependsOn = 0;
   std::string filePath;
+  std::vector<std::string> pendingTable;
 };
 struct DumpDeps {
   std::uint64_t fileDependsOn = 0;

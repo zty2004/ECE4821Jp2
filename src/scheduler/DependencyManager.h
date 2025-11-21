@@ -2,7 +2,6 @@
 #define SRC_SCHEDULER_DEPENDENCYMANAGER_H_
 
 #include <cstdint>
-#include <deque>
 #include <queue>
 #include <string>
 #include <unordered_map>
