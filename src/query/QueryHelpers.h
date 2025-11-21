@@ -10,7 +10,6 @@ enum class QueryKind : std::uint8_t { Read, Write, Null };
 
 [[nodiscard]] constexpr auto getQueryKind(QueryType type) -> QueryKind {
   switch (type) {
-  // --- Read Operations (S Lock) ---
   case QueryType::Dump:
   case QueryType::List:
   case QueryType::PrintTable:
