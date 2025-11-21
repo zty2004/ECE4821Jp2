@@ -1,9 +1,13 @@
 #include "TaskQueue.h"
 
 #include <atomic>
+#include <csignal>
+#include <exception>
+#include <format>
 #include <future>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <utility>
 
 #include "../query/Query.h"
@@ -63,10 +67,56 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   dst.query = std::move(src.query);
   dst.promise = std::move(src.promise);
   dst.execOverride = nullptr; // normal path executed by worker
-  dst.onCompleted = [this]() {
+  const ActionList actions = classifyActions(src);
+  const std::string capturedTable =
+      src.tableId; // src.tableId still valid post-move of query & promise
+  const QueryType capturedType = src.type;
+  const std::uint64_t capturedSeq = src.seq;
+  dst.onCompleted = [this, actions, capturedTable, capturedType,
+                     capturedSeq]() {
+    {
+      std::lock_guard<std::mutex> callbackLock(mu);
+      ScheduledItem meta; // placeholder
+      meta.tableId = capturedTable;
+      meta.type = capturedType;
+      meta.seq = capturedSeq;
+      applyActions(actions, meta);
+    }
     running.fetch_sub(1, std::memory_order_relaxed);
     completed.fetch_add(1, std::memory_order_relaxed);
   };
+}
+
+auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
+  ActionList actions;
+  switch (item.type) {
+  case QueryType::Load:
+  case QueryType::CopyTable: {
+    auto tblIt = tables.find(item.tableId);
+    bool needRegister = true;
+    if (tblIt != tables.end() && tblIt->second.registered) {
+      if (tblIt->second.registerSeq > item.seq) {
+        throw std::invalid_argument(std::format(
+            "Wrongly execute a latter Load {} before an ealier Load {}",
+            tblIt->second.registerSeq, item.seq));
+      }
+      needRegister = false;
+    }
+    if (needRegister) {
+      actions.push_back(CompletionAction::RegisterTable);
+    }
+    actions.push_back(CompletionAction::UpdateDeps);
+    break;
+  }
+  case QueryType::Dump:
+  case QueryType::Drop: {
+    actions.push_back(CompletionAction::UpdateDeps);
+    break;
+  }
+  default:
+    break; // no action for other types
+  }
+  return actions;
 }
 
 // Refactored single-path fetchNext (reduced branching)
@@ -167,32 +217,4 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   running.fetch_add(1, std::memory_order_relaxed);
   fetchTick.fetch_add(1, std::memory_order_relaxed);
   return true;
-}
-
-// Legacy API kept until CompletionAction/onCompleted path mplemented
-void TaskQueue::completeLoad(const std::string &tableId,
-                             std::uint64_t loadSeq) {
-  std::lock_guard<std::mutex> lock(mu);
-  auto tblIt = tables.find(tableId);
-  if (tblIt == tables.end()) {
-    return;
-  }
-  auto &tbl = tblIt->second;
-  if (tbl.registered) {
-    return;
-  }
-  tbl.registered = true;
-  tbl.registerSeq = loadSeq;
-  // Drop earlier tasks (simple mark)
-  for (auto &pending : tbl.queue) {
-    if (pending.seq < loadSeq) {
-      pending.droppedFlag = true;
-    }
-  }
-  // Upsert current head after registration if exists
-  if (!tbl.queue.empty()) {
-    const ScheduledItem &head = tbl.queue.front();
-    globalIndex.upsert(&tbl, head.priority,
-                       fetchTick.load(std::memory_order_relaxed), head.seq);
-  }
 }
