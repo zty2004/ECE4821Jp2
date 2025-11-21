@@ -82,6 +82,44 @@ private:
   std::array<thread_t, PoolSize> threads;
   std::atomic<bool> stop_flag_{false};
 
+  class WriteGuard {
+  public:
+    WriteGuard(LockManager &lkm, TableId index)
+        : lm_(lkm), id_(std::move(index)) {
+      lm_.lockX(id_);
+    }
+
+    ~WriteGuard() { lm_.unlockX(id_); }
+
+    WriteGuard(const WriteGuard &) = delete;
+    auto operator=(const WriteGuard &) -> WriteGuard & = delete;
+    WriteGuard(WriteGuard &&) = delete;
+    auto operator=(WriteGuard &&) -> WriteGuard & = delete;
+
+  private:
+    LockManager &lm_;
+    TableId id_;
+  };
+
+  class ReadGuard {
+  public:
+    ReadGuard(LockManager &lkm, TableId index)
+        : lm_(lkm), id_(std::move(index)) {
+      lm_.lockS(id_);
+    }
+
+    ~ReadGuard() { lm_.unlockS(id_); }
+
+    ReadGuard(const ReadGuard &) = delete;
+    auto operator=(const ReadGuard &) -> ReadGuard & = delete;
+    ReadGuard(ReadGuard &&) = delete;
+    auto operator=(ReadGuard &&) -> ReadGuard & = delete;
+
+  private:
+    LockManager &lm_;
+    TableId id_;
+  };
+
 #ifdef __cpp_lib_jthread
   void worker_loop(const std::stop_token &st) {
     while (!st.stop_requested()) {
