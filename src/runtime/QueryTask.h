@@ -6,12 +6,10 @@
 #define SRC_RUNTIME_QUERYTASK_H_
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <utility>
 
 #include "../query/Query.h"
-#include "../query/QueryResult.h"
 
 using TableId = std::string;
 

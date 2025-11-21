@@ -5,8 +5,6 @@
 #ifndef SRC_RUNTIME_LOCKMANAGER_H_
 #define SRC_RUNTIME_LOCKMANAGER_H_
 
-#include <atomic>
-#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
