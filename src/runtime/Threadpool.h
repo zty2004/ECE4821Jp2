@@ -180,6 +180,27 @@ private:
     }
   }
 
+  void executeTask(ExecutableTask &task) {
+    if (!task.query) {
+      executeGeneral(task);
+      return;
+    }
+
+    const TableId tid = task.query->getTargetTable();
+    const OpKind kind = task.query->kind;
+
+    try {
+      if (kind == OpKind::Write) {
+        WriteGuard guard(lock_manager_, tid);
+        executeWrite(task);
+      } else {
+        ReadGuard guard(lock_manager_, tid);
+        executeRead(task);
+      }
+    } catch (...) {
+    }
+  }
+
   void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
   void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
   void executeGeneral(ExecutableTask &task) { run_logic(task, "GENERAL"); }
