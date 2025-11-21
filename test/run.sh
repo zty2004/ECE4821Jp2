@@ -55,6 +55,7 @@ run_exec() {
   diff "${binary}-${test}.out" stdout/"${test}.out" > "${binary}-${test}.diff"
   [ ! -s "${binary}-${test}.diff" ]
   check_result "DIFF" $? || { cat "${binary}-${test}.diff" >&2; return 1; }
+  echo "" && echo "[lemondb-old] START"
   { time ../lemondb --listen queries/"${test}.query" > "${binary}-${test}.out" 2> "${binary}-${test}.err"; } 2>&1
 }
 
