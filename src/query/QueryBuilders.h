@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "../db/Table.h"
 #include "QueryParser.h"
 
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)

@@ -11,34 +11,13 @@
 
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
+#include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
 #include <array>
 #include <cstddef>
 #include <future>
 #include <queue>
 #include <utility>
-
-// just to erase red cross
-struct ExecutableTask {
-  std::uint64_t seq = 0;
-  std::unique_ptr<Query> query;
-  std::promise<std::unique_ptr<QueryResult>> promise;
-  std::function<std::unique_ptr<QueryResult>()>
-      execOverride;                   // preset function
-  std::function<void()> onCompleted;  // callback closure
-
-  ExecutableTask() = default;
-  ~ExecutableTask() = default;
-  ExecutableTask(ExecutableTask &&) noexcept = default;
-  ExecutableTask &operator=(ExecutableTask &&) noexcept = default;  // NOLINT
-  ExecutableTask(const ExecutableTask &) = delete;
-  ExecutableTask &operator=(const ExecutableTask &) = delete;  // NOLINT
-};
-
-class TaskQueue {
-public:
-  auto fetchNext(ExecutableTask &out) -> bool;
-};
 
 #ifdef __cpp_lib_jthread
 /**
