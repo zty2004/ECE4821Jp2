@@ -9,15 +9,11 @@
 
 #define __cpp_lib_jthread
 
-#include "../query/QueryHelpers.h"
-#include "../query/QueryResult.h"
 #include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
 #include <array>
 #include <cstddef>
-#include <future>
 #include <queue>
-#include <utility>
 
 #ifdef __cpp_lib_jthread
 /**
