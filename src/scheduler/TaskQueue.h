@@ -85,7 +85,7 @@ private:
   GlobalIndex globalIndex;
 
   // loadQueue: FIFO of ready LOAD items
-  std::deque<FileDependencyManager::LoadNode> loadQueue;
+  std::deque<ScheduledItem> loadQueue;
   bool loadBlocked = false; // whether LoadQueue blocked by barrier
 
   // FDM instance for per-file dependency management

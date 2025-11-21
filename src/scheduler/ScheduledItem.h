@@ -5,19 +5,39 @@
 #include <future>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "../query/QueryPriority.h"
 
 class Query;
 class QueryResult;
 
+struct LoadDeps {
+  std::uint64_t fileDependsOn = 0;
+  std::uint64_t tableDependsOn = 0;
+  std::string filePath;
+};
+struct DumpDeps {
+  std::uint64_t fileDependsOn = 0;
+  std::string filePath;
+};
+struct DropDeps {
+  std::uint64_t tableDependsOn = 0;
+};
+struct CopyTableDeps {
+  std::uint64_t srcTableDependsOn = 0;
+  std::uint64_t dstTableDependsOn = 0;
+};
+using DependencyPayload =
+    std::variant<std::monostate, LoadDeps, DumpDeps, DropDeps, CopyTableDeps>;
+
 // One scheduled task (move-only)
 struct ScheduledItem {
   std::uint64_t seq = 0; // global submission sequence
   QueryPriority priority = QueryPriority::NORMAL;
-  std::string tableId;  // table name or "__control__"
-  std::string filePath; // optional for LOAD/DUMP
-  QueryType type;       // type of the query
+  std::string tableId;         // table name or "__control__"
+  QueryType type;              // type of the query
+  DependencyPayload depends{}; // default is std::monostate (no deps)
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise; // result promise
   bool droppedFlag = false;                           // dropped mark

@@ -12,7 +12,6 @@
 #include "../query/QueryHelpers.h"
 #include "../query/QueryPriority.h"
 #include "../query/QueryResult.h"
-#include "FileDependencyManager.h"
 #include "ScheduledItem.h"
 
 auto TaskQueue::registerTask(std::unique_ptr<Query> query)
@@ -39,7 +38,6 @@ auto TaskQueue::registerTask(std::unique_ptr<Query> query)
   item.seq = static_cast<std::uint64_t>(getId(*query));
   item.priority = classifyPriority(queryType(*query));
   item.tableId = resolveTableId(*query);
-  item.filePath = extractFilePath(*query);
   item.type = queryType(*query);
   item.query = std::move(query);
 
@@ -52,12 +50,19 @@ auto TaskQueue::registerTask(std::unique_ptr<Query> query)
   }
 
   if (item.type == QueryType::Load) {
-    FileDependencyManager::LoadNode loadNode; // manual populate
-    loadNode.filePath = item.filePath;
-    loadNode.dependsOn = 0; // TODO: markScheduled
-    loadNode.item = std::move(item);
-    loadQueue.emplace_back(std::move(loadNode));
+    item.depends =
+        LoadDeps(0, 0, extractFilePath(*item.query)); // TODO: MakeSchedule
+    loadQueue.emplace_back(std::move(item));
     return fut;
+  }
+
+  if (item.type == QueryType::Dump) {
+    item.depends =
+        DumpDeps(0, extractFilePath(*item.query)); // TODO: MakeSchedule
+  } else if (item.type == QueryType::Drop) {
+    item.depends = DropDeps(); // TODO: MakeSchedule
+  } else if (item.type == QueryType::CopyTable) {
+    item.depends = CopyTableDeps(); // TODO: MakeSchedule
   }
 
   auto &tbl = tables[item.tableId];
