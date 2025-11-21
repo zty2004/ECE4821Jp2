@@ -41,68 +41,70 @@ enum class QueryType : std::uint8_t {
 
 struct QueryCondition {
   std::string field;
-  size_t fieldId{};  // NOLINT(cppcoreguidelines-pro-type-member-init)
+  size_t fieldId;
   std::string op;
   std::function<bool(const Table::ValueType &, const Table::ValueType &)> comp;
   std::string value;
-  Table::ValueType
-      valueParsed{};  // NOLINT(cppcoreguidelines-pro-type-member-init)
+  Table::ValueType valueParsed;
 };
 
 class Query {
+protected:
+  std::string targetTable;
+  int id = -1;
+
 public:
   Query() = default;
 
   explicit Query(std::string targetTable)
       : targetTable(std::move(targetTable)) {}
 
-  // Rule of five
-  Query(const Query &) = delete;
-  auto operator=(const Query &) -> Query & = delete;
-  Query(Query &&) = delete;
-  auto operator=(Query &&) -> Query & = delete;
-  virtual ~Query() = default;
+  typedef std::unique_ptr<Query> Ptr;
 
-  using Ptr = std::unique_ptr<Query>;
+  virtual QueryResult::Ptr execute() = 0;
 
-  virtual auto execute() -> QueryResult::Ptr = 0;
+  virtual std::string toString() = 0;
 
-  virtual auto toString() -> std::string = 0;
+  [[nodiscard]] virtual auto type() const noexcept -> QueryType {
+    return QueryType::Nop;
+  }
 
-  [[nodiscard]] auto getTargetTable() const noexcept -> const std::string & {
+  [[nodiscard]] auto table() const -> const std::string & {
     return targetTable;
   }
 
-protected:
-  std::string targetTable;  // NOLINT
-  int id = -1;              // NOLINT
+  // Virtual accessor for an associated file path (LOAD/DUMP)
+  [[nodiscard]] virtual auto filePath() const -> const std::string & {
+    static const std::string kEmptyFilePath;
+    return kEmptyFilePath;
+  }
+
+  virtual ~Query() = default;
 };
 
 class NopQuery : public Query {
 public:
-  auto execute() -> QueryResult::Ptr override {
+  QueryResult::Ptr execute() override {
     return std::make_unique<NullQueryResult>();
   }
 
-  [[maybe_unused]] auto toString() -> std::string override {
-    return "QUERY = NOOP";
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Nop;
   }
+
+  // cppcheck-suppress unusedFunction
+  [[maybe_unused]] std::string toString() override { return "QUERY = NOOP"; }
 };
 
 class ComplexQuery : public Query {
-public:
-  using Ptr = std::unique_ptr<ComplexQuery>;
-
-  ComplexQuery(std::string targetTable, std::vector<std::string> operands,
-               std::vector<QueryCondition> condition)
-      : Query(std::move(targetTable)), operands(std::move(operands)),
-        condition(std::move(condition)) {}
-
 protected:
   /** The field names in the first () */
-  std::vector<std::string> operands;  // NOLINT
+  std::vector<std::string> operands;
   /** The function used in where clause */
-  std::vector<QueryCondition> condition;  // NOLINT
+  std::vector<QueryCondition> condition;
+
+public:
+  typedef std::unique_ptr<ComplexQuery> Ptr;
 
   /**
    * init a fast condition according to the table
@@ -114,7 +116,7 @@ protected:
    * if flag is false, the condition is always false
    * in this situation, the condition may not be fully initialized to save time
    */
-  auto initCondition(const Table &table) -> std::pair<std::string, bool>;
+  std::pair<std::string, bool> initCondition(const Table &table);
 
   /**
    * skip the evaluation of KEY
@@ -123,8 +125,8 @@ protected:
    * @param object
    * @return
    */
-  auto evalCondition(const Table::Object &object) -> bool;
-  auto evalCondition(const Table::ConstObject &object) -> bool;
+  bool evalCondition(const Table::Object &object);
+  bool evalCondition(const Table::ConstObject &object);
 
   /**
    * This function seems have small effect and causes somme bugs
@@ -133,21 +135,24 @@ protected:
    * @param function
    * @return
    */
-  [[maybe_unused]] auto testKeyCondition(
+  [[maybe_unused]] bool testKeyCondition(
       const Table &table,
-      const std::function<void(bool, Table::ConstObject::Ptr &&)> &function)
-      -> bool;
+      const std::function<void(bool, Table::ConstObject::Ptr &&)> &function);
+
+  ComplexQuery(std::string targetTable, std::vector<std::string> operands,
+               std::vector<QueryCondition> condition)
+      : Query(std::move(targetTable)), operands(std::move(operands)),
+        condition(std::move(condition)) {}
 
   /** Get operands in the query */
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] [[maybe_unused]] auto
-  getOperands() const -> const std::vector<std::string> & {
+  [[maybe_unused]] const std::vector<std::string> &getOperands() const {
     return operands;
   }
 
   /** Get condition in the query, seems no use now */
   // cppcheck-suppress unusedFunction
-  [[maybe_unused]] auto getCondition() -> const std::vector<QueryCondition> & {
+  [[maybe_unused]] const std::vector<QueryCondition> &getCondition() {
     return condition;
   }
 };
