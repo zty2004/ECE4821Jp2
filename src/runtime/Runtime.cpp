@@ -14,47 +14,45 @@
 #include <vector>
 
 #include "../query/Query.h"
+#include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
+#include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
-#include "TaskQueue.h"
-#include "WorkerPool.h"
-
-// Factory functions (defined in SimpleTaskQueue.cpp and SimpleWorkerPool.cpp)
-extern auto createSimpleTaskQueue() -> std::unique_ptr<TaskQueue>;
-extern auto createSimpleWorkerPool(LockManager *lockMgr, TaskQueue *taskQueue)
-    -> std::unique_ptr<WorkerPool>;
+#include "Threadpool.h"
 
 Runtime::Runtime(std::size_t numThreads)
-    : numThreads_(numThreads), lockMgr_(std::make_unique<LockManager>()) {
+    : lockMgr_(std::make_unique<LockManager>()),
+      taskQueue_(std::make_unique<TaskQueue>()),
+      threadpool_(
+          std::make_unique<Threadpool>(numThreads, *lockMgr_, *taskQueue_)) {
   // Runtime is only used in multi-threaded mode (numThreads > 1)
   std::cerr << "lemondb: info: multi-threaded mode enabled (" << numThreads
             << " workers)\n";
-
-  taskQueue_ = createSimpleTaskQueue();
-  workers_ = createSimpleWorkerPool(lockMgr_.get(), taskQueue_.get());
-  workers_->start(numThreads_);
 }
 
 Runtime::~Runtime() {
   waitAll();
-
-  // Stop workers before destroying TaskQueue
-  if (workers_) {
-    workers_->stop();
-  }
+  // Threadpool will be automatically destroyed (jthread auto-joins)
 }
 
 void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
   ++totalSubmitted_;
 
-  // Create promise and get future
-  std::promise<std::unique_ptr<QueryResult>> resultPromise;
+  // Get query type before moving query
+  QueryType qtype = queryType(*query);
 
-  // CRITICAL: Get future BEFORE moving promise
-  auto future = resultPromise.get_future();
+  // Prepare ParsedQuery for TaskQueue
+  ParsedQuery pq;
+  pq.seq = orderIndex;
+  pq.tableName = resolveTableId(*query);
+  pq.type = qtype;
+  pq.priority = classifyPriority(qtype);
+  pq.query = std::move(query);
+  pq.promise =
+      std::promise<std::unique_ptr<QueryResult>>();  // Runtime creates promise
 
-  // Submit to TaskQueue (promise is moved here)
-  taskQueue_->registerTask(std::move(query), std::move(resultPromise));
+  // TaskQueue will get_future() from promise before moving it
+  auto future = taskQueue_->registerTask(std::move(pq));
 
   // Store future for later retrieval
   {

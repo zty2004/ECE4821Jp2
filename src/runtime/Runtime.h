@@ -15,8 +15,9 @@
 
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
+#include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
-#include "WorkerPool.h"
+#include "Threadpool.h"
 
 class Runtime {
 public:
@@ -38,11 +39,9 @@ public:
   auto getResultsInOrder() -> std::vector<QueryResult::Ptr>;
 
 private:
-  std::size_t numThreads_;
-
   std::unique_ptr<LockManager> lockMgr_;
   std::unique_ptr<TaskQueue> taskQueue_;
-  std::unique_ptr<WorkerPool> workers_;
+  std::unique_ptr<Threadpool> threadpool_;
 
   std::mutex futuresMtx_;
 
