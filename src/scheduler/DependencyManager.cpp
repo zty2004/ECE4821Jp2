@@ -69,3 +69,48 @@ auto DependencyManager::markScheduledTable(const std::string &tableId,
   }
   return ret;
 }
+
+void DependencyManager::addWait(const DependencyType &type,
+                                const std::string &key, ScheduledItem *item) {
+  auto &waitingMap = type == DependencyType::File ? waitingFile : waitingTable;
+  waitingMap[key].push(item);
+}
+
+auto DependencyManager::notifyCompleted(
+    const DependencyType &type, const std::string &key,
+    std::uint64_t seq) -> std::vector<ScheduledItem *> {
+  std::vector<ScheduledItem *> ready;
+  auto &completedSeq = type == DependencyType::File ? lastCompletedFile[key]
+                                                    : lastCompletedTable[key];
+  if (seq < completedSeq) {
+    return ready;
+  }
+  completedSeq = seq;
+  auto &waitingMap = type == DependencyType::File ? waitingFile : waitingTable;
+  auto waitingIter = waitingMap.find(key);
+  if (waitingIter == waitingMap.end()) {
+    return ready;
+  }
+  auto &heap = waitingIter->second;
+  if (!heap.empty()) {
+    ScheduledItem const &waitItem = *heap.top();
+    if (waitItem.type == QueryType::Load &&
+        std::get<LoadDeps>(waitItem.depends).fileDependsOn < completedSeq) {
+      return ready;
+    }
+    ready.push_back(heap.top());
+    heap.pop();
+  }
+  if (heap.empty()) {
+    waitingMap.erase(waitingIter);
+  }
+  return ready;
+}
+
+auto DependencyManager::lastCompletedFor(
+    const DependencyType &type, const std::string &key) const -> std::uint64_t {
+  auto &lastCompleted = type == DependencyType::File ? lastCompletedFile[key]
+                                                     : lastCompletedTable[key];
+  auto iter = lastCompletedFile.find(key);
+  return iter == lastCompletedFile.end() ? 0 : iter->second;
+}

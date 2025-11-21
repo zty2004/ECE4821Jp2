@@ -3,13 +3,31 @@
 
 #include <cstdint>
 #include <deque>
+#include <queue>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../query/Query.h"
 #include "ScheduledItem.h"
 
 class DependencyManager {
+private:
+  struct Cmp {
+    auto operator()(const ScheduledItem *itema,
+                    const ScheduledItem *itemb) -> bool {
+      return itema->seq > itemb->seq;
+    }
+  };
+
+  using WaitingHeap =
+      std::priority_queue<ScheduledItem *, std::vector<ScheduledItem *>, Cmp>;
+
+  enum class DependencyType : std::uint8_t {
+    File,
+    Table,
+  };
+
 public:
   DependencyManager() = default;
   ~DependencyManager() = default;
@@ -21,25 +39,16 @@ public:
 
   void markScheduled(ScheduledItem &item, QueryType tag);
 
-  void addFileWait(const std::string &filePath, ScheduledItem *item,
-                   std::uint64_t dependsOn);
-
-  void addTableWait(const std::string &tableId, ScheduledItem *item,
-                    std::uint64_t dependsOn);
+  void addWait(const DependencyType &type, const std::string &key,
+               ScheduledItem *item);
 
   [[nodiscard]] auto
-  notifyFileCompleted(const std::string &filePath,
-                      std::uint64_t seq) -> std::vector<ScheduledItem *>;
+  notifyCompleted(const DependencyType &type, const std::string &key,
+                  std::uint64_t seq) -> std::vector<ScheduledItem *>;
 
   [[nodiscard]] auto
-  notifyTableCompleted(const std::string &tableId,
-                       std::uint64_t seq) -> std::vector<ScheduledItem *>;
-
-  [[nodiscard]] auto
-  lastCompletedForFile(const std::string &filePath) const -> std::uint64_t;
-
-  [[nodiscard]] auto
-  lastCompletedForTable(const std::string &tableId) const -> std::uint64_t;
+  lastCompletedFor(const DependencyType &type,
+                   const std::string &key) const -> std::uint64_t;
 
 private:
   std::unordered_map<std::string, std::pair<QueryType, std::uint64_t>>
@@ -48,8 +57,9 @@ private:
   std::unordered_map<std::string, std::pair<QueryType, std::uint64_t>>
       lastScheduledTable;
   std::unordered_map<std::string, std::uint64_t> lastCompletedTable;
-  std::unordered_map<std::string, std::deque<ScheduledItem *>> waitingFile;
-  std::unordered_map<std::string, std::deque<ScheduledItem *>> waitingTable;
+
+  std::unordered_map<std::string, WaitingHeap> waitingFile;
+  std::unordered_map<std::string, WaitingHeap> waitingTable;
 
   auto markScheduledFile(const std::string &filePath, std::uint64_t seq,
                          QueryType tag) -> std::pair<QueryType, std::uint64_t>;
