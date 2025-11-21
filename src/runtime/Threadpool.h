@@ -9,7 +9,6 @@
 
 #define __cpp_lib_jthread
 
-#include "../query/Query.h"
 #include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
 #include "../scheduler/TaskQueue.h"
@@ -177,20 +176,22 @@ private:
 
   void executeTask(ExecutableTask &task) {
     if (!task.query) {
-      executeGeneral(task);
+      executeNull(task);
       return;
     }
 
     const TableId tid = resolveTableId(*task.query);
-    const QueryType kind = task.query
+    const QueryKind kind = getQueryKind(queryType(*task.query));
 
-                           try {
-      if (kind == OpKind::Write) {
+    try {
+      if (kind == QueryKind::Write) {
         WriteGuard guard(lock_manager_, tid);
         executeWrite(task);
-      } else {
+      } else if (kind == QueryKind::Read) {
         ReadGuard guard(lock_manager_, tid);
         executeRead(task);
+      } else {
+        executeNull(task);
       }
     } catch (...) {
     }
@@ -198,7 +199,7 @@ private:
 
   void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
   void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
-  void executeGeneral(ExecutableTask &task) { run_logic(task, "GENERAL"); }
+  void executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }
 
   void run_logic(ExecutableTask &task, const char *type) {
     try {
