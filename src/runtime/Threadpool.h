@@ -180,52 +180,6 @@ private:
     }
   }
 
-  auto tryExecuteTask(PooledTask &item) -> bool {
-    ExecutableTask &task = item.getTask();
-
-    if (!task.query) {
-      executeGeneral(task);
-      return true;
-    }
-
-    const TableId tid = task.query->getTargetTable();
-    // const OpKind kind = task.query->kind;
-
-    if (kind == OpKind::Write) {
-      if (item.getAttempts() == 0) {
-        lock_manager_.writerIntentBegin(tid);
-      }
-
-      if (lock_manager_.tryLockX(tid)) {
-        executeWrite(task);
-        lock_manager_.unlockX(tid);
-        lock_manager_.writerIntentEnd(tid);
-        return true;
-      }
-
-      item.incrementAttempts();
-      return false;
-    }
-
-    if (kind == OpKind::Read) {
-      if (!lock_manager_.canAdmitShared(tid)) {
-        item.incrementAttempts();
-        return false;
-      }
-
-      if (lock_manager_.tryLockS(tid)) {
-        executeRead(task);
-        lock_manager_.unlockS(tid);
-        return true;
-      }
-
-      item.incrementAttempts();
-      return false;
-    }
-
-    return true;
-  }
-
   void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
   void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
   void executeGeneral(ExecutableTask &task) { run_logic(task, "GENERAL"); }
