@@ -4,8 +4,6 @@ cd "$(dirname "$0")/.."
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
-ls test
-
 check_result() {
   [ $2 -eq 0 ] && echo "[$1] PASSED" || { echo "[$1] FAILED"; return 1; }
 }
@@ -57,6 +55,7 @@ run_exec() {
   diff "${binary}-${test}.out" stdout/"${test}.out" > "${binary}-${test}.diff"
   [ ! -s "${binary}-${test}.diff" ]
   check_result "DIFF" $? || { cat "${binary}-${test}.diff" >&2; return 1; }
+  { time ../lemondb --listen queries/"${test}.query" > "${binary}-${test}.out" 2> "${binary}-${test}.err"; } 2>&1
 }
 
 # run whole test
