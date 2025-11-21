@@ -93,7 +93,8 @@ auto ComplexQuery::evalCondition(const Table::ConstObject &object) -> bool {
   return ret;
 }
 
-auto ComplexQuery::testKeyCondition(
+// cppcheck-suppress unusedFunction
+[[maybe_unused]] auto ComplexQuery::testKeyCondition(
     const Table &table,
     const std::function<void(bool, Table::ConstObject::Ptr &&)> &function)
     -> bool {
