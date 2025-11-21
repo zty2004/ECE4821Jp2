@@ -168,3 +168,31 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   fetchTick.fetch_add(1, std::memory_order_relaxed);
   return true;
 }
+
+// Legacy API kept until CompletionAction/onCompleted path mplemented
+void TaskQueue::completeLoad(const std::string &tableId,
+                             std::uint64_t loadSeq) {
+  std::lock_guard<std::mutex> lock(mu);
+  auto tblIt = tables.find(tableId);
+  if (tblIt == tables.end()) {
+    return;
+  }
+  auto &tbl = tblIt->second;
+  if (tbl.registered) {
+    return;
+  }
+  tbl.registered = true;
+  tbl.registerSeq = loadSeq;
+  // Drop earlier tasks (simple mark)
+  for (auto &pending : tbl.queue) {
+    if (pending.seq < loadSeq) {
+      pending.droppedFlag = true;
+    }
+  }
+  // Upsert current head after registration if exists
+  if (!tbl.queue.empty()) {
+    const ScheduledItem &head = tbl.queue.front();
+    globalIndex.upsert(&tbl, head.priority,
+                       fetchTick.load(std::memory_order_relaxed), head.seq);
+  }
+}
