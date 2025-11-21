@@ -28,10 +28,10 @@ public:
   DependencyManager() = default;
   ~DependencyManager() = default;
   DependencyManager(const DependencyManager &) = delete;
-  DependencyManager &operator=(const DependencyManager &) = delete; // NOLINT
+  DependencyManager &operator=(const DependencyManager &) = delete;  // NOLINT
   DependencyManager(DependencyManager &&) noexcept = delete;
   DependencyManager &
-  operator=(DependencyManager &&) noexcept = delete; // NOLINT
+  operator=(DependencyManager &&) noexcept = delete;  // NOLINT
 
   enum class DependencyType : std::uint8_t {
     File,
@@ -69,4 +69,4 @@ private:
                           QueryType tag) -> std::pair<QueryType, std::uint64_t>;
 };
 
-#endif // SRC_SCHEDULER_DEPENDENCYMANAGER_H_
+#endif  // SRC_SCHEDULER_DEPENDENCYMANAGER_H_
