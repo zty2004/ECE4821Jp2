@@ -101,6 +101,9 @@ private:
   std::deque<TableQueue *> waitingTables; // tables blocked by current barrier
 
   bool quitFlag = false; // whether QUIT is fetched
+
+  // Internal helper to materialize ExecutableTask from a ScheduledItem
+  void buildExecutableFromScheduled(ScheduledItem &src, ExecutableTask &dst);
 };
 
 #endif // SRC_SCHEDULER_TASKQUEUE_H_

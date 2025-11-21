@@ -124,7 +124,7 @@ auto DependencyManager::notifyCompleted(
         std::get<LoadDeps>(waitItem.depends).fileDependsOn < completedSeq) {
       break;
     }
-    ready.push_back(heap.top());
+    ready.emplace_back(heap.top());
     heap.pop();
   }
   if (heap.empty()) {

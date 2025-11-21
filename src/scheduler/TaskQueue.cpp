@@ -55,3 +55,56 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
   tbl.queue.emplace_back(std::move(item));
   return fut;
 }
+
+void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
+                                             ExecutableTask &dst) {
+  dst.seq = src.seq;
+  dst.type = src.type;
+  dst.query = std::move(src.query);
+  dst.promise = std::move(src.promise);
+  dst.execOverride = nullptr; // normal path executed by worker
+  dst.onCompleted = [this]() {
+    running.fetch_sub(1, std::memory_order_relaxed);
+    completed.fetch_add(1, std::memory_order_relaxed);
+  };
+}
+
+// Refactored single-path fetchNext (reduced branching)
+auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
+  std::lock_guard<std::mutex> lock(mu);
+
+  if (quitFlag) {
+    return false;
+  }
+
+  // Acquire LOAD candidate considering barrier
+  ScheduledItem *loadCand = nullptr;
+  if (!loadQueue.empty() && !loadBlocked) {
+    if (!barriers.empty() && loadQueue.front().seq > barriers.front().seq) {
+      loadBlocked = true;
+    }
+    loadCand = &loadQueue.front();
+  }
+
+  // Acquire table candidate via GlobalIndex
+  ScheduledItem *tableCand = nullptr;
+  TableQueue *tableCandQ = nullptr;
+  TableQueue *picked = nullptr;
+  while (globalIndex.pickBest(picked)) {
+    if (picked == nullptr || picked->queue.empty()) {
+      continue;
+    }
+    ScheduledItem &head = picked->queue.front();
+    if (!barriers.empty() && head.seq > barriers.front().seq) {
+      waitingTables.push_back(picked);
+      continue;
+    }
+    tableCand = &head;
+    tableCandQ = picked;
+    break;
+  }
+
+  running.fetch_add(1, std::memory_order_relaxed);
+  fetchTick.fetch_add(1, std::memory_order_relaxed);
+  return true;
+}
