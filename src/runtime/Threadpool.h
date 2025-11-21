@@ -216,6 +216,10 @@ private:
     return true;
   }
 
+  void executeWrite(ExecutableTask &task) { run_logic(task, "WRITE"); }
+  void executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
+  void executeGeneral(ExecutableTask &task) { run_logic(task, "GENERAL"); }
+
   void run_logic(ExecutableTask &task) {
     try {
       std::unique_ptr<QueryResult> res;
