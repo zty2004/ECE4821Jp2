@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -24,7 +25,7 @@
 
 namespace {
 // constants and small helpers for argument parsing
-constexpr int dec = 10;
+const int dec = 10;
 
 inline auto to_sv(char *param) -> std::string_view {
   return (param != nullptr) ? std::string_view(param) : std::string_view();
@@ -227,16 +228,15 @@ auto run(std::span<char *> argv, int argc) -> int {
     exit(-1);
   }
 
-  // Determine thread count
-  size_t numThreads;
-  if (parsedArgs.threads == 0) {
-    numThreads = std::thread::hardware_concurrency();
-    if (numThreads == 0)
-      numThreads = 4;
-    std::cerr << "lemondb: info: auto detected " << numThreads << " threads"
-              << '\n';
-  } else {
+  // Determine thread count (default to 1 for single-threaded mode)
+  size_t numThreads = 1;
+  if (parsedArgs.threads > 0) {
     numThreads = static_cast<size_t>(parsedArgs.threads);
+  }
+
+  if (numThreads == 1) {
+    std::cerr << "lemondb: info: running in single-threaded mode" << '\n';
+  } else {
     std::cerr << "lemondb: info: running in " << numThreads << " threads"
               << '\n';
   }
@@ -247,11 +247,8 @@ auto run(std::span<char *> argv, int argc) -> int {
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(ManageTable)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Complex)>());
 
-  // Use runtime if threads > 1
-  std::unique_ptr<Runtime> runtime;
-  if (numThreads > 1) {
-    runtime = std::make_unique<Runtime>(numThreads);
-  }
+  // Always use Runtime (numThreads=1 means single-threaded mode)
+  Runtime runtime(numThreads);
 
   size_t counter = 0;
 
@@ -283,29 +280,9 @@ auto run(std::span<char *> argv, int argc) -> int {
         input_stream.rdbuf(fin.rdbuf());
       }
 
-      // Regular query execution
-      QueryResult::Ptr result;
-      if (runtime) {
-        // Multi-threaded execution
-        runtime->submitQuery(std::move(query), ++counter);
-      } else {
-        // Single-threaded execution
-        result = query->execute();
-        std::cout << ++counter << "\n";
-        if (result->success()) {
-          if (result->display()) {
-            std::cout << *result;
-          } else {
-#ifndef NDEBUG
-            std::cout.flush();
-            std::cerr << *result;
-#endif
-          }
-        } else {
-          std::cout.flush();
-          std::cerr << "QUERY FAILED:\n\t" << *result;
-        }
-      }
+      // Regular query execution - always use runtime
+      runtime.submitQuery(std::move(query), ++counter);
+
     } catch (const std::ios_base::failure &) {
       // End of input
       break;
@@ -315,27 +292,25 @@ auto run(std::span<char *> argv, int argc) -> int {
     }
   }
 
-  // If using runtime, wait for all queries and output results
-  if (runtime) {
-    runtime->waitAll();
-    auto results = runtime->getResultsInOrder();
+  // Wait for all queries and output results
+  runtime.waitAll();
+  auto results = runtime.getResultsInOrder();
 
-    for (size_t i = 0; i < results.size(); ++i) {
-      std::cout << (i + 1) << "\n";
-      const auto &result = results[i];
-      if (result->success()) {
-        if (result->display()) {
-          std::cout << *result;
-        } else {
-#ifndef NDEBUG
-          std::cout.flush();
-          std::cerr << *result;
-#endif
-        }
+  for (size_t i = 0; i < results.size(); ++i) {
+    std::cout << (i + 1) << "\n";
+    const auto &result = results[i];
+    if (result->success()) {
+      if (result->display()) {
+        std::cout << *result;
       } else {
+#ifndef NDEBUG
         std::cout.flush();
-        std::cerr << "QUERY FAILED:\n\t" << *result;
+        std::cerr << *result;
+#endif
       }
+    } else {
+      std::cout.flush();
+      std::cerr << "QUERY FAILED:\n\t" << *result;
     }
   }
 
