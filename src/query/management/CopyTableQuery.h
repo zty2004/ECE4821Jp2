@@ -18,6 +18,10 @@ public:
 
   auto toString() -> std::string override;
 
+  [[nodiscard]] auto newTable() const -> const std::string & override {
+    return new_table;
+  }
+
   [[nodiscard]] auto type() const noexcept -> QueryType override {
     return QueryType::CopyTable;
   }

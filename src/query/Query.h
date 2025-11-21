@@ -79,6 +79,11 @@ public:
     return kEmptyFilePath;
   }
 
+  [[nodiscard]] virtual auto newTable() const -> const std::string & {
+    static const std::string kEmptyTableName;
+    return kEmptyTableName;
+  }
+
   virtual ~Query() = default;
 };
 

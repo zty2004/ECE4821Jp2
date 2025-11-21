@@ -19,6 +19,11 @@ inline auto extractFilePath(const Query &query) -> std::string {
   return query.filePath();
 }
 
+// Extract the new_table field of CopyTable; return empty if none.
+inline auto extractNewTable(const Query &query) -> std::string {
+  return query.newTable();
+}
+
 // Get the type of queries
 inline auto queryType(const Query &query) -> QueryType { return query.type(); }
 
