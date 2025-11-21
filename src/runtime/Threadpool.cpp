@@ -7,23 +7,25 @@
 #include "Threadpool.h"
 #include "../query/QueryHelpers.h"
 
-template <std::size_t PoolSize>
-Threadpool<PoolSize>::Threadpool(LockManager &lm, TaskQueue &tq)
-    : lock_manager_(lm), task_queue_(tq) {
-  for (std::size_t i = 0; i < PoolSize; ++i) {
+Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
+    : thread_count_(numThreads), lock_manager_(lm), task_queue_(tq) {
+  threads_.reserve(numThreads);
+  for (std::size_t i = 0; i < numThreads; ++i) {
 #ifdef __cpp_lib_jthread
-    threads[i] =
-        thread_t([this](std::stop_token st) { this->worker_loop(st); });
+    threads_.emplace_back(
+        [this](std::stop_token st) { this->worker_loop(std::move(st)); });
 #else
-    threads[i] = thread_t([this] { this->worker_loop(); });
+    threads_.emplace_back([this] { this->worker_loop(); });
 #endif
   }
 }
 
-template <std::size_t PoolSize> Threadpool<PoolSize>::~Threadpool() {
+Threadpool::~Threadpool() {
+#ifdef __cpp_lib_jthread
+  // jthread automatically requests stop and joins in destructor
+#else
   stop_flag_.store(true);
-#ifndef __cpp_lib_jthread
-  for (auto &t : threads) {
+  for (auto &t : threads_) {
     if (t.joinable()) {
       t.join();
     }
@@ -31,48 +33,36 @@ template <std::size_t PoolSize> Threadpool<PoolSize>::~Threadpool() {
 #endif
 }
 
-template <std::size_t PoolSize>
-auto Threadpool<PoolSize>::get_threadpool_size() const -> size_t {
-  return thread_count;
-}
-
-template <std::size_t PoolSize>
-Threadpool<PoolSize>::WriteGuard::WriteGuard(LockManager &lkm, TableId index)
+auto Threadpool::get_threadpool_size() const -> size_t { return thread_count_; }
+Threadpool::WriteGuard::WriteGuard(LockManager &lkm, TableId index)
     : lm_(lkm), id_(std::move(index)) {
   lm_.lockX(id_);
 }
 
-template <std::size_t PoolSize>
-Threadpool<PoolSize>::WriteGuard::~WriteGuard() {
-  lm_.unlockX(id_);
-}
+Threadpool::WriteGuard::~WriteGuard() { lm_.unlockX(id_); }
 
-template <std::size_t PoolSize>
-Threadpool<PoolSize>::ReadGuard::ReadGuard(LockManager &lkm, TableId index)
+Threadpool::ReadGuard::ReadGuard(LockManager &lkm, TableId index)
     : lm_(lkm), id_(std::move(index)) {
   lm_.lockS(id_);
 }
 
-template <std::size_t PoolSize> Threadpool<PoolSize>::ReadGuard::~ReadGuard() {
-  lm_.unlockS(id_);
-}
+Threadpool::ReadGuard::~ReadGuard() { lm_.unlockS(id_); }
 
 #ifdef __cpp_lib_jthread
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::worker_loop(const std::stop_token &st) {
+void Threadpool::worker_loop(std::stop_token st) {
   while (!st.stop_requested()) {
     work();
   }
 }
 #else
-template <std::size_t PoolSize> void Threadpool<PoolSize>::worker_loop() {
+void Threadpool::worker_loop() {
   while (!stop_flag_.load(std::memory_order_acquire)) {
     work();
   }
 }
 #endif
 
-template <std::size_t PoolSize> void Threadpool<PoolSize>::work() {
+void Threadpool::work() {
   ExecutableTask task;
   bool has_task = false;
   {
@@ -108,12 +98,12 @@ template <std::size_t PoolSize> void Threadpool<PoolSize>::work() {
   if (has_task) {
     executeTask(task);
   } else {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    // Use shorter sleep when idle to reduce latency
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
   }
 }
 
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::executeTask(ExecutableTask &task) {
+void Threadpool::executeTask(ExecutableTask &task) {
   if (!task.query) {
     executeNull(task);
     return;
@@ -133,38 +123,37 @@ void Threadpool<PoolSize>::executeTask(ExecutableTask &task) {
       executeNull(task);
     }
   } catch (...) {
+    // Log error or handle exception
   }
 }
 
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::executeWrite(ExecutableTask &task) {
+void Threadpool::executeWrite(ExecutableTask &task) {
   run_logic(task, "WRITE");
 }
 
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::executeRead(ExecutableTask &task) {
-  run_logic(task, "READ");
-}
+void Threadpool::executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
 
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::executeNull(ExecutableTask &task) {
-  run_logic(task, "NULL");
-}
+void Threadpool::executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }
 
-template <std::size_t PoolSize>
-void Threadpool<PoolSize>::run_logic(ExecutableTask &task, const char *type) {
+void Threadpool::run_logic(ExecutableTask &task, const char * /*type*/) {
   try {
     std::unique_ptr<QueryResult> res;
     if (task.execOverride) {
+      // Use custom execution function if provided
       res = task.execOverride();
+    } else if (task.query) {
+      // Execute the actual query
+      res = task.query->execute();
     } else {
-      res = std::make_unique<QueryResult>(std::string(type) + " Result");
+      // No query to execute, create a null result
+      res = std::make_unique<NullQueryResult>();
     }
     task.promise.set_value(std::move(res));
   } catch (...) {
     try {
       task.promise.set_exception(std::current_exception());
     } catch (...) {
+      // Promise already satisfied, ignore
     }
   }
   if (task.onCompleted) {

@@ -7,35 +7,25 @@
 #ifndef SRC_RUNTIME_THREADPOOL_H_
 #define SRC_RUNTIME_THREADPOOL_H_
 
-#define __cpp_lib_jthread
-
 #include "../scheduler/TaskQueue.h"
 #include "LockManager.h"
-#include <array>
+#include <atomic>
 #include <cstddef>
+#include <mutex>
 #include <queue>
+#include <thread>
+#include <vector>
 
 #ifdef __cpp_lib_jthread
-/**
- * @brief The type of threads to use. In C++20 and later we use `std::jthread`.
- */
 #include <stop_token>
-#include <thread>
-using thread_t = std::jthread;
-#else
-/**
- * @brief The type of threads to use. In C++17 we use`std::thread`.
- */
-#include <thread>
-using thread_t = std::thread;
 #endif
 
-template <std::size_t PoolSize> class Threadpool {
+class Threadpool {
 
 public:
   static constexpr size_t FETCH_BATCH_SIZE = 16;  // Fetch 16 tasks each time
 
-  Threadpool(LockManager &lm, TaskQueue &tq);
+  Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq);
 
   ~Threadpool();
 
@@ -47,15 +37,19 @@ public:
   [[nodiscard]] auto get_threadpool_size() const -> size_t;
 
 private:
-  static constexpr std::size_t thread_count = PoolSize;
+  std::size_t thread_count_;
   LockManager &lock_manager_;
   TaskQueue &task_queue_;
 
   std::queue<ExecutableTask> local_queue_;
   std::mutex local_mutex_;  // protect local_queue_
 
-  std::array<thread_t, PoolSize> threads;
+#ifdef __cpp_lib_jthread
+  std::vector<std::jthread> threads_;
+#else
+  std::vector<std::thread> threads_;
   std::atomic<bool> stop_flag_{false};
+#endif
 
   class WriteGuard {
   public:
@@ -90,7 +84,7 @@ private:
   };
 
 #ifdef __cpp_lib_jthread
-  void worker_loop(const std::stop_token &st);
+  void worker_loop(std::stop_token st);
 #else
   void worker_loop();
 #endif
