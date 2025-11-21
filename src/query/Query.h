@@ -16,27 +16,27 @@
 
 // Type of Queries
 enum class QueryType : std::uint8_t {
-  Load,
-  Dump,
-  Drop,
-  Truncate,
-  CopyTable,
-  List,
-  Quit,
-  PrintTable,
-  Insert,
-  Update,
-  Select,
-  Delete,
-  Duplicate,
-  Count,
-  Sum,
-  Min,
-  Max,
-  Add,
-  Sub,
-  Swap,
-  Nop,
+  Load,        // WRITE
+  Dump,        // READ
+  Drop,        // WRITE
+  Truncate,    // WRITE
+  CopyTable,   // WRITE
+  List,        // READ
+  Quit,        // NULL
+  PrintTable,  // READ
+  Insert,      // WRITE
+  Update,      // WRITE
+  Select,      // READ
+  Delete,      // WRITE
+  Duplicate,   // WRITE
+  Count,       // READ
+  Sum,         // READ
+  Min,         // READ
+  Max,         // READ
+  Add,         // WRITE
+  Sub,         // WRITE
+  Swap,        // WRITE
+  Nop,         // NULL
 };
 
 struct QueryCondition {
