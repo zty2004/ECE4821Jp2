@@ -73,21 +73,6 @@ public:
 
 private:
   static constexpr std::size_t thread_count = PoolSize;
-  class PooledTask {
-  public:
-    PooledTask() = default;
-    explicit PooledTask(ExecutableTask &&task) : task_(std::move(task)) {}
-
-    auto getTask() -> ExecutableTask & { return task_; }
-
-    [[nodiscard]] auto getAttempts() const -> int { return attempts_; }
-
-    void incrementAttempts() { attempts_++; }
-
-  private:
-    ExecutableTask task_;
-    int attempts_ = 0;
-  };
   LockManager &lock_manager_;
   TaskQueue &task_queue_;
 
