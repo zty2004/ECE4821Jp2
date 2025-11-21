@@ -4,6 +4,8 @@ cd "$(dirname "$0")/.."
 LOGFILE=$(mktemp)
 trap "rm -f $LOGFILE" EXIT
 
+ls test
+
 check_result() {
   [ $2 -eq 0 ] && echo "[$1] PASSED" || { echo "[$1] FAILED"; return 1; }
 }
