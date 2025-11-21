@@ -4,108 +4,89 @@
 
 #include "Runtime.h"
 
-#include <chrono>
 #include <cstddef>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "LockManager.h"
-#include "PopUpExecutor.h"
-#include "QueryTask.h"
-#include "SimplePQManager.h"
 
-constexpr int kWaitIntervalMs = 10;
+// Forward declarations - to be implemented
+class TaskQueue;
+class WorkerPool;
 
-Runtime::Runtime(std::size_t maxThreads)
+Runtime::Runtime(std::size_t numThreads)
     : lockMgr_(std::make_unique<LockManager>()),
-      pqMgr_(std::make_unique<SimplePQManager>()) {
-  (void)maxThreads;  // TODO: Pass to PopUpExecutor when configurable
+      taskQueue_(nullptr),  // TODO: Initialize with TaskQueue implementation
+      workers_(nullptr)     // TODO: Initialize with WorkerPool implementation
+{
+  (void)numThreads;  // Will be used when WorkerPool is implemented
 
-  auto callback = [this](std::size_t idx, QueryResult::Ptr res) {
-    resultCallback(idx, std::move(res));
-  };
-
-  executor_ = std::make_unique<PopUpExecutor>(*lockMgr_, *pqMgr_, callback);
+  // TODO: Initialize TaskQueue and WorkerPool when implementations are
+  // available taskQueue_ = std::make_unique<TaskQueue>(); workers_ =
+  // std::make_unique<WorkerPool>(lockMgr_.get(), taskQueue_.get());
+  // workers_->start(numThreads);
+  //
+  // Note: Runtime creates promise and passes it to TaskQueue::registerTask()
+  // TaskQueue stores the promise in ScheduledItem/ExecutableTask
+  // Workers call promise.set_value() after execution
 }
 
 Runtime::~Runtime() { waitAll(); }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-auto Runtime::determineOpKind(Query &query) -> OpKind {
-  const std::string typeName = query.toString();
-
-  if (typeName.find("SELECT") != std::string::npos ||
-      typeName.find("COUNT") != std::string::npos ||
-      typeName.find("SUM") != std::string::npos ||
-      typeName.find("MIN") != std::string::npos ||
-      typeName.find("MAX") != std::string::npos ||
-      typeName.find("PRINT") != std::string::npos ||
-      typeName.find("DUMP") != std::string::npos ||
-      typeName.find("LIST") != std::string::npos) {
-    return OpKind::Read;
-  }
-
-  return OpKind::Write;
-}
-
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-auto Runtime::extractTableName(const Query &query) -> std::string {
-  return query.getTargetTable();
-}
-
-void Runtime::resultCallback(std::size_t orderIndex, QueryResult::Ptr result) {
-  const std::scoped_lock<std::mutex> lock(resultMtx_);
-  results_[orderIndex] = std::move(result);
-}
-
 void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
-  const std::string table = extractTableName(*query);
-  const OpKind kind = determineOpKind(*query);
+  // Create promise in Runtime
+  std::promise<std::unique_ptr<QueryResult>> resultPromise;
 
-  QueryTask task(table, kind, std::move(query), orderIndex);
+  // Get future before passing promise to TaskQueue
+  auto future = resultPromise.get_future();
 
+  // Register task with TaskQueue, passing promise
+  // TaskQueue::registerTask will take ownership of the promise
+  // taskQueue_->registerTask(std::move(query), std::move(resultPromise));
+
+  // Save future for later retrieval
   {
-    const std::scoped_lock<std::mutex> lock(resultMtx_);
-    totalSubmitted_++;
+    std::lock_guard lock(futuresMtx_);
+    futures_[orderIndex] = std::move(future);
+    ++totalSubmitted_;
   }
-
-  executor_->submit(std::move(task));
 }
 
 void Runtime::waitAll() {
-  while (true) {
-    std::size_t completed = 0;
-    std::size_t total = 0;
-    {
-      const std::scoped_lock<std::mutex> lock(resultMtx_);
-      completed = results_.size();
-      total = totalSubmitted_;
-    }
+  // TaskQueue doesn't have explicit shutdown
+  // Workers will keep polling until all tasks are complete
 
-    if (completed >= total && total > 0) {
-      break;
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(kWaitIntervalMs));
-  }
-
-  executor_->stop();
+  // TODO: Wait for all workers to complete their tasks
+  // workers_->stop();
 }
 
 auto Runtime::getResultsInOrder() -> std::vector<QueryResult::Ptr> {
-  const std::scoped_lock<std::mutex> lock(resultMtx_);
-  std::vector<QueryResult::Ptr> ordered;
-  ordered.reserve(results_.size());
+  std::vector<QueryResult::Ptr> results;
 
-  for (auto &[idx, result] : results_) {
-    ordered.push_back(std::move(result));
+  std::lock_guard lock(futuresMtx_);
+  results.reserve(totalSubmitted_);
+
+  // Retrieve results in order by calling future.get()
+  // This will block until each task completes
+  // future.get() returns std::unique_ptr<QueryResult>
+  for (auto &[orderIndex, future] : futures_) {
+    try {
+      // future.get() returns std::unique_ptr<QueryResult>, which is
+      // QueryResult::Ptr
+      results.push_back(future.get());  // Blocking wait for result
+    } catch (const std::exception &e) {
+      // If execution failed, create error result
+      auto errorResult = std::make_unique<ErrorMsgResult>(
+          "RUNTIME", "", std::string("Exception: ") + e.what());
+      results.push_back(std::move(errorResult));
+    }
   }
 
-  return ordered;
+  return results;
 }

@@ -6,6 +6,7 @@
 #define SRC_RUNTIME_RUNTIME_H_
 
 #include <cstddef>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -15,38 +16,37 @@
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "LockManager.h"
-#include "PopUpExecutor.h"
-#include "SimplePQManager.h"
+
+// Forward declarations
+class TaskQueue;
+class WorkerPool;
 
 class Runtime {
 public:
-  static constexpr std::size_t kDefaultMaxThreads = 8;
-  explicit Runtime(std::size_t maxThreads = kDefaultMaxThreads);
+  explicit Runtime(std::size_t numThreads);
   ~Runtime();
 
   Runtime(const Runtime &) = delete;
   auto operator=(const Runtime &) -> Runtime & = delete;
-
   Runtime(Runtime &&) = delete;
   auto operator=(Runtime &&) -> Runtime & = delete;
 
+  // Submit a query and get a future for its result
   void submitQuery(Query::Ptr query, std::size_t orderIndex);
 
+  // Wait for all submitted queries to complete
   void waitAll();
 
+  // Get all results in submission order
   auto getResultsInOrder() -> std::vector<QueryResult::Ptr>;
 
 private:
-  auto determineOpKind(Query &query) -> OpKind;
-  auto extractTableName(const Query &query) -> std::string;
-  void resultCallback(std::size_t orderIndex, QueryResult::Ptr result);
-
   std::unique_ptr<LockManager> lockMgr_;
-  std::unique_ptr<SimplePQManager> pqMgr_;
-  std::unique_ptr<PopUpExecutor> executor_;
+  std::unique_ptr<TaskQueue> taskQueue_;
+  std::unique_ptr<WorkerPool> workers_;
 
-  std::mutex resultMtx_;
-  std::map<std::size_t, QueryResult::Ptr> results_;
+  std::mutex futuresMtx_;
+  std::map<std::size_t, std::future<std::unique_ptr<QueryResult>>> futures_;
   std::size_t totalSubmitted_{0};
 };
 
