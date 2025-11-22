@@ -92,18 +92,15 @@ void Threadpool::work() {
       std::vector<ExecutableTask> batch;
       batch.reserve(FETCH_BATCH_SIZE);
 
-      int fetchCount = 0;
       for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
         ExecutableTask tmp;
-        if (task_queue_.fetchNext(tmp)) {
-          batch.push_back(std::move(tmp));
-          fetchCount++;
-        } else {
+        if (!task_queue_.fetchNext(tmp)) {
           break;
         }
+        batch.push_back(std::move(tmp));
       }
 
-      if (fetchCount > 0) {
+      if (!batch.empty()) {
         lock.lock();
         for (auto &tmp : batch) {
           local_queue_.emplace(std::move(tmp));
