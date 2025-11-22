@@ -1,6 +1,8 @@
 #include "DependencyManager.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -156,10 +158,9 @@ void DependencyManager::notifyCompleted(
     heap.pop();
   }
 
-  // Move all ready items to output vector
-  for (auto &item : temp) {
-    ready.push_back(std::move(item));
-  }
+  // Move all ready items to output vector using move iterators
+  std::copy(std::make_move_iterator(temp.begin()),
+            std::make_move_iterator(temp.end()), std::back_inserter(ready));
   if (heap.empty()) {
     waitingMap.erase(waitingIter);
   }
