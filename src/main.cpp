@@ -15,7 +15,7 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <thread>
+#include <thread>  // NOLINT(build/c++11)
 #include <vector>
 
 #include "query/Query.h"
@@ -237,7 +237,6 @@ auto processFile(const std::string &filename,
 
       // Store all queries (including LISTEN)
       result.queries.push_back(std::move(query));
-
     } catch (const std::ios_base::failure &) {
       break;  // End of file
     } catch (const std::exception &exception_obj) {
@@ -245,7 +244,6 @@ auto processFile(const std::string &filename,
       std::cerr << exception_obj.what() << '\n';
     }
   }
-
   return result;
 }
 
@@ -272,7 +270,6 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         }
 
         allQueries.push_back(std::move(query));
-
       } catch (const std::ios_base::failure &) {
         break;
       } catch (const std::exception &exception_obj) {
@@ -296,7 +293,6 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         }
 
         allQueries.push_back(std::move(query));
-
       } catch (const std::ios_base::failure &) {
         break;
       } catch (const std::exception &exception_obj) {
@@ -353,7 +349,7 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
   }
 }
 
-// NOLINTNEXTLINE(readability-function-size)
+// NOLINTNEXTLINE(readability/fn_size)
 auto run(std::span<char *> argv, int argc) -> int {
   // Assume only C++ style I/O is used in lemondb
   // Do not use printf/fprintf in <cstdio> with this line
