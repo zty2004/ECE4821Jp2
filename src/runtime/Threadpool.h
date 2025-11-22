@@ -7,9 +7,6 @@
 #ifndef SRC_RUNTIME_THREADPOOL_H_
 #define SRC_RUNTIME_THREADPOOL_H_
 
-#include "../scheduler/TaskQueue.h"
-#include "LockManager.h"
-#include <atomic>
 #include <cstddef>
 #include <mutex>
 #include <queue>
@@ -20,8 +17,10 @@
 #include <stop_token>
 #endif
 
-class Threadpool {
+#include "../scheduler/TaskQueue.h"
+#include "LockManager.h"
 
+class Threadpool {
 public:
   static constexpr size_t FETCH_BATCH_SIZE = 16;  // Fetch 16 tasks each time
 
