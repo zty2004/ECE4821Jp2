@@ -299,6 +299,28 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
       preferLoad = tableCand == nullptr;
     }
 
+    // Materialize and update structures
+    if (preferLoad) {
+      const auto &lDeps = std::get<LoadDeps>(loadCand->depends);
+      if (lDeps.fileDependsOn >
+          depManager.lastCompletedFor(DependencyManager::DependencyType::File,
+                                      lDeps.filePath)) {
+        depManager.addWait(DependencyManager::DependencyType::File,
+                           lDeps.filePath, std::move(loadCand));
+        continue;
+      }
+      if (lDeps.fileDependsOn >
+          depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
+                                      loadCand->tableId)) {
+        const auto &loadTableId = loadCand->tableId;
+        depManager.addWait(DependencyManager::DependencyType::File, loadTableId,
+                           std::move(loadCand));
+        continue;
+      }
+      buildExecutableFromScheduled(*loadCand, out);
+      loadQueue.pop_front();
+    }
+
     running.fetch_add(1, std::memory_order_relaxed);
     fetchTick.fetch_add(1, std::memory_order_relaxed);
     return true;
