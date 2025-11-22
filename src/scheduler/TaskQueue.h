@@ -10,8 +10,10 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../query/Query.h"
+#include "../query/QueryPriority.h"
 #include "DependencyManager.h"
 #include "GlobalIndex.h"
 #include "ScheduledItem.h"

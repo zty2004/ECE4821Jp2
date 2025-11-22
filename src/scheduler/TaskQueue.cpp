@@ -1,10 +1,12 @@
 #include "TaskQueue.h"
 
 #include <atomic>
+#include <cstdint>
 #include <future>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -13,6 +15,7 @@
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
 #include "ScheduledItem.h"
+#include "TableQueue.h"
 
 void TaskQueue::setReady() {
   readyToFetch_.store(true, std::memory_order_release);
@@ -25,7 +28,7 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
   // Get future from the promise that Runtime created
   auto fut = prQuery.promise.get_future();
 
-  std::lock_guard<std::mutex> lock(mu);
+  std::scoped_lock const lock(mu);
 
   if (quitFlag) {
     auto tmpPromise = std::promise<std::unique_ptr<QueryResult>>();
@@ -96,7 +99,7 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
                      capturedDeps, capturedTableQ]() -> void {
     {
-      std::lock_guard<std::mutex> callbackLock(mu);
+      std::scoped_lock const callbackLock(mu);
       ScheduledItem meta;  // placeholder
       meta.tableId = capturedTable;
       meta.type = capturedType;
@@ -368,7 +371,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     return false;
   }
 
-  std::lock_guard<std::mutex> lock(mu);
+  std::scoped_lock const lock(mu);
 
   while (true) {  // Changed from while (!quitFlag) to process all tasks
     std::unique_ptr<ScheduledItem> loadCand = nullptr;
