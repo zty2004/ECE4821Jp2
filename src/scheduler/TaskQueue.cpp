@@ -184,8 +184,8 @@ void TaskQueue::applyRegisterTable(const ScheduledItem &item) {
   if (!tblPtr) {
     tblPtr = std::make_unique<TableQueue>();
   }
-  TableQueue &tbl = *tblPtr;
-  registerTableQueue(tbl, item);
+
+  registerTableQueue(tblPtr, item);
 
   // For COPYTABLE, also register the new table
   if (item.type == QueryType::CopyTable) {
@@ -195,12 +195,13 @@ void TaskQueue::applyRegisterTable(const ScheduledItem &item) {
     if (!newTblPtr) {
       newTblPtr = std::make_unique<TableQueue>();
     }
-    TableQueue &newTbl = *newTblPtr;
-    registerTableQueue(newTbl, item);
+    registerTableQueue(newTblPtr, item);
   }
 }
 
-void TaskQueue::registerTableQueue(TableQueue &tbl, const ScheduledItem &item) {
+void TaskQueue::registerTableQueue(std::unique_ptr<TableQueue> &tblPtr,
+                                   const ScheduledItem &item) {
+  TableQueue &tbl = *tblPtr;
   if (!tbl.registered) {
     tbl.registered = true;
     tbl.registerSeq = item.seq;

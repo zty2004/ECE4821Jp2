@@ -123,7 +123,8 @@ private:
   void applyRegisterTable(const ScheduledItem &item);
   void applyUpdateDeps(const ScheduledItem &item);
 
-  void registerTableQueue(TableQueue &tbl, const ScheduledItem &item);
+  void registerTableQueue(std::unique_ptr<TableQueue> &tblPtr,
+                          const ScheduledItem &item);
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_
