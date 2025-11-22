@@ -14,8 +14,8 @@
 class DependencyManager {
 private:
   struct Cmp {
-    auto operator()(const ScheduledItem *itema,
-                    const ScheduledItem *itemb) -> bool {
+    auto operator()(const std::unique_ptr<ScheduledItem> itema,
+                    const std::unique_ptr<ScheduledItem> itemb) -> bool {
       return itema->seq > itemb->seq;
     }
   };
@@ -41,7 +41,7 @@ public:
   void markScheduled(ScheduledItem &item, QueryType tag);
 
   void addWait(const DependencyType &type, const std::string &key,
-               std::unique_ptr<ScheduledItem> item);
+               std::unique_ptr<ScheduledItem> &&item);
 
   void notifyCompleted(const DependencyType &type, const std::string &key,
                        std::uint64_t seq,

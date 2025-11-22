@@ -102,9 +102,9 @@ auto DependencyManager::markScheduledTable(const std::string &tableId,
 
 void DependencyManager::addWait(const DependencyType &type,
                                 const std::string &key,
-                                std::unique_ptr<ScheduledItem> item) {
+                                std::unique_ptr<ScheduledItem> &&item) {
   auto &waitingMap = type == DependencyType::File ? waitingFile : waitingTable;
-  waitingMap[key].push(item);
+  waitingMap[key].push(std::move(item));
 }
 
 void DependencyManager::notifyCompleted(

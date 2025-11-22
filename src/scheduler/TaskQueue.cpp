@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <csignal>
-#include <format>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -101,9 +100,8 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
     bool needRegister = true;
     if (tblIt != tables.end() && tblIt->second.registered) {
       if (tblIt->second.registerSeq > item.seq) {
-        throw std::invalid_argument(std::format(
-            "Wrongly execute a latter Load {} before an ealier Load {}",
-            tblIt->second.registerSeq, item.seq));
+        throw std::invalid_argument(
+            "Wrongly execute a latter Loadbefore an ealier Load");
       }
       needRegister = false;
     }
@@ -194,6 +192,9 @@ void TaskQueue::applyActions(const ActionList &actions,
           if (!rlDeps.pendingTable.empty()) {
             auto &database = Database::getInstance();
             readyItem->tableId = database.getFileTableName(rlDeps.filePath);
+            // No need to update `tableDependsOn`, since cannot get correct
+            // dependency Ignore Table dependency might cause issues, but the
+            // operations to table also protected by outside mutex, acceptable
           } else if (rlDeps.tableDependsOn >
                      depManager.lastCompletedFor(
                          DependencyManager::DependencyType::Table,
@@ -264,6 +265,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
         loadBlocked = true;
       }
       loadCand = std::move(loadQueue.front());
+      loadQueue.pop_front();
     }
 
     // Acquire table candidate via GlobalIndex
@@ -340,7 +342,6 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
         continue;
       }
       buildExecutableFromScheduled(*loadCand, out);
-      loadQueue.pop_front();
     } else if (tableCandQ != nullptr) {
       if (tableCand->type == QueryType::Dump) {
         const auto &dumpDeps = std::get<DumpDeps>(tableCand->depends);
