@@ -3,13 +3,10 @@
 //
 
 #include "LockManager.h"
-#include <atomic>
-#include <iostream>
 #include <memory>
 #include <mutex>
-#include <thread>
 
-LockManager::Entry &LockManager::entry(const TableId &id) {
+auto LockManager::entry(const TableId &id) -> LockManager::Entry & {
   const std::scoped_lock<std::mutex> lock(mapMtx_);
   auto iter = map_.find(id);
   if (iter == map_.end()) {
