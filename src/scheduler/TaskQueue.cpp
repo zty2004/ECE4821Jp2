@@ -3,6 +3,7 @@
 #include <atomic>
 #include <csignal>
 #include <future>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -15,6 +16,10 @@
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
 #include "ScheduledItem.h"
+
+void TaskQueue::setReady() {
+  readyToFetch_.store(true, std::memory_order_release);
+}
 
 auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
     -> std::future<std::unique_ptr<QueryResult>> {
@@ -278,9 +283,14 @@ void TaskQueue::applyActions(const ActionList &actions,
 
 // Refactored single-path fetchNext (reduced branching)
 auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
+  // Don't fetch until all tasks are registered
+  if (!readyToFetch_.load(std::memory_order_acquire)) {
+    return false;
+  }
+
   std::lock_guard<std::mutex> lock(mu);
 
-  while (!quitFlag) {
+  while (true) {  // Changed from while (!quitFlag) to process all tasks
     // Acquire LOAD candidate considering barrier
     std::unique_ptr<ScheduledItem> loadCand = nullptr;
     if (!loadQueue.empty() && !loadBlocked) {
@@ -357,12 +367,12 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
                            lDeps.filePath, std::move(loadCand));
         continue;
       }
-      if (lDeps.fileDependsOn >
+      if (lDeps.tableDependsOn >
           depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
                                       loadCand->tableId)) {
         const auto &loadTableId = loadCand->tableId;
-        depManager.addWait(DependencyManager::DependencyType::File, loadTableId,
-                           std::move(loadCand));
+        depManager.addWait(DependencyManager::DependencyType::Table,
+                           loadTableId, std::move(loadCand));
         continue;
       }
       // loadCand is already moved out from loadQueue at line 291

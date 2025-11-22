@@ -4,8 +4,10 @@
 
 #include "LockManager.h"
 #include <atomic>
+#include <iostream>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 LockManager::Entry &LockManager::entry(const TableId &id) {
   const std::scoped_lock<std::mutex> lock(mapMtx_);

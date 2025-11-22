@@ -338,8 +338,9 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     }
   }
 
-  // Multi-threaded mode: wait and output all results
+  // Multi-threaded mode: start execution and wait for results
   if (numThreads > 1) {
+    runtime.startExecution();
     runtime.waitAll();
     auto results = runtime.getResultsInOrder();
     for (size_t i = 0; i < results.size(); ++i) {

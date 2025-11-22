@@ -32,6 +32,9 @@ public:
   // Submit a query and get a future for its result
   void submitQuery(Query::Ptr query, std::size_t orderIndex);
 
+  // Signal that all queries have been submitted, workers can start
+  void startExecution();
+
   // Wait for all submitted queries to complete
   void waitAll();
 

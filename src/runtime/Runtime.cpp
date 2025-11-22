@@ -61,6 +61,8 @@ void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
   }
 }
 
+void Runtime::startExecution() { taskQueue_->setReady(); }
+
 void Runtime::waitAll() {
   // Wait for all futures to complete
   std::lock_guard lock(futuresMtx_);

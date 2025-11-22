@@ -6,6 +6,7 @@
 
 #include "Threadpool.h"
 #include "../query/QueryHelpers.h"
+#include <iostream>
 
 Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
     : thread_count_(numThreads), lock_manager_(lm), task_queue_(tq) {
@@ -73,18 +74,22 @@ void Threadpool::work() {
       std::vector<ExecutableTask> batch;
       batch.reserve(FETCH_BATCH_SIZE);
 
+      int fetchCount = 0;
       for (size_t i = 0; i < FETCH_BATCH_SIZE; ++i) {
         ExecutableTask tmp;
         if (task_queue_.fetchNext(tmp)) {
           batch.push_back(std::move(tmp));
+          fetchCount++;
         } else {
           break;
         }
       }
 
-      lock.lock();
-      for (auto &tmp : batch) {
-        local_queue_.emplace(std::move(tmp));
+      if (fetchCount > 0) {
+        lock.lock();
+        for (auto &tmp : batch) {
+          local_queue_.emplace(std::move(tmp));
+        }
       }
     }
 

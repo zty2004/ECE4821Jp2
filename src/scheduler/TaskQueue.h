@@ -62,6 +62,9 @@ public:
   auto registerTask(ParsedQuery &&parsedQuery)
       -> std::future<std::unique_ptr<QueryResult>>;
 
+  // Mark that all tasks have been registered, ready to fetch
+  void setReady();
+
   // Fetch next executable task, Returns false if no task is ready
   auto fetchNext(ExecutableTask &out) -> bool;
 
@@ -72,6 +75,7 @@ private:
   std::atomic<std::uint64_t> submitted{0};
   std::atomic<std::uint64_t> running{0};
   std::atomic<std::uint64_t> completed{0};
+  std::atomic<bool> readyToFetch_{false};  // Whether all tasks registered
 
   struct Stats {
     std::uint64_t fetchTick{0};
