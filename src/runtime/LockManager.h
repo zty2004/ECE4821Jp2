@@ -33,9 +33,9 @@ public:
 
 private:
   struct Entry {
-    // NOLINTBEGIN(misc-non-private-member-variables-in-classes,codequality-no-public-member-variables)
+    // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
     mutable std::shared_mutex rw;
-    // NOLINTEND(misc-non-private-member-variables-in-classes,codequality-no-public-member-variables)
+    // NOLINTEND(misc-non-private-member-variables-in-classes)
   };
 
   auto entry(const TableId &id) -> Entry &;
