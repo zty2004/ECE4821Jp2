@@ -124,9 +124,32 @@ void DependencyManager::notifyCompleted(
   auto &heap = waitingIter->second;
   while (!heap.empty()) {
     ScheduledItem const &waitItem = *heap.top();
-    if (waitItem.type == QueryType::Load &&
-        std::get<LoadDeps>(waitItem.depends).fileDependsOn < completedSeq) {
-      break;
+    if (waitItem.type == QueryType::Load) {
+      const auto &loadDeps = std::get<LoadDeps>(waitItem.depends);
+      if ((type == DependencyType::File &&
+           loadDeps.fileDependsOn > completedSeq) ||
+          (type == DependencyType::Table &&
+           loadDeps.tableDependsOn > completedSeq)) {
+        break; // dependency not satisfied
+      }
+    }
+    if (waitItem.type == QueryType::Dump && type == DependencyType::File &&
+        std::get<DumpDeps>(waitItem.depends).fileDependsOn > completedSeq) {
+      break; // dependency not satisfied
+    }
+    if (waitItem.type == QueryType::Drop && type == DependencyType::Table &&
+        std::get<DropDeps>(waitItem.depends).tableDependsOn > completedSeq) {
+      break; // dependency not satisfied
+    }
+    if (waitItem.type == QueryType::CopyTable &&
+        type == DependencyType::Table) {
+      const auto &copyDeps = std::get<CopyTableDeps>(waitItem.depends);
+      if (copyDeps.srcTableDependsOn > completedSeq &&
+          copyDeps.dstTableDependsOn > completedSeq) {
+        break;
+        // any of which statisfied, poped out, then will judge which not
+        // satisfied (if exist) in fetchNext
+      }
     }
     ready.emplace_back(
         std::move(const_cast<std::unique_ptr<ScheduledItem> &>(heap.top())));
