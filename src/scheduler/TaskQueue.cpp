@@ -185,7 +185,45 @@ void TaskQueue::applyActions(const ActionList &actions,
       default:
         break;
       }
-
+      for (auto &&readyItem : readyFileItems) {
+        if (readyItem->type == QueryType::Load) {
+          const auto &rlDeps = std::get<LoadDeps>(readyItem->depends);
+          if (!rlDeps.pendingTable.empty()) {
+            auto &database = Database::getInstance();
+            readyItem->tableId = database.getFileTableName(rlDeps.filePath);
+          } else if (rlDeps.tableDependsOn >
+                     depManager.lastCompletedFor(
+                         DependencyManager::DependencyType::Table,
+                         readyItem->tableId)) {
+            const auto &readyTableId = readyItem->tableId;
+            depManager.addWait(DependencyManager::DependencyType::Table,
+                               readyTableId, std::move(readyItem));
+            continue;
+          }
+          loadQueue.push_front(std::move(readyItem));
+        } else {
+          auto &pendingTable = tables[readyItem->tableId];
+          pendingTable.queue.push_front(std::move(*readyItem));
+          readyItem.reset();
+          const auto &head = pendingTable.queue.front();
+          globalIndex.upsert(&pendingTable, head.priority,
+                             fetchTick.load(std::memory_order_relaxed),
+                             head.seq);
+        }
+      }
+      for (auto &&readyItem : readyTableItems) {
+        if (readyItem->type == QueryType::Load) {
+          loadQueue.push_front(std::move(readyItem));
+        } else {
+          auto &pendingTable = tables[readyItem->tableId];
+          pendingTable.queue.push_front(std::move(*readyItem));
+          readyItem.reset();
+          const auto &head = pendingTable.queue.front();
+          globalIndex.upsert(&pendingTable, head.priority,
+                             fetchTick.load(std::memory_order_relaxed),
+                             head.seq);
+        }
+      } // TODO: redundant function, can be optimized
       break;
     }
     }
