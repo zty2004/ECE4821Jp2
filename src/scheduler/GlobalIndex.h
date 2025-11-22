@@ -35,11 +35,11 @@ public:
 
 private:
   struct Key {
-    QueryPriority pri{};       // priority level of representative key
-    std::uint64_t stamp{0};    // enqueueTick
-    std::uint64_t headSeq{0};  // sequence index
-    TableQueue *tbl{nullptr};  // table queue
-    std::uint64_t version{0};  // monotonic to invalidate stale entries
+    QueryPriority pri{};       // priority level of representative key //NOLINT
+    std::uint64_t stamp{0};    // enqueueTick //NOLINT
+    std::uint64_t headSeq{0};  // sequence index //NOLINT
+    TableQueue *tbl{nullptr};  // table queue //NOLINT
+    std::uint64_t version{0};  // monotonic to invalidate stale entries //NOLINT
   };
   struct KeyCmp {
     auto operator()(const Key &leftKey, const Key &rightKey) const -> bool {
