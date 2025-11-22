@@ -80,7 +80,7 @@ private:
   }
 
   // Map of tableId -> TableQueue
-  std::unordered_map<std::string, TableQueue> tables;
+  std::unordered_map<std::string, std::unique_ptr<TableQueue>> tables;
 
   // Cross-table selection structure
   GlobalIndex globalIndex;

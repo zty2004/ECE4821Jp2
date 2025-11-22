@@ -55,8 +55,11 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
     depManager.markScheduled(item, item.type);
   }
 
-  auto &tbl = tables[item.tableId];
-  tbl.queue.emplace_back(std::move(item));
+  auto &tblPtr = tables[item.tableId];
+  if (!tblPtr) {
+    tblPtr = std::make_unique<TableQueue>();
+  }
+  tblPtr->queue.emplace_back(std::move(item));
   return fut;
 }
 
@@ -98,10 +101,12 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
   case QueryType::CopyTable: {
     auto tblIt = tables.find(item.tableId);
     bool needRegister = true;
-    if (tblIt != tables.end() && tblIt->second.registered) {
-      if (tblIt->second.registerSeq > item.seq) {
-        throw std::invalid_argument(
-            "Wrongly execute a latter Loadbefore an ealier Load");
+    if (tblIt != tables.end() && tblIt->second && tblIt->second->registered) {
+      if (tblIt->second->registerSeq > item.seq) {
+        throw std::invalid_argument("Wrongly execute a later Load " +
+                                    std::to_string(tblIt->second->registerSeq) +
+                                    " before an earlier Load " +
+                                    std::to_string(item.seq));
       }
       needRegister = false;
     }
@@ -127,7 +132,11 @@ void TaskQueue::applyActions(const ActionList &actions,
   for (auto act : actions) {
     switch (act) {
     case CompletionAction::RegisterTable: {
-      auto &tbl = tables[item.tableId];
+      auto &tblPtr = tables[item.tableId];
+      if (!tblPtr) {
+        tblPtr = std::make_unique<TableQueue>();
+      }
+      TableQueue &tbl = *tblPtr;
       if (!tbl.registered && !tbl.queue.empty()) {
         // might have prolem if require non-empty, but low possiblity, ignore
         tbl.registered = true;
@@ -139,7 +148,7 @@ void TaskQueue::applyActions(const ActionList &actions,
           }
         }
         const ScheduledItem &head = tbl.queue.front();
-        globalIndex.upsert(&tbl, head.priority,
+        globalIndex.upsert(tblPtr.get(), head.priority,
                            fetchTick.load(std::memory_order_relaxed), head.seq);
       }
       break;
@@ -193,12 +202,13 @@ void TaskQueue::applyActions(const ActionList &actions,
             auto &database = Database::getInstance();
             readyItem->tableId = database.getFileTableName(rlDeps.filePath);
             // No need to update `tableDependsOn`, since cannot get correct
-            // dependency Ignore Table dependency might cause issues, but the
+            // dependency. Ignoring Table dependency might cause issues, but the
             // operations to table also protected by outside mutex, acceptable
           } else if (rlDeps.tableDependsOn >
                      depManager.lastCompletedFor(
                          DependencyManager::DependencyType::Table,
                          readyItem->tableId)) {
+            // judge if table dependency satisfied for decided LOADs
             const auto &readyTableId = readyItem->tableId;
             depManager.addWait(DependencyManager::DependencyType::Table,
                                readyTableId, std::move(readyItem));
@@ -206,11 +216,15 @@ void TaskQueue::applyActions(const ActionList &actions,
           }
           loadQueue.push_front(std::move(readyItem));
         } else {
-          auto &pendingTable = tables[readyItem->tableId];
+          auto &pendingTablePtr = tables[readyItem->tableId];
+          if (!pendingTablePtr) {
+            pendingTablePtr = std::make_unique<TableQueue>();
+          }
+          auto &pendingTable = *pendingTablePtr;
           pendingTable.queue.push_front(std::move(*readyItem));
           readyItem.reset();
           const auto &head = pendingTable.queue.front();
-          globalIndex.upsert(&pendingTable, head.priority,
+          globalIndex.upsert(pendingTablePtr.get(), head.priority,
                              fetchTick.load(std::memory_order_relaxed),
                              head.seq);
         }
@@ -239,11 +253,16 @@ void TaskQueue::applyActions(const ActionList &actions,
             continue;
           }
         }
-        auto &pendingTable = tables[readyItem->tableId];
+        // DROP directly goes here
+        auto &pendingTablePtr = tables[readyItem->tableId];
+        if (!pendingTablePtr) {
+          pendingTablePtr = std::make_unique<TableQueue>();
+        }
+        auto &pendingTable = *pendingTablePtr;
         pendingTable.queue.push_front(std::move(*readyItem));
         readyItem.reset();
         const auto &head = pendingTable.queue.front();
-        globalIndex.upsert(&pendingTable, head.priority,
+        globalIndex.upsert(pendingTablePtr.get(), head.priority,
                            fetchTick.load(std::memory_order_relaxed), head.seq);
 
       } // TODO: redundant function, can be optimized
