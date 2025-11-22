@@ -92,7 +92,7 @@ p2team03/
 
 ### Prerequisites
 
-- C++20 compatible compiler (GCC 10+, Clang 11+)
+- `Clang++-18`
 - CMake 3.22+
 - Git
 
@@ -121,7 +121,7 @@ p2team03/
 3. **Run lemondb**:
 
    ```bash
-   ./build/lemondb --listen <query_file> --threads <N>
+   build/lemondb --listen <query_file> --threads=<N>
    ```
 
    Options:
@@ -143,13 +143,13 @@ rm -rf build
 
 ```bash
 # Run with 8 worker threads
-./build/lemondb --listen test/queries/basic.query --threads 8
+build/lemondb --listen test/queries/basic.query --threads=8
 
 # Auto-detect thread count
-./build/lemondb -l test/queries/basic.query -t 0
+build/lemondb --listen test/queries/basic.query --threads=0
 
 # Single-threaded mode
-./build/lemondb -l test/queries/basic.query -t 1
+build/lemondb --listen test/queries/basic.query --threads=1
 ```
 
 ### Query Format
@@ -158,22 +158,23 @@ LemonDB supports standard SQL-like queries:
 
 ```sql
 -- Table operations
-LOAD students FROM students.txt;
-INSERT INTO students KEY Alice 25 30000;
-SELECT * FROM students WHERE Age > 20;
-UPDATE students SET Salary = 35000 WHERE KEY = Alice;
-DELETE FROM students WHERE Age < 18;
-DUMP students TO output.txt;
-DROP TABLE students;
+LOAD students.query;
+INSERT ( Alice 25 30000 ) FROM Students ;
+SELECT ( KEY Age ) FROM students WHERE ( Age > 20 );
+UPDATE ( Age 20 ) FROM Student WHERE ( KEY = Alice );
+DELETE ( ) FROM Students WHERE ( Age < 18 );
+DUMP Students students.back;
+DROP Students;
 
 -- Aggregation
-COUNT FROM students WHERE Age > 25;
-SUM Salary FROM students;
-MIN Age FROM students;
-MAX Salary FROM students;
+COUNT ( ) FROM Students WHERE ( Age > 25 );
+SUM ( Salary Grade ) FROM Students;
+MIN ( Age ) FROM Students;
+MAX ( Salary ) FROM students WHERE ( Age < 25 );
 
 -- Utility
-LIST;  -- Show all tables
+LISTEN undergraduates.query;
+LIST;  -- Only allowed in DEBUG mode. Show all tables
 QUIT;  -- Exit (waits for all tasks)
 ```
 
