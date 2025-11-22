@@ -6,7 +6,6 @@
 
 #include "Threadpool.h"
 #include "../query/QueryHelpers.h"
-#include <iostream>
 
 Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
     : thread_count_(numThreads), lock_manager_(lm), task_queue_(tq) {
@@ -34,7 +33,10 @@ Threadpool::~Threadpool() {
 #endif
 }
 
-auto Threadpool::get_threadpool_size() const -> size_t { return thread_count_; }
+[[maybe_unused]] auto Threadpool::get_threadpool_size() const -> size_t {
+  return thread_count_;
+}
+
 Threadpool::WriteGuard::WriteGuard(LockManager &lkm, TableId index)
     : lm_(lkm), id_(std::move(index)) {
   lm_.lockX(id_);
@@ -50,8 +52,8 @@ Threadpool::ReadGuard::ReadGuard(LockManager &lkm, TableId index)
 Threadpool::ReadGuard::~ReadGuard() { lm_.unlockS(id_); }
 
 #ifdef __cpp_lib_jthread
-void Threadpool::worker_loop(std::stop_token st) {
-  while (!st.stop_requested()) {
+void Threadpool::worker_loop(std::stop_token st_) {
+  while (!st_.stop_requested()) {
     work();
   }
 }

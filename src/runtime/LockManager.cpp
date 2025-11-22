@@ -15,7 +15,8 @@ auto LockManager::entry(const TableId &id) -> LockManager::Entry & {
   return *iter->second;
 }
 
-auto LockManager::entryConst(const TableId &id) const -> const Entry * {
+[[maybe_unused]] auto
+LockManager::entryConst(const TableId &id) const -> const Entry * {
   const std::scoped_lock<std::mutex> lock(mapMtx_);
   if (auto iter = map_.find(id); iter != map_.end()) {
     return iter->second.get();
