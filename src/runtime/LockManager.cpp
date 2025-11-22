@@ -15,6 +15,7 @@ auto LockManager::entry(const TableId &id) -> LockManager::Entry & {
   return *iter->second;
 }
 
+/*
 [[maybe_unused]] auto
 LockManager::entryConst(const TableId &id) const -> const Entry * {
   const std::scoped_lock<std::mutex> lock(mapMtx_);
@@ -23,6 +24,7 @@ LockManager::entryConst(const TableId &id) const -> const Entry * {
   }
   return nullptr;
 }
+*/
 
 void LockManager::lockS(const TableId &id) {
   auto &entry_ref = entry(id);

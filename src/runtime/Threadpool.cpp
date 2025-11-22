@@ -37,9 +37,11 @@ Threadpool::~Threadpool() {
 #endif
 }
 
+/*
 [[maybe_unused]] auto Threadpool::get_threadpool_size() const -> size_t {
   return thread_count_;
 }
+*/
 
 Threadpool::WriteGuard::WriteGuard(LockManager &lkm, TableId index)
     : lm_(lkm), id_(std::move(index)) {
