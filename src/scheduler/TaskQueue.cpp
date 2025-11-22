@@ -402,38 +402,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
 
     // No candidate case
     if (tableCand == nullptr && loadCand == nullptr) {
-      if (!barriers.empty()) {
-        // Barrier must wait for:
-        // 1. All running tasks to complete
-        // 2. All loads in loadQueue to be processed (or we'd return before
-        // this)
-        auto runningCount = running.load(std::memory_order_relaxed);
-        if (runningCount > 0) {
-          return false;  // Cannot process barrier yet, tasks still running
-        }
-
-        ScheduledItem barrierItem = std::move(barriers.front());
-        barriers.pop_front();
-        if (barrierItem.type == QueryType::Quit) {
-          quitFlag = true;
-        }
-        buildExecutableFromScheduled(barrierItem, out);
-        running.fetch_add(1, std::memory_order_relaxed);
-        fetchTick.fetch_add(1, std::memory_order_relaxed);
-        // Reinsert stashed tables
-        for (auto *blocked : waitingTables) {
-          if (blocked != nullptr && !blocked->queue.empty()) {
-            const ScheduledItem &blockedHead = blocked->queue.front();
-            globalIndex.upsert(blocked, blockedHead.priority,
-                               fetchTick.load(std::memory_order_relaxed),
-                               blockedHead.seq);
-          }
-        }
-        waitingTables.clear();
-        loadBlocked = false;
-        return true;
-      }
-      return false;
+      return fetchBarrier(out);
     }
 
     // choose higher priority, then smaller seq
@@ -544,6 +513,41 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
 
     running.fetch_add(1, std::memory_order_relaxed);
     fetchTick.fetch_add(1, std::memory_order_relaxed);
+    return true;
+  }
+  return false;
+}
+
+auto TaskQueue::fetchBarrier(ExecutableTask &out) -> bool {
+  if (!barriers.empty()) {
+    // Barrier must wait for:
+    // 1. All running tasks to complete
+    // 2. All loads in loadQueue to be processed (or we'd return before
+    // this)
+    auto runningCount = running.load(std::memory_order_relaxed);
+    if (runningCount > 0) {
+      return false;  // Cannot process barrier yet, tasks still running
+    }
+
+    ScheduledItem barrierItem = std::move(barriers.front());
+    barriers.pop_front();
+    if (barrierItem.type == QueryType::Quit) {
+      quitFlag = true;
+    }
+    buildExecutableFromScheduled(barrierItem, out);
+    running.fetch_add(1, std::memory_order_relaxed);
+    fetchTick.fetch_add(1, std::memory_order_relaxed);
+    // Reinsert stashed tables
+    for (auto *blocked : waitingTables) {
+      if (blocked != nullptr && !blocked->queue.empty()) {
+        const ScheduledItem &blockedHead = blocked->queue.front();
+        globalIndex.upsert(blocked, blockedHead.priority,
+                           fetchTick.load(std::memory_order_relaxed),
+                           blockedHead.seq);
+      }
+    }
+    waitingTables.clear();
+    loadBlocked = false;
     return true;
   }
   return false;

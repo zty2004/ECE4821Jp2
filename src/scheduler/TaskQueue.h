@@ -131,6 +131,9 @@ private:
       std::vector<std::unique_ptr<ScheduledItem>> &readyTableItems);
   void updateReadyFiles(std::unique_ptr<ScheduledItem> &readyItem);
   void updateReadyTables(std::unique_ptr<ScheduledItem> &readyItem);
+
+  // FetchNext helpers
+  auto fetchBarrier(ExecutableTask &out) -> bool;
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_
