@@ -102,20 +102,20 @@ void DependencyManager::addWait(const DependencyType &type,
   waitingMap[key].push(item);
 }
 
-auto DependencyManager::notifyCompleted(
-    const DependencyType &type, const std::string &key,
-    std::uint64_t seq) -> std::vector<ScheduledItem *> {
-  std::vector<ScheduledItem *> ready;
+void DependencyManager::notifyCompleted(const DependencyType &type,
+                                        const std::string &key,
+                                        std::uint64_t seq,
+                                        std::vector<ScheduledItem *> ready) {
   auto &completedSeq = type == DependencyType::File ? lastCompletedFile[key]
                                                     : lastCompletedTable[key];
   if (seq < completedSeq) {
-    return ready;
+    return;
   }
   completedSeq = seq;
   auto &waitingMap = type == DependencyType::File ? waitingFile : waitingTable;
   auto waitingIter = waitingMap.find(key);
   if (waitingIter == waitingMap.end()) {
-    return ready;
+    return;
   }
   auto &heap = waitingIter->second;
   while (!heap.empty()) {
@@ -130,7 +130,6 @@ auto DependencyManager::notifyCompleted(
   if (heap.empty()) {
     waitingMap.erase(waitingIter);
   }
-  return ready;
 }
 
 auto DependencyManager::lastCompletedFor(

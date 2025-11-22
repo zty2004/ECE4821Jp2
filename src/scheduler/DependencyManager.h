@@ -22,11 +22,6 @@ private:
   using WaitingHeap =
       std::priority_queue<ScheduledItem *, std::vector<ScheduledItem *>, Cmp>;
 
-  enum class DependencyType : std::uint8_t {
-    File,
-    Table,
-  };
-
 public:
   DependencyManager() = default;
   ~DependencyManager() = default;
@@ -36,14 +31,18 @@ public:
   DependencyManager &
   operator=(DependencyManager &&) noexcept = delete; // NOLINT
 
+  enum class DependencyType : std::uint8_t {
+    File,
+    Table,
+  };
+
   void markScheduled(ScheduledItem &item, QueryType tag);
 
   void addWait(const DependencyType &type, const std::string &key,
                ScheduledItem *item);
 
-  [[nodiscard]] auto
-  notifyCompleted(const DependencyType &type, const std::string &key,
-                  std::uint64_t seq) -> std::vector<ScheduledItem *>;
+  void notifyCompleted(const DependencyType &type, const std::string &key,
+                       std::uint64_t seq, std::vector<ScheduledItem *> ready);
 
   [[nodiscard]] auto
   lastCompletedFor(const DependencyType &type,
