@@ -324,6 +324,43 @@ void TaskQueue::updateReadyFiles(std::unique_ptr<ScheduledItem> &readyItem) {
                      fetchTick.load(std::memory_order_relaxed), head.seq);
 }
 
+void TaskQueue::updateReadyTables(std::unique_ptr<ScheduledItem> &readyItem) {
+  if (readyItem->type == QueryType::Load) {
+    loadQueue.emplace_front(std::move(readyItem));
+    return;
+  }
+
+  if (readyItem->type == QueryType::CopyTable) {
+    const auto &rcDeps = std::get<CopyTableDeps>(readyItem->depends);
+    const auto &srcTableId = readyItem->tableId;
+    if (rcDeps.srcTableDependsOn >
+        depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
+                                    srcTableId)) {
+      depManager.addWait(DependencyManager::DependencyType::Table, srcTableId,
+                         std::move(readyItem));
+      return;
+    }
+    if (rcDeps.dstTableDependsOn >
+        depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
+                                    rcDeps.newTable)) {
+      depManager.addWait(DependencyManager::DependencyType::Table,
+                         rcDeps.newTable, std::move(readyItem));
+      return;
+    }
+  }
+  // DROP directly goes here
+  auto &pendingTablePtr = tables[readyItem->tableId];
+  if (!pendingTablePtr) {
+    pendingTablePtr = std::make_unique<TableQueue>();
+  }
+  auto &pendingTable = *pendingTablePtr;
+  pendingTable.queue.push_front(std::move(*readyItem));
+  readyItem.reset();
+  const auto &head = pendingTable.queue.front();
+  globalIndex.upsert(pendingTablePtr.get(), head.priority,
+                     fetchTick.load(std::memory_order_relaxed), head.seq);
+}
+
 // Refactored single-path fetchNext (reduced branching)
 auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   // Don't fetch until all tasks are registered
