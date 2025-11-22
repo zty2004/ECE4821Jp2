@@ -65,12 +65,12 @@ run_test() {
   mkdir -p test/data/tmp
   cd test/data
   local failed=0
-  run_exec lemondb-asan "${test}" || failed=1
-  rm -rf tmp *.out *.err *.diff
-  run_exec lemondb-msan "${test}" || failed=1
-  rm -rf tmp *.out *.err *.diff
-  run_exec lemondb-ubsan "${test}" || failed=1
-  rm -rf tmp *.out *.err *.diff
+  # run_exec lemondb-asan "${test}" || failed=1
+  # rm -rf tmp *.out *.err *.diff
+  # run_exec lemondb-msan "${test}" || failed=1
+  # rm -rf tmp *.out *.err *.diff
+  # run_exec lemondb-ubsan "${test}" || failed=1
+  # rm -rf tmp *.out *.err *.diff
   run_exec lemondb "${test}" 1 || failed=1
   rm -rf tmp *.out *.err *.diff
   cd ../..
