@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -20,7 +21,7 @@
 #include "Table.h"
 
 void Database::testDuplicate(const std::string &tableName) {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto iter = this->tables.find(tableName);
   if (iter != this->tables.end()) {
     throw DuplicatedTableName("Error when inserting table \"" + tableName +
@@ -29,7 +30,7 @@ void Database::testDuplicate(const std::string &tableName) {
 }
 
 auto Database::registerTable(Table::Ptr &&table) -> Table & {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto name = table->name();
   auto iter = this->tables.find(name);
   if (iter != this->tables.end()) {
@@ -41,7 +42,7 @@ auto Database::registerTable(Table::Ptr &&table) -> Table & {
 }
 
 auto Database::operator[](const std::string &tableName) -> Table & {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto iter = this->tables.find(tableName);
   if (iter == this->tables.end()) {
     throw TableNameNotFound("Error accesing table \"" + tableName +
@@ -51,7 +52,7 @@ auto Database::operator[](const std::string &tableName) -> Table & {
 }
 
 auto Database::operator[](const std::string &tableName) const -> const Table & {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto iter = this->tables.find(tableName);
   if (iter == this->tables.end()) {
     throw TableNameNotFound("Error accesing table \"" + tableName +
@@ -61,7 +62,7 @@ auto Database::operator[](const std::string &tableName) const -> const Table & {
 }
 
 void Database::dropTable(const std::string &tableName) {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto iter = this->tables.find(tableName);
   if (iter == this->tables.end()) {
     throw TableNameNotFound("Error when trying to drop table \"" + tableName +
@@ -71,7 +72,7 @@ void Database::dropTable(const std::string &tableName) {
 }
 
 void Database::printAllTable() {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   const int width = 15;
   std::cout << "Database overview:" << '\n';
   std::cout << "=========================" << '\n';
@@ -94,12 +95,12 @@ auto Database::getInstance() -> Database & {
 
 void Database::updateFileTableName(const std::string &fileName,
                                    const std::string &tableName) {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   fileTableNameMap[fileName] = tableName;
 }
 
 auto Database::getFileTableName(const std::string &fileName) -> std::string {
-  std::lock_guard<std::recursive_mutex> lock(databaseMutex);
+  const std::lock_guard<std::recursive_mutex> lock(databaseMutex);
   auto iter = fileTableNameMap.find(fileName);
   if (iter == fileTableNameMap.end()) {
     std::ifstream infile(fileName);

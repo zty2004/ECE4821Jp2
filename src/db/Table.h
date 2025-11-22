@@ -16,6 +16,7 @@
 #include "../utils/formatter.h"
 #include "../utils/uexception.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
 #define DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field)                              \
   do {                                                                         \
     try {                                                                      \
@@ -35,6 +36,7 @@
       throw TableFieldNotFound(R"(Field index ? out of range.)"_f % (index));  \
     }                                                                          \
   } while (0)
+// NOLINTEND(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
 
 class Table {
 public:
