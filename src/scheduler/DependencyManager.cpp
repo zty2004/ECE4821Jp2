@@ -1,9 +1,12 @@
 #include "DependencyManager.h"
 
 #include <cstdint>
-#include <iostream>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "../query/Query.h"
 #include "../query/QueryHelpers.h"
 #include "ScheduledItem.h"
 
@@ -192,8 +195,9 @@ void DependencyManager::notifyCompleted(
   }
 }
 
-auto DependencyManager::lastCompletedFor(
-    const DependencyType &type, const std::string &key) const -> std::uint64_t {
+auto DependencyManager::lastCompletedFor(const DependencyType &type,
+                                         const std::string &key) const
+    -> std::uint64_t {
   const auto &lastCompletedMap =
       type == DependencyType::File ? lastCompletedFile : lastCompletedTable;
   auto iter = lastCompletedMap.find(key);

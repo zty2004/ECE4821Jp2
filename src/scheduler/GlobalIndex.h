@@ -1,6 +1,7 @@
 #ifndef SRC_SCHEDULER_GLOBALINDEX_H_
 #define SRC_SCHEDULER_GLOBALINDEX_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <queue>
 #include <unordered_map>

@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+#include "../query/Query.h"
 #include "../query/QueryPriority.h"
 
 class Query;
@@ -37,22 +38,23 @@ using DependencyPayload =
 
 // One scheduled task (move-only)
 struct ScheduledItem {
-  std::uint64_t seq = 0;  // global submission sequence
-  QueryPriority priority = QueryPriority::NORMAL;
-  std::string tableId;              // table name or "__control__"
-  QueryType type = QueryType::Nop;  // type of the query
-  DependencyPayload depends{};      // default is std::monostate (no deps)
-  std::unique_ptr<Query> query;
-  std::promise<std::unique_ptr<QueryResult>> promise;  // result promise
-  bool droppedFlag = false;                            // dropped mark
+  std::uint64_t seq = 0;  // global submission sequence //NOLINT
+  QueryPriority priority = QueryPriority::NORMAL;  // NOLINT
+  std::string tableId;              // table name or "__control__" //NOLINT
+  QueryType type = QueryType::Nop;  // type of the query //NOLINT
+  DependencyPayload depends;     // default is std::monostate (no deps) //NOLINT
+  std::unique_ptr<Query> query;  // NOLINT
+  std::promise<std::unique_ptr<QueryResult>>
+      promise;               // result promise //NOLINT
+  bool droppedFlag = false;  // dropped mark//NOLINT
 
-  ScheduledItem() noexcept = default;  // NOLINT
+  ScheduledItem() noexcept = default;
   ~ScheduledItem() = default;
   ScheduledItem(ScheduledItem &&) noexcept = default;
-  ScheduledItem &operator=(ScheduledItem &&) noexcept = default;  // NOLINT
+  auto operator=(ScheduledItem &&) noexcept -> ScheduledItem & = default;
 
   ScheduledItem(const ScheduledItem &) = delete;
-  ScheduledItem &operator=(const ScheduledItem &) = delete;  // NOLINT
+  auto operator=(const ScheduledItem &) -> ScheduledItem & = delete;
 };
 
 #endif  // SRC_SCHEDULER_SCHEDULEDITEM_H_
