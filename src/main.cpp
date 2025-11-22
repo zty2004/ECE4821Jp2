@@ -2,20 +2,24 @@
 // Created by liu on 18-10-21.
 //
 
-#include <charconv>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <system_error>
+
+#include <charconv>
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <queue>
 #include <span>
 #include <string>
 #include <string_view>
-#include <thread>
+#include <thread>  // NOLINT(build/c++11)
 #include <utility>
 #include <vector>
 
@@ -248,6 +252,7 @@ auto processFile(const std::string &filename,
   return result;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
                     QueryParser &parser, Runtime &runtime, size_t numThreads) {
   size_t counter = 0;
@@ -256,7 +261,7 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
 
   // BFS-style file traversal
   // Process initial input (either from file or stdin)
-  bool isInitialFile = !fin.is_open();
+  const bool isInitialFile = !fin.is_open();
 
   if (isInitialFile) {
     // Read from stdin - process inline
@@ -305,7 +310,7 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
 
   // Process queued files in BFS order
   while (!fileQueue.empty()) {
-    std::string filename = fileQueue.front();
+    const std::string filename = fileQueue.front();
     fileQueue.pop();
 
     auto fileResult = processFile(filename, parser);
@@ -393,7 +398,7 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
 
   // Determine thread count (default to 1 for single-threaded mode)
-  size_t numThreads;
+  size_t numThreads = 0;
   if (parsedArgs.threads > 0) {
     numThreads = static_cast<size_t>(parsedArgs.threads);
   } else {
