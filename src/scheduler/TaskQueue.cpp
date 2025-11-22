@@ -67,7 +67,9 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   dst.type = src.type;
   dst.query = std::move(src.query);
   dst.promise = std::move(src.promise);
-  dst.execOverride = nullptr; // normal path executed by worker
+  dst.execOverride = src.droppedFlag
+                         ? []() { return std::make_unique<NullQueryResult>(); }
+                         : nullptr;
   const ActionList actions = classifyActions(src);
   const std::string capturedTable =
       src.tableId; // src.tableId still valid post-move of query & promise
