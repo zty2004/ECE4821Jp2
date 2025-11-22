@@ -4,7 +4,6 @@
 
 #include "ListenQuery.h"
 
-#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -13,8 +12,11 @@
 
 auto ListenQuery::execute() -> QueryResult::Ptr {
   // Extract just the filename (without path) for the success message
-  std::filesystem::path filePath(this->fileName);
-  std::string displayName = filePath.filename().string();
+  std::string displayName = this->fileName;
+  auto lastSlash = displayName.find_last_of("/\\");
+  if (lastSlash != std::string::npos) {
+    displayName = displayName.substr(lastSlash + 1);
+  }
 
   // Return success result with the filename
   // The actual file opening will be handled in main.cpp

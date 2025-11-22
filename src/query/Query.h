@@ -50,7 +50,9 @@ struct QueryCondition {
 
 class Query {
 protected:
+  // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   std::string targetTable;
+  // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   int id = -1;
 
 public:
@@ -59,27 +61,37 @@ public:
   explicit Query(std::string targetTable)
       : targetTable(std::move(targetTable)) {}
 
-  typedef std::unique_ptr<Query> Ptr;
+  using Ptr = std::unique_ptr<Query>;
 
-  virtual QueryResult::Ptr execute() = 0;
+  // Polymorphic base class - delete copy, default move
+  Query(const Query &) = delete;
+  auto operator=(const Query &) -> Query & = delete;
+  Query(Query &&) = default;
+  auto operator=(Query &&) -> Query & = default;
 
-  virtual std::string toString() = 0;
+  virtual auto execute() -> QueryResult::Ptr = 0;
 
+  virtual auto toString() -> std::string = 0;
+
+  // cppcheck-suppress unusedFunction
   [[nodiscard]] virtual auto type() const noexcept -> QueryType {
     return QueryType::Nop;
   }
 
+  // cppcheck-suppress unusedFunction
   [[nodiscard]] auto table() const -> const std::string & {
     return targetTable;
   }
 
   // Virtual accessor for an associated file path (LOAD/DUMP)
+  // cppcheck-suppress unusedFunction
   [[nodiscard]] virtual auto filePath() const -> const std::string & {
     static const std::string kEmptyFilePath;
     return kEmptyFilePath;
   }
 
   // Virtual accessor for new table name (COPYTABLE)
+  // cppcheck-suppress unusedFunction
   [[nodiscard]] virtual auto newTable() const -> const std::string & {
     static const std::string kEmptyNewTable;
     return kEmptyNewTable;
@@ -90,7 +102,7 @@ public:
 
 class NopQuery : public Query {
 public:
-  QueryResult::Ptr execute() override {
+  auto execute() -> QueryResult::Ptr override {
     return std::make_unique<NullQueryResult>();
   }
 
@@ -99,18 +111,22 @@ public:
   }
 
   // cppcheck-suppress unusedFunction
-  [[maybe_unused]] std::string toString() override { return "QUERY = NOOP"; }
+  [[maybe_unused]] auto toString() -> std::string override {
+    return "QUERY = NOOP";
+  }
 };
 
 class ComplexQuery : public Query {
 protected:
   /** The field names in the first () */
+  // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   std::vector<std::string> operands;
   /** The function used in where clause */
+  // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
   std::vector<QueryCondition> condition;
 
 public:
-  typedef std::unique_ptr<ComplexQuery> Ptr;
+  using Ptr = std::unique_ptr<ComplexQuery>;
 
   /**
    * init a fast condition according to the table
@@ -122,7 +138,7 @@ public:
    * if flag is false, the condition is always false
    * in this situation, the condition may not be fully initialized to save time
    */
-  std::pair<std::string, bool> initCondition(const Table &table);
+  auto initCondition(const Table &table) -> std::pair<std::string, bool>;
 
   /**
    * skip the evaluation of KEY
@@ -131,8 +147,8 @@ public:
    * @param object
    * @return
    */
-  bool evalCondition(const Table::Object &object);
-  bool evalCondition(const Table::ConstObject &object);
+  auto evalCondition(const Table::Object &object) -> bool;
+  auto evalCondition(const Table::ConstObject &object) -> bool;
 
   /**
    * This function seems have small effect and causes somme bugs
@@ -141,9 +157,10 @@ public:
    * @param function
    * @return
    */
-  [[maybe_unused]] bool testKeyCondition(
+  [[maybe_unused]] auto testKeyCondition(
       const Table &table,
-      const std::function<void(bool, Table::ConstObject::Ptr &&)> &function);
+      const std::function<void(bool, Table::ConstObject::Ptr &&)> &function)
+      -> bool;
 
   ComplexQuery(std::string targetTable, std::vector<std::string> operands,
                std::vector<QueryCondition> condition)
@@ -152,13 +169,14 @@ public:
 
   /** Get operands in the query */
   // cppcheck-suppress unusedFunction
-  [[maybe_unused]] const std::vector<std::string> &getOperands() const {
+  [[maybe_unused]] [[nodiscard]] auto
+  getOperands() -> const std::vector<std::string> & {
     return operands;
   }
 
   /** Get condition in the query, seems no use now */
   // cppcheck-suppress unusedFunction
-  [[maybe_unused]] const std::vector<QueryCondition> &getCondition() {
+  [[maybe_unused]] auto getCondition() -> const std::vector<QueryCondition> & {
     return condition;
   }
 };
