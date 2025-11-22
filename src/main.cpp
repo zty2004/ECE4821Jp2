@@ -33,15 +33,15 @@ inline auto to_sv(char *param) -> std::string_view {
   return (param != nullptr) ? std::string_view(param) : std::string_view();
 }
 
-inline void warn_unknown(std::string_view token) {
+inline void warn_unknown(const std::string_view &token) {
   std::cerr << "lemondb: warning: unknown argument " << token << '\n';
 }
 
-inline void warn_missing(std::string_view opt) {
+inline void warn_missing(const std::string_view &opt) {
   std::cerr << "lemondb: warning: missing value for " << opt << '\n';
 }
 
-inline void warn_invalid_threads(std::string_view value) {
+inline void warn_invalid_threads(const std::string_view &value) {
   std::cerr << "lemondb: warning: invalid value for --threads " << value
             << '\n';
 }
@@ -396,11 +396,11 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
 
   // Determine thread count (default to 1 for single-threaded mode)
-  size_t numThreads = 1;
+  size_t numThreads;
   if (parsedArgs.threads > 0) {
     numThreads = static_cast<size_t>(parsedArgs.threads);
-  } else if (parsedArgs.threads == 0) {
-    // Auto-detect available hardware threads
+  } else {
+    // Auto-detect available hardware threads (threads == 0)
     numThreads = std::thread::hardware_concurrency();
     if (numThreads == 0) {
       // hardware_concurrency() may return 0 if unable to detect
