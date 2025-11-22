@@ -28,20 +28,20 @@ LockManager::entryConst(const TableId &id) const -> const Entry * {
 
 void LockManager::lockS(const TableId &id) {
   auto &entry_ref = entry(id);
-  entry_ref.rw.lock_shared();  // Blocking call
+  entry_ref.rw_.lock_shared();  // Blocking call
 }
 
 void LockManager::unlockS(const TableId &id) {
   auto &entry_ref = entry(id);
-  entry_ref.rw.unlock_shared();
+  entry_ref.rw_.unlock_shared();
 }
 
 void LockManager::lockX(const TableId &id) {
   auto &entry_ref = entry(id);
-  entry_ref.rw.lock();  // Blocking call
+  entry_ref.rw_.lock();  // Blocking call
 }
 
 void LockManager::unlockX(const TableId &id) {
   auto &entry_ref = entry(id);
-  entry_ref.rw.unlock();
+  entry_ref.rw_.unlock();
 }

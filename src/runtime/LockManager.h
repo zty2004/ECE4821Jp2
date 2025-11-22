@@ -34,7 +34,7 @@ public:
 private:
   // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   struct Entry {
-    mutable std::shared_mutex rw;
+    mutable std::shared_mutex rw_;
   };
   // NOLINTEND(misc-non-private-member-variables-in-classes)
 
