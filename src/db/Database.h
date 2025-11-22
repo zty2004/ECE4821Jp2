@@ -5,6 +5,7 @@
 #ifndef SRC_DB_DATABASE_H_
 #define SRC_DB_DATABASE_H_
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -24,6 +25,12 @@ private:
    * The map of fileName -> tableName
    */
   std::unordered_map<std::string, std::string> fileTableNameMap;
+
+  /**
+   * Recursive mutex for thread-safe access to tables and fileTableNameMap
+   * (allows re-entrant locking from the same thread)
+   */
+  mutable std::recursive_mutex databaseMutex;
 
   /**
    * The default constructor is made private for singleton instance
