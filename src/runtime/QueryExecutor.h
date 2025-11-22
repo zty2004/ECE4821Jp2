@@ -18,6 +18,8 @@ auto extractQueryString(std::istream &input_stream) -> std::string;
 void outputQueryResult(size_t queryNum, const QueryResult::Ptr &result);
 
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
-                    QueryParser &parser, Runtime &runtime, size_t numThreads);
+                    QueryParser &parser,  // NOLINT(runtime/references)
+                    Runtime &runtime,     // NOLINT(runtime/references)
+                    size_t numThreads);
 
 #endif  // SRC_RUNTIME_QUERYEXECUTOR_H_

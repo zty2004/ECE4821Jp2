@@ -61,7 +61,8 @@ struct FileProcessResult {
 };
 
 auto processFile(const std::string &filename,
-                 QueryParser &parser) -> FileProcessResult {
+                 QueryParser &parser)  // NOLINT(runtime/references)
+    -> FileProcessResult {
   FileProcessResult result;
 
   std::ifstream fin(filename);

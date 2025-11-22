@@ -163,7 +163,8 @@ void Threadpool::executeTask(ExecutableTask &task) {
 }
 
 namespace {
-void run_logic(ExecutableTask &task, const char * /*type*/) {
+void run_logic(ExecutableTask &task,  // NOLINT(runtime/references)
+               const char * /*type*/) {
   try {
     std::unique_ptr<QueryResult> res;
     if (task.execOverride) {

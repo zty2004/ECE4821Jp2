@@ -28,7 +28,7 @@ public:
 
   void upsert(TableQueue *tableQ, QueryPriority priorityLevel,
               std::uint64_t enqueueTick, std::uint64_t headSeq);
-  auto pickBest(TableQueue *&outTableQ) -> bool;
+  auto pickBest(TableQueue *&outTableQ) -> bool;  // NOLINT(runtime/references)
 
   [[nodiscard]] auto empty() const -> bool { return heap.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return heap.size(); }

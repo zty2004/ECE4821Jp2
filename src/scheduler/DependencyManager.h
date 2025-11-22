@@ -38,14 +38,16 @@ public:
     Table,
   };
 
-  void markScheduled(ScheduledItem &item, QueryType tag);
+  void markScheduled(ScheduledItem &item,  // NOLINT(runtime/references)
+                     QueryType tag);
 
   void addWait(const DependencyType &type, const std::string &key,
                std::unique_ptr<ScheduledItem> &&item);
 
   void notifyCompleted(const DependencyType &type, const std::string &key,
                        std::uint64_t seq,
-                       std::vector<std::unique_ptr<ScheduledItem>> &ready);
+                       std::vector<std::unique_ptr<ScheduledItem>>
+                           &ready);  // NOLINT(runtime/references)
 
   [[nodiscard]] auto
   lastCompletedFor(const DependencyType &type,

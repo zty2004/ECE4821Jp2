@@ -24,7 +24,9 @@ class Threadpool {
 public:
   static constexpr size_t FETCH_BATCH_SIZE = 16;  // Fetch 16 tasks each time
 
-  Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq);
+  Threadpool(std::size_t numThreads,
+             LockManager &lm,  // NOLINT(runtime/references)
+             TaskQueue &tq);   // NOLINT(runtime/references)
 
   ~Threadpool();
 
@@ -52,7 +54,8 @@ private:
 
   class WriteGuard {
   public:
-    WriteGuard(LockManager &lkm, TableId index);
+    WriteGuard(LockManager &lkm,  // NOLINT(runtime/references)
+               TableId index);
 
     ~WriteGuard();
 
@@ -68,7 +71,8 @@ private:
 
   class ReadGuard {
   public:
-    ReadGuard(LockManager &lkm, TableId index);
+    ReadGuard(LockManager &lkm,  // NOLINT(runtime/references)
+              TableId index);
 
     ~ReadGuard();
 
@@ -90,11 +94,11 @@ private:
 
   void work();
 
-  void executeTask(ExecutableTask &task);
+  void executeTask(ExecutableTask &task);  // NOLINT(runtime/references)
 
-  static void executeWrite(ExecutableTask &task);
-  static void executeRead(ExecutableTask &task);
-  static void executeNull(ExecutableTask &task);
+  static void executeWrite(ExecutableTask &task);  // NOLINT(runtime/references)
+  static void executeRead(ExecutableTask &task);   // NOLINT(runtime/references)
+  static void executeNull(ExecutableTask &task);   // NOLINT(runtime/references)
 
   // void run_logic(ExecutableTask &task, const char *type);
 };

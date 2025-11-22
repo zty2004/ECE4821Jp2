@@ -68,7 +68,7 @@ public:
   void setReady();
 
   // Fetch next executable task, Returns false if no task is ready
-  auto fetchNext(ExecutableTask &out) -> bool;
+  auto fetchNext(ExecutableTask &out) -> bool;  // NOLINT(runtime/references)
 
 private:
   // Data member
@@ -99,7 +99,9 @@ private:
   bool quitFlag = false;  // whether QUIT is fetched
 
   // Internal helper to materialize ExecutableTask from a ScheduledItem
-  void buildExecutableFromScheduled(ScheduledItem &src, ExecutableTask &dst);
+  void buildExecutableFromScheduled(
+      ScheduledItem &src,    // NOLINT(runtime/references)
+      ExecutableTask &dst);  // NOLINT(runtime/references)
 
   // Completion actions
   enum class CompletionAction : std::uint8_t { RegisterTable, UpdateDeps };
@@ -111,22 +113,28 @@ private:
   void applyRegisterTable(const ScheduledItem &item);
   void applyUpdateDeps(const ScheduledItem &item);
 
-  void registerTableQueue(std::unique_ptr<TableQueue> &tblPtr,
-                          const ScheduledItem &item);
+  void registerTableQueue(
+      std::unique_ptr<TableQueue> &tblPtr,  // NOLINT(runtime/references)
+      const ScheduledItem &item);
   void updateDependencyRecords(
       const ScheduledItem &item,
-      std::vector<std::unique_ptr<ScheduledItem>> &readyFileItems,
-      std::vector<std::unique_ptr<ScheduledItem>> &readyTableItems);
-  void updateReadyFiles(std::unique_ptr<ScheduledItem> &readyItem);
-  void updateReadyTables(std::unique_ptr<ScheduledItem> &readyItem);
+      std::vector<std::unique_ptr<ScheduledItem>> &readyFileItems,    // NOLINT
+      std::vector<std::unique_ptr<ScheduledItem>> &readyTableItems);  // NOLINT
+  void updateReadyFiles(
+      std::unique_ptr<ScheduledItem> &readyItem);  // NOLINT(runtime/references)
+  void updateReadyTables(
+      std::unique_ptr<ScheduledItem> &readyItem);  // NOLINT(runtime/references)
 
   // FetchNext helpers
-  void getFetched(std::unique_ptr<ScheduledItem> &loadCand,
-                  ScheduledItem *&tableCand, TableQueue *&tableCandQ);
-  auto fetchBarrier(ExecutableTask &out) -> bool;
-  auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand) -> bool;
-  auto judgeNormalDeps(ScheduledItem *&tableCand,
-                       TableQueue *&tableCandQ) -> bool;
+  void getFetched(std::unique_ptr<ScheduledItem> &loadCand,  // NOLINT
+                  ScheduledItem *&tableCand,       // NOLINT(runtime/references)
+                  TableQueue *&tableCandQ);        // NOLINT(runtime/references)
+  auto fetchBarrier(ExecutableTask &out) -> bool;  // NOLINT(runtime/references)
+  auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand)
+      -> bool;                                     // NOLINT(runtime/references)
+  auto judgeNormalDeps(ScheduledItem *&tableCand,  // NOLINT(runtime/references)
+                       TableQueue *&tableCandQ)
+      -> bool;  // NOLINT(runtime/references)
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_
