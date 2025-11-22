@@ -5,6 +5,7 @@
 #ifndef SRC_RUNTIME_RUNTIME_H_
 #define SRC_RUNTIME_RUNTIME_H_
 
+#include "../utils/uexception.h"
 #include <cstddef>
 #include <future>
 #include <map>

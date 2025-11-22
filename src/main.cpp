@@ -344,6 +344,10 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     runtime.waitAll();
     auto results = runtime.getResultsInOrder();
     for (size_t i = 0; i < results.size(); ++i) {
+      if (results[i] == nullptr) {
+        // QUIT command encountered - exit cleanly without output
+        throw QuitException();
+      }
       outputQueryResult(i + 1, results[i]);
     }
   }

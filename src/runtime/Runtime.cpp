@@ -85,6 +85,10 @@ auto Runtime::getResultsInOrder() -> std::vector<QueryResult::Ptr> {
     if (it != futures_.end() && it->second.valid()) {
       try {
         results.push_back(it->second.get());
+      } catch (const QuitException &) {
+        // Store nullptr to mark QUIT command - don't break the loop
+        // so that all results are collected
+        results.push_back(nullptr);
       } catch (const std::exception &e) {
         auto errorResult = std::make_unique<ErrorMsgResult>(
             "RUNTIME", "", std::string("Exception: ") + e.what());
