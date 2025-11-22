@@ -125,6 +125,12 @@ private:
 
   void registerTableQueue(std::unique_ptr<TableQueue> &tblPtr,
                           const ScheduledItem &item);
+  void updateDependencyRecords(
+      const ScheduledItem &item,
+      std::vector<std::unique_ptr<ScheduledItem>> &readyFileItems,
+      std::vector<std::unique_ptr<ScheduledItem>> &readyTableItems);
+  void updateReadyFiles(std::unique_ptr<ScheduledItem> &readyItem);
+  void updateReadyTables(std::unique_ptr<ScheduledItem> &readyItem);
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_
