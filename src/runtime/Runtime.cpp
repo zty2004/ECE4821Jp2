@@ -5,6 +5,7 @@
 #include "Runtime.h"
 
 #include <cstddef>
+#include <exception>
 #include <future>
 #include <iostream>
 #include <memory>
@@ -15,8 +16,10 @@
 
 #include "../query/Query.h"
 #include "../query/QueryHelpers.h"
+#include "../query/QueryPriority.h"
 #include "../query/QueryResult.h"
 #include "../scheduler/TaskQueue.h"
+#include "../utils/uexception.h"
 #include "LockManager.h"
 #include "Threadpool.h"
 
@@ -39,20 +42,20 @@ void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
   ++totalSubmitted_;
 
   // Get query type before moving query
-  QueryType qtype = queryType(*query);
+  const QueryType qtype = queryType(*query);
 
   // Prepare ParsedQuery for TaskQueue
-  ParsedQuery pq;
-  pq.seq = orderIndex;
-  pq.tableName = resolveTableId(*query);
-  pq.type = qtype;
-  pq.priority = classifyPriority(qtype);
-  pq.query = std::move(query);
-  pq.promise =
+  ParsedQuery pqueue;
+  pqueue.seq = orderIndex;
+  pqueue.tableName = resolveTableId(*query);
+  pqueue.type = qtype;
+  pqueue.priority = classifyPriority(qtype);
+  pqueue.query = std::move(query);
+  pqueue.promise =
       std::promise<std::unique_ptr<QueryResult>>();  // Runtime creates promise
 
   // TaskQueue will get_future() from promise before moving it
-  auto future = taskQueue_->registerTask(std::move(pq));
+  auto future = taskQueue_->registerTask(std::move(pqueue));
 
   // Store future for later retrieval
   {
@@ -81,10 +84,10 @@ auto Runtime::getResultsInOrder() -> std::vector<QueryResult::Ptr> {
 
   // Extract results from futures in submission order
   for (std::size_t i = 1; i <= totalSubmitted_; ++i) {
-    auto it = futures_.find(i);
-    if (it != futures_.end() && it->second.valid()) {
+    auto itr = futures_.find(i);
+    if (itr != futures_.end() && itr->second.valid()) {
       try {
-        results.push_back(it->second.get());
+        results.push_back(itr->second.get());
       } catch (const QuitException &) {
         // Store nullptr to mark QUIT command - don't break the loop
         // so that all results are collected

@@ -4,12 +4,20 @@
 // focues on thread management and synchronization.
 //
 
-#include "Threadpool.h"
+#include <chrono>
+#include <cstddef>
+#include <exception>
 #include <memory>
+#include <mutex>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "../query/QueryHelpers.h"
+#include "../query/QueryResult.h"
+#include "../scheduler/TaskQueue.h"
+#include "LockManager.h"
+#include "Threadpool.h"
 
 Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
     : thread_count_(numThreads), lock_manager_(lm), task_queue_(tq) {
@@ -17,7 +25,7 @@ Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
   for (std::size_t i = 0; i < numThreads; ++i) {
 #ifdef __cpp_lib_jthread
     threads_.emplace_back(
-        [this](std::stop_token st) { this->worker_loop(std::move(st)); });
+        [this](std::stop_token st) { this->worker_loop(st); });
 #else
     threads_.emplace_back([this] { this->worker_loop(); });
 #endif
@@ -29,9 +37,9 @@ Threadpool::~Threadpool() {
   // jthread automatically requests stop and joins in destructor
 #else
   stop_flag_.store(true);
-  for (auto &t : threads_) {
-    if (t.joinable()) {
-      t.join();
+  for (auto &thread : threads_) {
+    if (thread.joinable()) {
+      thread.join();
     }
   }
 #endif
@@ -58,7 +66,7 @@ Threadpool::ReadGuard::ReadGuard(LockManager &lkm, TableId index)
 Threadpool::ReadGuard::~ReadGuard() { lm_.unlockS(id_); }
 
 #ifdef __cpp_lib_jthread
-void Threadpool::worker_loop(std::stop_token st_) {
+void Threadpool::worker_loop(const std::stop_token &st_) {
   while (!st_.stop_requested()) {
     work();
   }
@@ -120,7 +128,9 @@ void Threadpool::work() {
     executeTask(task);
   } else {
     // Use shorter sleep when idle to reduce latency
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    constexpr int idle_sleep_microseconds = 100;
+    std::this_thread::sleep_for(
+        std::chrono::microseconds(idle_sleep_microseconds));
   }
 }
 
@@ -144,20 +154,14 @@ void Threadpool::executeTask(ExecutableTask &task) {
     } else {
       executeNull(task);
     }
-  } catch (...) {
-    // Log error or handle exception
+  } catch (...) {  // NOLINT(bugprone-empty-catch)
+    // Intentionally catch and ignore all exceptions to prevent thread
+    // termination Errors are reported via promise/future mechanism in run_logic
   }
 }
 
-void Threadpool::executeWrite(ExecutableTask &task) {
-  run_logic(task, "WRITE");
-}
-
-void Threadpool::executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
-
-void Threadpool::executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }
-
-void Threadpool::run_logic(ExecutableTask &task, const char * /*type*/) {
+namespace {
+void run_logic(ExecutableTask &task, const char * /*type*/) {
   try {
     std::unique_ptr<QueryResult> res;
     if (task.execOverride) {
@@ -174,8 +178,8 @@ void Threadpool::run_logic(ExecutableTask &task, const char * /*type*/) {
   } catch (...) {
     try {
       task.promise.set_exception(std::current_exception());
-    } catch (...) {
-      // Promise already satisfied, ignore
+    } catch (...) {  // NOLINT(bugprone-empty-catch)
+      // Promise already satisfied, ignore - this is an expected race condition
     }
   }
 
@@ -184,9 +188,18 @@ void Threadpool::run_logic(ExecutableTask &task, const char * /*type*/) {
   if (task.onCompleted) {
     try {
       task.onCompleted();
-    } catch (...) {
+    } catch (...) {  // NOLINT(bugprone-empty-catch)
       // Callback should not throw, but protect against it anyway
-      // Log or handle the error if needed
+      // Intentionally ignore to prevent task failure propagation
     }
   }
 }
+}  // namespace
+
+void Threadpool::executeWrite(ExecutableTask &task) {
+  run_logic(task, "WRITE");
+}
+
+void Threadpool::executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
+
+void Threadpool::executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }

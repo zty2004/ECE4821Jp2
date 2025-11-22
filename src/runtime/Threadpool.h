@@ -83,7 +83,7 @@ private:
   };
 
 #ifdef __cpp_lib_jthread
-  void worker_loop(std::stop_token st);
+  void worker_loop(const std::stop_token &st);
 #else
   void worker_loop();
 #endif
@@ -96,7 +96,7 @@ private:
   void executeRead(ExecutableTask &task);
   void executeNull(ExecutableTask &task);
 
-  void run_logic(ExecutableTask &task, const char *type);
+  // void run_logic(ExecutableTask &task, const char *type);
 };
 
 #endif  // SRC_RUNTIME_THREADPOOL_H_
