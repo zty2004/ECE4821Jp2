@@ -134,7 +134,6 @@ public:
     auto operator=(ObjectImpl &&) noexcept -> ObjectImpl & = default;
 
     ~ObjectImpl() = default;
-
     [[nodiscard]] auto key() const -> const KeyType & { return it->key; }
 
     void setKey(KeyType key) {
@@ -145,12 +144,7 @@ public:
       it->key = std::move(key);
     }
 
-    /**
-     * Accessing by index should be, at least as fast as accessing by field
-     * name. Clients should prefer accessing by index if the same field is
-     * accessed frequently (the implement is improved so that index is actually
-     * faster now)
-     */
+    // Access by index or field name
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
     auto operator[](const FieldNameType &field) const -> VType & {
       DBTABLE_ACCESS_WITH_NAME_EXCEPTION(field);
@@ -175,11 +169,7 @@ public:
   using Object = ObjectImpl<DataIterator, ValueType>;
   using ConstObject = ObjectImpl<ConstDataIterator, const ValueType>;
 
-  /**
-   * A proxy class that provides iteration on the table
-   * @tparam ObjType
-   * @tparam DatumIterator
-   */
+  // Proxy class for table iteration
   template <typename ObjType, typename DatumIterator> class IteratorImpl {
     friend class Table;
 
@@ -193,26 +183,17 @@ public:
     using reference = ObjType;
     using iterator_category = std::random_access_iterator_tag;
     using iterator_concept = std::random_access_iterator_tag;
-    // See https://stackoverflow.com/questions/37031805/
-
     IteratorImpl(DatumIterator datumIt, const Table *table_ptr)
         : it(datumIt), table(table_ptr) {}
 
     IteratorImpl() = default;
-
     IteratorImpl(const IteratorImpl &) = default;
-
     IteratorImpl(IteratorImpl &&) noexcept = default;
-
     auto operator=(const IteratorImpl &) -> IteratorImpl & = default;
-
     auto operator=(IteratorImpl &&) noexcept -> IteratorImpl & = default;
-
     ~IteratorImpl() = default;
 
     auto operator->() -> pointer { return createProxy(it, table); }
-
-    // *Note: Directly build an Obj instead of Proxy, need further test
     auto operator*() -> reference { return ObjType(it, table); }
 
     auto operator+(difference_type n) const -> IteratorImpl {
@@ -299,15 +280,6 @@ public:
   explicit Table(std::string name) : tableName(std::move(name)) {}
 
   /**
-   * Accept any container that contains string.
-   * @tparam FieldIDContainer
-   * @param name: the table name (must be unique in the database)
-   * @param fields: an iterable container with fields
-   */
-  template <class FieldIDContainer>
-  Table(const std::string &name, const FieldIDContainer &fields);
-
-  /**
    * Copy constructor from another table
    * @param name: the table name (must be unique in the database)
    * @param origin: the original table copied from
@@ -316,93 +288,59 @@ public:
       : fields(origin.fields), fieldMap(origin.fieldMap), data(origin.data),
         keyMap(origin.keyMap), tableName(std::move(name)) {}
 
-  /**
-   * Find the index of a field in the fieldMap
-   * @param field
-   * @return fieldIndex
-   */
+  //==========================================================================
+  // Template constructor accepting any container of field names
+  // Implementation must be inline in header due to template
+  //==========================================================================
+  template <class FieldIDContainer>
+  Table(const std::string &name, const FieldIDContainer &fields)
+      : fields(fields.cbegin(), fields.cend()), tableName(name) {
+    SizeType fieldIndex = 0;
+    for (const auto &fieldName : fields) {
+      if (fieldName == "KEY") {
+        throw MultipleKey("Error creating table \"" + name +
+                          "\": Multiple KEY field.");
+      }
+      fieldMap.emplace(fieldName, fieldIndex++);
+    }
+  }
+
+  // Find the index of a field
   [[nodiscard]] auto
   getFieldIndex(const FieldNameType &field) const -> FieldIndex;
 
-  /**
-   * Insert a row of data by its key
-   * @tparam ValueTypeContainer
-   * @param key
-   * @param data
-   */
+  // Insert a row by key
   void insertByIndex(const KeyType &key, std::vector<ValueType> &&data);
 
-  /**
-   * Delete a row by its key
-   * @param key
-   * @return true if the row was deleted, false if key doesn't exist
-   */
+  // Delete a row by key (returns true if deleted)
   auto deleteByIndex(const KeyType &key) -> bool;
 
-  /**
-   * Duplicate a row by source key to a destination key.
-   * @param src Source key to copy from (must exist)
-   * @param dst Destination key to create (must not exist)
-   * @return true if duplicated successfully, false if src not found or dst
-   * already exists
-   */
+  // Duplicate row from src key to dst key
   auto duplicateByKey(const KeyType &src, const KeyType &dst) -> bool;
 
-  /**
-   * Access the value according to the key
-   * @param key
-   * @return the Object that KEY = key, or nullptr if key doesn't exist
-   */
+  // Access row by key (returns nullptr if not found)
   auto operator[](const KeyType &key) -> Object::Ptr;
-
-  /**
-   * Const access the value according to the key
-   * @param key
-   * @return the ConstObject that KEY = key, or nullptr if key doesn't exist
-   */
   auto operator[](const KeyType &key) const -> ConstObject::Ptr;
 
-  /**
-   * Set the name of the table
-   * @param name
-   */
-  // cppcheck-suppress unusedFunction
+  // Set table name
   [[maybe_unused]] void setName(std::string name) {
     this->tableName = std::move(name);
   }
 
-  /**
-   * Get the name of the table
-   * @return
-   */
+  // Get table name
   [[nodiscard]] auto name() const -> const std::string & {
     return this->tableName;
   }
-
-  /**
-   * Return whether the table is empty
-   * @return
-   */
+  // Check if table is empty
   [[nodiscard]] auto empty() const -> bool { return this->data.empty(); }
-
-  /**
-   * Return the num of data stored in the table
-   * @return
-   */
+  // Get number of rows
   [[nodiscard]] auto size() const -> size_t { return this->data.size(); }
-
-  /**
-   * Return the fields in the table
-   * @return
-   */
+  // Get field names
   [[nodiscard]] auto field() const -> const std::vector<FieldNameType> & {
     return this->fields;
   }
 
-  /**
-   * Clear all content in the table
-   * @return rows affected
-   */
+  // Clear all rows (returns rows affected)
   auto clear() -> size_t {
     auto result = keyMap.size();
     data.clear();
@@ -410,57 +348,21 @@ public:
     return result;
   }
 
-  /**
-   * Get a begin iterator similar to the standard iterator
-   * @return begin iterator
-   */
+  // Standard iterators
   auto begin() noexcept -> Iterator { return {data.begin(), this}; }
-
-  /**
-   * Get a end iterator similar to the standard iterator
-   * @return end iterator
-   */
   auto end() noexcept -> Iterator { return {data.end(), this}; }
-
-  /**
-   * Get a const begin iterator similar to the standard iterator
-   * @return const begin iterator
-   */
   [[nodiscard]] auto begin() const noexcept -> ConstIterator {
     return {data.cbegin(), this};
   }
-
-  /**
-   * Get a const end iterator similar to the standard iterator
-   * @return const end iterator
-   */
   [[nodiscard]] auto end() const noexcept -> ConstIterator {
     return {data.cend(), this};
   }
 
-  /**
-   * Overload the << operator for complete print of the table
-   * @param os
-   * @param table
-   * @return the origin ostream
-   */
+  // Stream output operator
   friend auto operator<<(std::ostream &os,
                          const Table &table) -> std::ostream &;
 };
 
 auto operator<<(std::ostream &os, const Table &table) -> std::ostream &;
-
-template <class FieldIDContainer>
-Table::Table(const std::string &name, const FieldIDContainer &fields)
-    : fields(fields.cbegin(), fields.cend()), tableName(name) {
-  SizeType fieldIndex = 0;
-  for (const auto &fieldName : fields) {
-    if (fieldName == "KEY") {
-      throw MultipleKey("Error creating table \"" + name +
-                        "\": Multiple KEY field.");
-    }
-    fieldMap.emplace(fieldName, fieldIndex++);
-  }
-}
 
 #endif  // SRC_DB_TABLE_H_
