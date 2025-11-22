@@ -131,6 +131,7 @@ void TaskQueue::applyActions(const ActionList &actions,
     case CompletionAction::RegisterTable: {
       auto &tbl = tables[item.tableId];
       if (!tbl.registered && !tbl.queue.empty()) {
+        // might have prolem if require non-empty, but low possiblity, ignore
         tbl.registered = true;
         tbl.registerSeq = item.seq;
         for (auto &pending : tbl.queue) {
@@ -330,12 +331,12 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
                            lDeps.filePath, std::move(loadCand));
         continue;
       }
-      if (lDeps.fileDependsOn >
+      if (lDeps.tableDependsOn >
           depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
                                       loadCand->tableId)) {
         const auto &loadTableId = loadCand->tableId;
-        depManager.addWait(DependencyManager::DependencyType::File, loadTableId,
-                           std::move(loadCand));
+        depManager.addWait(DependencyManager::DependencyType::Table,
+                           loadTableId, std::move(loadCand));
         continue;
       }
       buildExecutableFromScheduled(*loadCand, out);
@@ -363,7 +364,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File, tableId,
+          depManager.addWait(DependencyManager::DependencyType::Table, tableId,
                              std::move(waitingP));
           continue;
         }
@@ -377,7 +378,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File,
+          depManager.addWait(DependencyManager::DependencyType::Table,
                              srcTableId, std::move(waitingP));
           continue;
         }
@@ -387,7 +388,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File,
+          depManager.addWait(DependencyManager::DependencyType::Table,
                              copyDeps.newTable, std::move(waitingP));
           continue;
         }
