@@ -13,6 +13,7 @@
 #include "../db/Table.h"
 #include "QueryParser.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define QueryBuilder(name) name##QueryBuilder
 
 #define QueryBuilderClass(name)                                                \
@@ -30,16 +31,24 @@
     Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;    \
   }
 
+// NOLINTNEXTLINE(readability/nolint)
+// NOLINTEND(cppcoreguidelines-macro-usage)
+
+// NOLINTBEGIN(cppcoreguidelines-special-member-functions,
+//             modernize-use-trailing-return-type)
 class FailedQueryBuilder : public QueryBuilder {
 public:
   static QueryBuilder::Ptr getDefault() {
     return std::make_unique<FailedQueryBuilder>();
   }
 
+  // NOLINTNEXTLINE(readability-identifier-length)
   Query::Ptr tryExtractQuery(const TokenizedQueryString &q) final {
     throw QueryBuilderMatchFailed(q.rawQeuryString);
   }
 
+  // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved,
+  // readability-named-parameter)
   void setNext(QueryBuilder::Ptr &&) final {}
 
   void clear() override {}
@@ -47,6 +56,13 @@ public:
   ~FailedQueryBuilder() override = default;
 };
 
+// NOLINTEND(cppcoreguidelines-special-member-functions,
+//             modernize-use-trailing-return-type)
+
+// NOLINTBEGIN(cppcoreguidelines-special-member-functions,
+//             cppcoreguidelines-non-private-member-variables-in-classes,
+//             misc-non-private-member-variables-in-classes,
+//             modernize-use-trailing-return-type)
 class BasicQueryBuilder : public QueryBuilder {
 protected:
   QueryBuilder::Ptr nextBuilder;
@@ -64,7 +80,14 @@ public:
 
   ~BasicQueryBuilder() override = default;
 };
+// NOLINTEND(cppcoreguidelines-special-member-functions,
+//           cppcoreguidelines-non-private-member-variables-in-classes,
+//           misc-non-private-member-variables-in-classes,
+//           modernize-use-trailing-return-type)
 
+// NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes,
+//             misc-non-private-member-variables-in-classes,
+//             modernize-use-trailing-return-type)
 class ComplexQueryBuilder : public BasicQueryBuilder {
 protected:
   std::string targetTable;
@@ -83,12 +106,15 @@ private:
 public:
   void clear() override;
 
-public:
   // Used as a debugging function.
   // Prints the parsed information
   Query::Ptr tryExtractQuery(const TokenizedQueryString &query) override;
 };
+// NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes,
+//           misc-non-private-member-variables-in-classes,
+//           modernize-use-trailing-return-type)
 
+// NOLINTBEGIN(modernize-use-trailing-return-type)
 // Transparant builder
 // It does not modify or extract anything
 // It prints current tokenized string
@@ -100,6 +126,8 @@ BasicQueryBuilderClass(Debug);
 
 // Load, dump, truncate and delete table
 BasicQueryBuilderClass(ManageTable);
+// NOLINTNEXTLINE(readability/nolint)
+// NOLINTEND(modernize-use-trailing-return-type)
 
 // ComplexQueryBuilderClass(UpdateTable);
 // ComplexQueryBuilderClass(Insert);

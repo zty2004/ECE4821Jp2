@@ -41,11 +41,11 @@ enum class QueryType : std::uint8_t {
 
 struct QueryCondition {
   std::string field;
-  size_t fieldId;
+  size_t fieldId{};
   std::string op;
   std::function<bool(const Table::ValueType &, const Table::ValueType &)> comp;
   std::string value;
-  Table::ValueType valueParsed;
+  Table::ValueType valueParsed{};
 };
 
 class Query {

@@ -8,7 +8,6 @@
 #include <string>
 
 #include "../../query/QueryResult.h"
-#include "../../utils/formatter.h"
 
 auto ListenQuery::execute() -> QueryResult::Ptr {
   // Extract just the filename (without path) for the success message

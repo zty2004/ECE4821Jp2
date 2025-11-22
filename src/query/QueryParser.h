@@ -12,6 +12,9 @@ struct TokenizedQueryString {
   std::string rawQeuryString;
 };
 
+// NOLINTBEGIN(cppcoreguidelines-special-member-functions,
+//             modernize-use-using,
+//             modernize-use-trailing-return-type)
 class QueryBuilder {
 public:
   typedef std::unique_ptr<QueryBuilder> Ptr;
@@ -23,10 +26,15 @@ public:
 
   virtual ~QueryBuilder() = default;
 };
+// NOLINTEND(cppcoreguidelines-special-member-functions,
+//           modernize-use-using,
+//           modernize-use-trailing-return-type)
 
+// NOLINTBEGIN(cppcoreguidelines-special-member-functions,
+//             modernize-use-trailing-return-type)
 class QueryParser {
-  QueryBuilder::Ptr first;  // An owning pointer
-  QueryBuilder *last;       // None owning reference
+  QueryBuilder::Ptr first;      // An owning pointer
+  QueryBuilder *last{nullptr};  // None owning reference
 
   static TokenizedQueryString
   tokenizeQueryString(const std::string &queryString);
@@ -38,5 +46,7 @@ public:
   QueryParser();
   ~QueryParser() = default;
 };
+// NOLINTEND(cppcoreguidelines-special-member-functions,
+//           modernize-use-trailing-return-type)
 
 #endif  // SRC_QUERY_QUERYPARSER_H_

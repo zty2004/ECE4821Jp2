@@ -15,8 +15,7 @@ class ListenQuery : public Query {
   std::string fileName;
 
 public:
-  explicit ListenQuery(std::string fileName)
-      : Query(), fileName(std::move(fileName)) {}
+  explicit ListenQuery(std::string fileName) : fileName(std::move(fileName)) {}
 
   auto execute() -> QueryResult::Ptr override;
 
