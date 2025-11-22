@@ -133,9 +133,11 @@ private:
   void updateReadyTables(std::unique_ptr<ScheduledItem> &readyItem);
 
   // FetchNext helpers
+  void getFetched(std::unique_ptr<ScheduledItem> &loadCand,
+                  ScheduledItem *&tableCand, TableQueue *&tableCandQ);
   auto fetchBarrier(ExecutableTask &out) -> bool;
   auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand) -> bool;
-  auto judgeNormalDeps(ScheduledItem *tableCand, TableQueue *tableCandQ)
+  auto judgeNormalDeps(ScheduledItem *&tableCand, TableQueue *&tableCandQ)
       -> bool;
 };
 

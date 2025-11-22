@@ -371,34 +371,11 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   std::lock_guard<std::mutex> lock(mu);
 
   while (true) {  // Changed from while (!quitFlag) to process all tasks
-    // Acquire LOAD candidate considering barrier
     std::unique_ptr<ScheduledItem> loadCand = nullptr;
-    if (!loadQueue.empty() && !loadBlocked) {
-      if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
-        loadBlocked = true;
-      } else {
-        loadCand = std::move(loadQueue.front());
-        loadQueue.pop_front();
-      }
-    }
-
-    // Acquire table candidate via GlobalIndex
     ScheduledItem *tableCand = nullptr;
     TableQueue *tableCandQ = nullptr;
-    TableQueue *picked = nullptr;
-    while (globalIndex.pickBest(picked)) {
-      if (picked == nullptr || picked->queue.empty()) {
-        continue;
-      }
-      ScheduledItem &head = picked->queue.front();
-      if (!barriers.empty() && head.seq > barriers.front().seq) {
-        waitingTables.push_back(picked);
-        continue;
-      }
-      tableCand = &head;
-      tableCandQ = picked;
-      break;
-    }
+
+    getFetched(loadCand, tableCand, tableCandQ);
 
     // No candidate case
     if (tableCand == nullptr && loadCand == nullptr) {
@@ -441,6 +418,34 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     return true;
   }
   return false;
+}
+
+void TaskQueue::getFetched(std::unique_ptr<ScheduledItem> &loadCand,
+                           ScheduledItem *&tableCand, TableQueue *&tableCandQ) {
+  // Acquire LOAD candidate considering barrier
+  if (!loadQueue.empty() && !loadBlocked) {
+    if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
+      loadBlocked = true;
+    } else {
+      loadCand = std::move(loadQueue.front());
+      loadQueue.pop_front();
+    }
+  }
+  // Acquire table candidate via GlobalIndex
+  TableQueue *picked = nullptr;
+  while (globalIndex.pickBest(picked)) {
+    if (picked == nullptr || picked->queue.empty()) {
+      continue;
+    }
+    ScheduledItem &head = picked->queue.front();
+    if (!barriers.empty() && head.seq > barriers.front().seq) {
+      waitingTables.push_back(picked);
+      continue;
+    }
+    tableCand = &head;
+    tableCandQ = picked;
+    break;
+  }
 }
 
 auto TaskQueue::fetchBarrier(ExecutableTask &out) -> bool {
@@ -499,8 +504,8 @@ auto TaskQueue::judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand)
   return false;
 }
 
-auto TaskQueue::judgeNormalDeps(ScheduledItem *tableCand,
-                                TableQueue *tableCandQ) -> bool {
+auto TaskQueue::judgeNormalDeps(ScheduledItem *&tableCand,
+                                TableQueue *&tableCandQ) -> bool {
   if (tableCand->type == QueryType::Dump) {
     const auto &dumpDeps = std::get<DumpDeps>(tableCand->depends);
     const std::string filePath = dumpDeps.filePath;  // Copy before move!
