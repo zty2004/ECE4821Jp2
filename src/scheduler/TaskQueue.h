@@ -134,6 +134,9 @@ private:
 
   // FetchNext helpers
   auto fetchBarrier(ExecutableTask &out) -> bool;
+  auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand) -> bool;
+  auto judgeNormalDeps(ScheduledItem *tableCand, TableQueue *tableCandQ)
+      -> bool;
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_

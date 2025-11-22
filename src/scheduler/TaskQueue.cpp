@@ -417,20 +417,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
 
     // Materialize and update structures
     if (preferLoad) {
-      const auto &lDeps = std::get<LoadDeps>(loadCand->depends);
-      if (lDeps.fileDependsOn >
-          depManager.lastCompletedFor(DependencyManager::DependencyType::File,
-                                      lDeps.filePath)) {
-        depManager.addWait(DependencyManager::DependencyType::File,
-                           lDeps.filePath, std::move(loadCand));
-        continue;
-      }
-      if (lDeps.tableDependsOn >
-          depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
-                                      loadCand->tableId)) {
-        const auto &loadTableId = loadCand->tableId;
-        depManager.addWait(DependencyManager::DependencyType::Table,
-                           loadTableId, std::move(loadCand));
+      if (judgeLoadDeps(loadCand)) {
         continue;
       }
       // loadCand is already moved out from loadQueue at line 291
@@ -440,70 +427,8 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
       return true;
     }
     if (tableCandQ != nullptr) {
-      if (tableCand->type == QueryType::Dump) {
-        const auto &dumpDeps = std::get<DumpDeps>(tableCand->depends);
-        const std::string filePath = dumpDeps.filePath;  // Copy before move!
-        const std::string tableId = tableCand->tableId;  // Copy before move!
-        if (dumpDeps.fileDependsOn >
-            depManager.lastCompletedFor(DependencyManager::DependencyType::File,
-                                        filePath)) {
-          auto waitingP = std::make_unique<ScheduledItem>(
-              std::move(tableCandQ->queue.front()));
-          tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File, filePath,
-                             std::move(waitingP));
-          continue;
-        }
-        // Also check table dependency
-        if (dumpDeps.tableDependsOn >
-            depManager.lastCompletedFor(
-                DependencyManager::DependencyType::Table, tableId)) {
-          auto waitingP = std::make_unique<ScheduledItem>(
-              std::move(tableCandQ->queue.front()));
-          tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::Table, tableId,
-                             std::move(waitingP));
-          continue;
-        }
-      }
-      if (tableCand->type == QueryType::Drop) {
-        const auto &dropDeps = std::get<DropDeps>(tableCand->depends);
-        const std::string tableId = tableCand->tableId;  // Copy before move!
-        auto lastCompleted = depManager.lastCompletedFor(
-            DependencyManager::DependencyType::Table, tableId);
-        if (dropDeps.tableDependsOn > lastCompleted) {
-          auto waitingP = std::make_unique<ScheduledItem>(
-              std::move(tableCandQ->queue.front()));
-          tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::Table, tableId,
-                             std::move(waitingP));
-          continue;
-        }
-      }
-      if (tableCand->type == QueryType::CopyTable) {
-        const auto &copyDeps = std::get<CopyTableDeps>(tableCand->depends);
-        const std::string srcTableId = tableCand->tableId;  // Copy before move!
-        const std::string newTable = copyDeps.newTable;     // Copy before move!
-        if (copyDeps.srcTableDependsOn >
-            depManager.lastCompletedFor(
-                DependencyManager::DependencyType::Table, srcTableId)) {
-          auto waitingP = std::make_unique<ScheduledItem>(
-              std::move(tableCandQ->queue.front()));
-          tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::Table,
-                             srcTableId, std::move(waitingP));
-          continue;
-        }
-        if (copyDeps.dstTableDependsOn >
-            depManager.lastCompletedFor(
-                DependencyManager::DependencyType::Table, newTable)) {
-          auto waitingP = std::make_unique<ScheduledItem>(
-              std::move(tableCandQ->queue.front()));
-          tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::Table, newTable,
-                             std::move(waitingP));
-          continue;
-        }
+      if (judgeNormalDeps(tableCand, tableCandQ)) {
+        continue;
       }
       buildExecutableFromScheduled(*tableCand, out);
       tableCandQ->queue.pop_front();
@@ -548,6 +473,27 @@ auto TaskQueue::fetchBarrier(ExecutableTask &out) -> bool {
     }
     waitingTables.clear();
     loadBlocked = false;
+    return true;
+  }
+  return false;
+}
+
+auto TaskQueue::judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand)
+    -> bool {
+  const auto &lDeps = std::get<LoadDeps>(loadCand->depends);
+  if (lDeps.fileDependsOn >
+      depManager.lastCompletedFor(DependencyManager::DependencyType::File,
+                                  lDeps.filePath)) {
+    depManager.addWait(DependencyManager::DependencyType::File, lDeps.filePath,
+                       std::move(loadCand));
+    return true;
+  }
+  if (lDeps.tableDependsOn >
+      depManager.lastCompletedFor(DependencyManager::DependencyType::Table,
+                                  loadCand->tableId)) {
+    const auto &loadTableId = loadCand->tableId;
+    depManager.addWait(DependencyManager::DependencyType::Table, loadTableId,
+                       std::move(loadCand));
     return true;
   }
   return false;
