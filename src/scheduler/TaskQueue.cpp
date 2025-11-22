@@ -222,6 +222,19 @@ void TaskQueue::registerTableQueue(std::unique_ptr<TableQueue> &tblPtr,
 void TaskQueue::applyUpdateDeps(const ScheduledItem &item) {
   std::vector<std::unique_ptr<ScheduledItem>> readyFileItems;
   std::vector<std::unique_ptr<ScheduledItem>> readyTableItems;
+  updateDependencyRecords(item, readyFileItems, readyTableItems);
+  for (auto &&readyItem : readyFileItems) {
+    updateReadyFiles(readyItem);
+  }
+  for (auto &&readyItem : readyTableItems) {
+    updateReadyTables(readyItem);
+  }
+}
+
+void TaskQueue::updateDependencyRecords(
+    const ScheduledItem &item,
+    std::vector<std::unique_ptr<ScheduledItem>> &readyFileItems,
+    std::vector<std::unique_ptr<ScheduledItem>> &readyTableItems) {
   switch (item.type) {
   case QueryType::Load: {
     const auto &loadDeps = std::get<LoadDeps>(item.depends);
@@ -275,6 +288,40 @@ void TaskQueue::applyUpdateDeps(const ScheduledItem &item) {
     }
     break;
   }
+}
+
+void TaskQueue::updateReadyFiles(std::unique_ptr<ScheduledItem> &readyItem) {
+  if (readyItem->type == QueryType::Load) {
+    const auto &rlDeps = std::get<LoadDeps>(readyItem->depends);
+    if (!rlDeps.pendingTable.empty()) {
+      auto &database = Database::getInstance();
+      readyItem->tableId = database.getFileTableName(rlDeps.filePath);
+      // No need to update `tableDependsOn`, since cannot get correct
+      // dependency. Ignoring Table dependency might cause issues, but the
+      // operations to table also protected by outside mutex, acceptable
+    } else if (rlDeps.tableDependsOn >
+               depManager.lastCompletedFor(
+                   DependencyManager::DependencyType::Table,
+                   readyItem->tableId)) {
+      // judge if table dependency satisfied for decided LOADs
+      const auto &readyTableId = readyItem->tableId;
+      depManager.addWait(DependencyManager::DependencyType::Table, readyTableId,
+                         std::move(readyItem));
+      return;
+    }
+    loadQueue.emplace_front(std::move(readyItem));
+    return;
+  }
+  auto &pendingTablePtr = tables[readyItem->tableId];
+  if (!pendingTablePtr) {
+    pendingTablePtr = std::make_unique<TableQueue>();
+  }
+  auto &pendingTable = *pendingTablePtr;
+  pendingTable.queue.push_front(std::move(*readyItem));
+  readyItem.reset();
+  const auto &head = pendingTable.queue.front();
+  globalIndex.upsert(pendingTablePtr.get(), head.priority,
+                     fetchTick.load(std::memory_order_relaxed), head.seq);
 }
 
 // Refactored single-path fetchNext (reduced branching)
