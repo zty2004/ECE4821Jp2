@@ -122,38 +122,62 @@ void DependencyManager::notifyCompleted(
     return;
   }
   auto &heap = waitingIter->second;
+
+  // We need to extract items from the heap properly
+  // Create a temporary vector to check and move items
+  std::vector<std::unique_ptr<ScheduledItem>> temp;
+
   while (!heap.empty()) {
-    ScheduledItem const &waitItem = *heap.top();
+    // We can't modify through const ref, so we need to use const_cast to access
+    // But we should check dependencies first before moving
+    const auto &topPtr = heap.top();
+    const ScheduledItem &waitItem = *topPtr;
+
+    bool shouldBreak = false;
+
     if (waitItem.type == QueryType::Load) {
       const auto &loadDeps = std::get<LoadDeps>(waitItem.depends);
       if ((type == DependencyType::File &&
            loadDeps.fileDependsOn > completedSeq) ||
           (type == DependencyType::Table &&
            loadDeps.tableDependsOn > completedSeq)) {
-        break;  // dependency not satisfied
+        shouldBreak = true;  // dependency not satisfied
       }
-    }
-    if (waitItem.type == QueryType::Dump && type == DependencyType::File &&
-        std::get<DumpDeps>(waitItem.depends).fileDependsOn > completedSeq) {
-      break;  // dependency not satisfied
-    }
-    if (waitItem.type == QueryType::Drop && type == DependencyType::Table &&
-        std::get<DropDeps>(waitItem.depends).tableDependsOn > completedSeq) {
-      break;  // dependency not satisfied
-    }
-    if (waitItem.type == QueryType::CopyTable &&
-        type == DependencyType::Table) {
+    } else if (waitItem.type == QueryType::Dump &&
+               type == DependencyType::File &&
+               std::get<DumpDeps>(waitItem.depends).fileDependsOn >
+                   completedSeq) {
+      shouldBreak = true;  // dependency not satisfied
+    } else if (waitItem.type == QueryType::Drop &&
+               type == DependencyType::Table &&
+               std::get<DropDeps>(waitItem.depends).tableDependsOn >
+                   completedSeq) {
+      shouldBreak = true;  // dependency not satisfied
+    } else if (waitItem.type == QueryType::CopyTable &&
+               type == DependencyType::Table) {
       const auto &copyDeps = std::get<CopyTableDeps>(waitItem.depends);
       if (copyDeps.srcTableDependsOn > completedSeq &&
           copyDeps.dstTableDependsOn > completedSeq) {
-        break;
+        shouldBreak = true;
         // any of which statisfied, poped out, then will judge which not
         // satisfied (if exist) in fetchNext
       }
     }
-    ready.emplace_back(
-        std::move(const_cast<std::unique_ptr<ScheduledItem> &>(heap.top())));
+
+    if (shouldBreak) {
+      break;
+    }
+
+    // Move item from heap - need to use const_cast since priority_queue doesn't
+    // provide mutable access
+    temp.push_back(std::move(const_cast<std::unique_ptr<ScheduledItem> &>(
+        const_cast<WaitingHeap &>(heap).top())));
     heap.pop();
+  }
+
+  // Move all ready items to output vector
+  for (auto &item : temp) {
+    ready.push_back(std::move(item));
   }
   if (heap.empty()) {
     waitingMap.erase(waitingIter);

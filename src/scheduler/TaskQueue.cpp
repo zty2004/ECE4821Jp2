@@ -365,6 +365,7 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
                            loadTableId, std::move(loadCand));
         continue;
       }
+      // loadCand is already moved out from loadQueue at line 269
       buildExecutableFromScheduled(*loadCand, out);
     } else if (tableCandQ != nullptr) {
       if (tableCand->type == QueryType::Dump) {
