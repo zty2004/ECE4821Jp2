@@ -104,13 +104,14 @@ void Threadpool::work() {
 }
 
 void Threadpool::executeTask(ExecutableTask &task) {
+  // If query is nullptr (e.g., execOverride-only tasks), execute without lock
   if (!task.query) {
     executeNull(task);
     return;
   }
 
   const TableId tid = resolveTableId(*task.query);
-  const QueryKind kind = getQueryKind(queryType(*task.query));
+  const QueryKind kind = getQueryKind(task.type);
 
   try {
     if (kind == QueryKind::Write) {
