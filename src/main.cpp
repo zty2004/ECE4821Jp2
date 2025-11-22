@@ -394,13 +394,26 @@ auto run(std::span<char *> argv, int argc) -> int {
   size_t numThreads = 1;
   if (parsedArgs.threads > 0) {
     numThreads = static_cast<size_t>(parsedArgs.threads);
+  } else if (parsedArgs.threads == 0) {
+    // Auto-detect available hardware threads
+    numThreads = std::thread::hardware_concurrency();
+    if (numThreads == 0) {
+      // hardware_concurrency() may return 0 if unable to detect
+      std::cerr << "lemondb: warning: unable to detect hardware threads, "
+                   "defaulting to 1"
+                << '\n';
+      numThreads = 1;
+    }
   }
 
   if (numThreads == 1) {
     std::cerr << "lemondb: info: running in single-threaded mode" << '\n';
   } else {
-    std::cerr << "lemondb: info: running in " << numThreads << " threads"
-              << '\n';
+    std::cerr << "lemondb: info: running in " << numThreads << " threads";
+    if (parsedArgs.threads == 0) {
+      std::cerr << " (auto-detected)";
+    }
+    std::cerr << '\n';
   }
 
   QueryParser parser;
