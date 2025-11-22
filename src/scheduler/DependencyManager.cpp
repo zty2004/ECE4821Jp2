@@ -1,6 +1,7 @@
 #include "DependencyManager.h"
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 
 #include "../query/QueryHelpers.h"
@@ -21,7 +22,9 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
     std::uint64_t const fileCompleted =
         completedIter == lastCompletedFile.end() ? 0 : completedIter->second;
 
-    item.droppedFlag = (prevFileTag == QueryType::Load &&
+    // Only drop if there was a PREVIOUS Load (prevFileSeq > 0) and table not
+    // dropped
+    item.droppedFlag = (prevFileSeq > 0 && prevFileTag == QueryType::Load &&
                         lastScheduledTable[tableId].first != QueryType::Drop);
 
     bool const pending =
@@ -53,7 +56,11 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
     auto filePath = extractFilePath(*item.query);
     auto res = markScheduledFile(filePath, seq, tag);
     auto fileDependsOn = res.second;
-    item.depends = DumpDeps(fileDependsOn, filePath);
+    // DUMP also needs to track table dependency to ensure it waits for previous
+    // operations on the table
+    auto tableRes = markScheduledTable(tableId, seq, tag);
+    auto tableDependsOn = tableRes.second;
+    item.depends = DumpDeps(fileDependsOn, filePath, tableDependsOn);
     return;
   }
 
@@ -121,6 +128,7 @@ void DependencyManager::notifyCompleted(
   if (waitingIter == waitingMap.end()) {
     return;
   }
+
   auto &heap = waitingIter->second;
 
   // We need to extract items from the heap properly
