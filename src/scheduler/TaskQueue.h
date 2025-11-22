@@ -24,7 +24,7 @@ struct ParsedQuery {
   std::uint64_t seq = 0;  // global sequence of the query
   std::string tableName;  // name of the corresponding table
   QueryType type{QueryType::Nop};
-  QueryPriority priority{QueryPriority::Low};
+  QueryPriority priority{QueryPriority::LOW};
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
 };

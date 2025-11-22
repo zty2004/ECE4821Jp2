@@ -32,11 +32,11 @@ public:
   void unlockX(const TableId &id);
 
 private:
+  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   struct Entry {
-    // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
     mutable std::shared_mutex rw;
-    // NOLINTEND(misc-non-private-member-variables-in-classes)
   };
+  // NOLINTEND(misc-non-private-member-variables-in-classes)
 
   auto entry(const TableId &id) -> Entry &;
   auto entryConst(const TableId &id) const -> const Entry *;

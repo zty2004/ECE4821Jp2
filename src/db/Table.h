@@ -36,10 +36,10 @@
       throw TableFieldNotFound(R"(Field index ? out of range.)"_f % (index));  \
     }                                                                          \
   } while (0)
-// NOLINTEND(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
 
 class Table {
 public:
+  // NOLINTEND(cppcoreguidelines-macro-usage, cppcoreguidelines-avoid-do-while)
   using KeyType = std::string;
   using FieldNameType = std::string;
   using FieldIndex = size_t;
