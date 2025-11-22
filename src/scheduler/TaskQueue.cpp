@@ -171,133 +171,7 @@ void TaskQueue::applyActions(const ActionList &actions,
       break;
     }
     case CompletionAction::UpdateDeps: {
-      std::vector<std::unique_ptr<ScheduledItem>> readyFileItems;
-      std::vector<std::unique_ptr<ScheduledItem>> readyTableItems;
-      switch (item.type) {
-      case QueryType::Load: {
-        const auto &loadDeps = std::get<LoadDeps>(item.depends);
-        depManager.notifyCompleted(DependencyManager::DependencyType::File,
-                                   loadDeps.filePath, item.seq, readyFileItems);
-        if (!loadDeps.pendingTable.empty()) {
-          for (const auto &ptableId : loadDeps.pendingTable) {
-            depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                       ptableId, item.seq, readyTableItems);
-          }
-        } else {
-          depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                     item.tableId, item.seq, readyTableItems);
-        }
-        break;
-      }
-      case QueryType::Dump: {
-        const auto &dumpDeps = std::get<DumpDeps>(item.depends);
-        depManager.notifyCompleted(DependencyManager::DependencyType::File,
-                                   dumpDeps.filePath, item.seq, readyFileItems);
-        // Also notify table dependency completion
-        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                   item.tableId, item.seq, readyTableItems);
-        break;
-      }
-      case QueryType::Drop: {
-        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                   item.tableId, item.seq, readyTableItems);
-        // Clear the registered flag so that future LOADs can re-register the
-        // table
-        auto tblIt = tables.find(item.tableId);
-        if (tblIt != tables.end() && tblIt->second) {
-          tblIt->second->registered = false;
-        }
-        break;
-      }
-      case QueryType::CopyTable: {
-        const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
-        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                   item.tableId, item.seq, readyTableItems);
-        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                   copyDeps.newTable, item.seq,
-                                   readyTableItems);
-        break;
-      }
-      default:
-        // For other query types (INSERT, SELECT, DELETE, UPDATE, etc.),
-        // update table dependency
-        if (!item.tableId.empty()) {
-          depManager.notifyCompleted(DependencyManager::DependencyType::Table,
-                                     item.tableId, item.seq, readyTableItems);
-        }
-        break;
-      }
-      for (auto &&readyItem : readyFileItems) {
-        if (readyItem->type == QueryType::Load) {
-          const auto &rlDeps = std::get<LoadDeps>(readyItem->depends);
-          if (!rlDeps.pendingTable.empty()) {
-            auto &database = Database::getInstance();
-            readyItem->tableId = database.getFileTableName(rlDeps.filePath);
-            // No need to update `tableDependsOn`, since cannot get correct
-            // dependency. Ignoring Table dependency might cause issues, but the
-            // operations to table also protected by outside mutex, acceptable
-          } else if (rlDeps.tableDependsOn >
-                     depManager.lastCompletedFor(
-                         DependencyManager::DependencyType::Table,
-                         readyItem->tableId)) {
-            // judge if table dependency satisfied for decided LOADs
-            const auto &readyTableId = readyItem->tableId;
-            depManager.addWait(DependencyManager::DependencyType::Table,
-                               readyTableId, std::move(readyItem));
-            continue;
-          }
-          loadQueue.emplace_front(std::move(readyItem));
-        } else {
-          auto &pendingTablePtr = tables[readyItem->tableId];
-          if (!pendingTablePtr) {
-            pendingTablePtr = std::make_unique<TableQueue>();
-          }
-          auto &pendingTable = *pendingTablePtr;
-          pendingTable.queue.push_front(std::move(*readyItem));
-          readyItem.reset();
-          const auto &head = pendingTable.queue.front();
-          globalIndex.upsert(pendingTablePtr.get(), head.priority,
-                             fetchTick.load(std::memory_order_relaxed),
-                             head.seq);
-        }
-      }
-      for (auto &&readyItem : readyTableItems) {
-        if (readyItem->type == QueryType::Load) {
-          loadQueue.emplace_front(std::move(readyItem));
-          continue;
-        }
-
-        if (readyItem->type == QueryType::CopyTable) {
-          const auto &rcDeps = std::get<CopyTableDeps>(readyItem->depends);
-          const auto &srcTableId = readyItem->tableId;
-          if (rcDeps.srcTableDependsOn >
-              depManager.lastCompletedFor(
-                  DependencyManager::DependencyType::Table, srcTableId)) {
-            depManager.addWait(DependencyManager::DependencyType::Table,
-                               srcTableId, std::move(readyItem));
-            continue;
-          }
-          if (rcDeps.dstTableDependsOn >
-              depManager.lastCompletedFor(
-                  DependencyManager::DependencyType::Table, rcDeps.newTable)) {
-            depManager.addWait(DependencyManager::DependencyType::Table,
-                               rcDeps.newTable, std::move(readyItem));
-            continue;
-          }
-        }
-        // DROP directly goes here
-        auto &pendingTablePtr = tables[readyItem->tableId];
-        if (!pendingTablePtr) {
-          pendingTablePtr = std::make_unique<TableQueue>();
-        }
-        auto &pendingTable = *pendingTablePtr;
-        pendingTable.queue.push_front(std::move(*readyItem));
-        readyItem.reset();
-        const auto &head = pendingTable.queue.front();
-        globalIndex.upsert(pendingTablePtr.get(), head.priority,
-                           fetchTick.load(std::memory_order_relaxed), head.seq);
-
-      }  // TODO: redundant function, can be optimized
+      applyUpdateDeps(item);
       break;
     }
     }
@@ -341,6 +215,64 @@ void TaskQueue::registerTableQueue(TableQueue &tbl, const ScheduledItem &item) {
       globalIndex.upsert(tblPtr.get(), head.priority,
                          fetchTick.load(std::memory_order_relaxed), head.seq);
     }
+  }
+}
+
+void TaskQueue::applyUpdateDeps(const ScheduledItem &item) {
+  std::vector<std::unique_ptr<ScheduledItem>> readyFileItems;
+  std::vector<std::unique_ptr<ScheduledItem>> readyTableItems;
+  switch (item.type) {
+  case QueryType::Load: {
+    const auto &loadDeps = std::get<LoadDeps>(item.depends);
+    depManager.notifyCompleted(DependencyManager::DependencyType::File,
+                               loadDeps.filePath, item.seq, readyFileItems);
+    if (!loadDeps.pendingTable.empty()) {
+      for (const auto &ptableId : loadDeps.pendingTable) {
+        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                   ptableId, item.seq, readyTableItems);
+      }
+    } else {
+      depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                 item.tableId, item.seq, readyTableItems);
+    }
+    break;
+  }
+  case QueryType::Dump: {
+    const auto &dumpDeps = std::get<DumpDeps>(item.depends);
+    depManager.notifyCompleted(DependencyManager::DependencyType::File,
+                               dumpDeps.filePath, item.seq, readyFileItems);
+    // Also notify table dependency completion
+    depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                               item.tableId, item.seq, readyTableItems);
+    break;
+  }
+  case QueryType::Drop: {
+    depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                               item.tableId, item.seq, readyTableItems);
+    // Clear the registered flag so that future LOADs can re-register the
+    // table
+    auto tblIt = tables.find(item.tableId);
+    if (tblIt != tables.end() && tblIt->second) {
+      tblIt->second->registered = false;
+    }
+    break;
+  }
+  case QueryType::CopyTable: {
+    const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
+    depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                               item.tableId, item.seq, readyTableItems);
+    depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                               copyDeps.newTable, item.seq, readyTableItems);
+    break;
+  }
+  default:
+    // For other query types (INSERT, SELECT, DELETE, UPDATE, etc.),
+    // update table dependency
+    if (!item.tableId.empty()) {
+      depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                 item.tableId, item.seq, readyTableItems);
+    }
+    break;
   }
 }
 
