@@ -79,20 +79,6 @@ private:
   std::atomic<std::uint64_t> completed{0};
   std::atomic<bool> readyToFetch_{false};  // Whether all tasks registered
 
-  struct Stats {
-    std::uint64_t fetchTick{0};
-    std::uint64_t submitted{0};
-    std::uint64_t running{0};
-    std::uint64_t completed{0};
-  };
-
-  [[nodiscard]] auto stats() const -> Stats {
-    return Stats{.fetchTick = fetchTick.load(std::memory_order_relaxed),
-                 .submitted = submitted.load(std::memory_order_relaxed),
-                 .running = running.load(std::memory_order_relaxed),
-                 .completed = completed.load(std::memory_order_relaxed)};
-  }
-
   // Map of tableId -> TableQueue
   std::unordered_map<std::string, std::unique_ptr<TableQueue>> tables;
 

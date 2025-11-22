@@ -124,15 +124,11 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
   switch (item.type) {
   case QueryType::Load:
   case QueryType::CopyTable: {
-    bool needRegister = false;
-
-    if (item.type == QueryType::CopyTable) {
-      // For COPYTABLE, always need RegisterTable to register the new table
-      needRegister = true;
-    } else {
+    bool needRegister = true;
+    // For COPYTABLE, always need RegisterTable to register the new table
+    if (item.type == QueryType::Load) {
       // For LOAD, check if the table is already registered
       auto tblIt = tables.find(item.tableId);
-      needRegister = true;
       if (tblIt != tables.end() && tblIt->second && tblIt->second->registered) {
         if (tblIt->second->registerSeq > item.seq) {
           throw std::invalid_argument(
@@ -143,7 +139,6 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
         needRegister = false;
       }
     }
-
     if (needRegister) {
       actions.push_back(CompletionAction::RegisterTable);
     }
@@ -386,13 +381,11 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     }
 
     // choose higher priority, then smaller seq
-    bool preferLoad = true;
+    bool preferLoad = tableCand == nullptr;
     if (loadCand != nullptr && tableCand != nullptr) {
       preferLoad = (loadCand->priority < tableCand->priority) ||
                    (loadCand->priority == tableCand->priority &&
                     loadCand->seq < tableCand->seq);
-    } else {
-      preferLoad = tableCand == nullptr;
     }
 
     // Materialize and update structures
