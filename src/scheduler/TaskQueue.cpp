@@ -216,37 +216,34 @@ void TaskQueue::applyActions(const ActionList &actions,
       for (auto &&readyItem : readyTableItems) {
         if (readyItem->type == QueryType::Load) {
           loadQueue.push_front(std::move(readyItem));
-        } else {
-          bool flag = true;
-          if (readyItem->type == QueryType::CopyTable) {
-            const auto &rcDeps = std::get<CopyTableDeps>(readyItem->depends);
-            const auto &srcTableId = readyItem->tableId;
-            if (rcDeps.srcTableDependsOn >
-                depManager.lastCompletedFor(
-                    DependencyManager::DependencyType::Table, srcTableId)) {
-              depManager.addWait(DependencyManager::DependencyType::File,
-                                 srcTableId, std::move(readyItem));
-              flag = false;
-            }
-            if (rcDeps.dstTableDependsOn >
-                depManager.lastCompletedFor(
-                    DependencyManager::DependencyType::Table,
-                    rcDeps.newTable)) {
-              depManager.addWait(DependencyManager::DependencyType::File,
-                                 rcDeps.newTable, std::move(readyItem));
-              flag = false;
-            }
+          continue;
+        }
+
+        if (readyItem->type == QueryType::CopyTable) {
+          const auto &rcDeps = std::get<CopyTableDeps>(readyItem->depends);
+          const auto &srcTableId = readyItem->tableId;
+          if (rcDeps.srcTableDependsOn >
+              depManager.lastCompletedFor(
+                  DependencyManager::DependencyType::Table, srcTableId)) {
+            depManager.addWait(DependencyManager::DependencyType::Table,
+                               srcTableId, std::move(readyItem));
+            continue;
           }
-          if (flag) {
-            auto &pendingTable = tables[readyItem->tableId];
-            pendingTable.queue.push_front(std::move(*readyItem));
-            readyItem.reset();
-            const auto &head = pendingTable.queue.front();
-            globalIndex.upsert(&pendingTable, head.priority,
-                               fetchTick.load(std::memory_order_relaxed),
-                               head.seq);
+          if (rcDeps.dstTableDependsOn >
+              depManager.lastCompletedFor(
+                  DependencyManager::DependencyType::Table, rcDeps.newTable)) {
+            depManager.addWait(DependencyManager::DependencyType::Table,
+                               rcDeps.newTable, std::move(readyItem));
+            continue;
           }
         }
+        auto &pendingTable = tables[readyItem->tableId];
+        pendingTable.queue.push_front(std::move(*readyItem));
+        readyItem.reset();
+        const auto &head = pendingTable.queue.front();
+        globalIndex.upsert(&pendingTable, head.priority,
+                           fetchTick.load(std::memory_order_relaxed), head.seq);
+
       } // TODO: redundant function, can be optimized
       break;
     }
