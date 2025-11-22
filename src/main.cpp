@@ -234,7 +234,7 @@ auto processFile(const std::string &filename,
       Query::Ptr query = parser.parseQuery(queryStr);
 
       // Check if this is a LISTEN query
-      auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+      const auto *listenQuery = dynamic_cast<const ListenQuery *>(query.get());
       if (listenQuery != nullptr) {
         // Enqueue the listen file for later processing
         result.listenFiles.push_back(listenQuery->getFileName());
@@ -270,7 +270,8 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         std::string const queryStr = extractQueryString(input_stream);
         Query::Ptr query = parser.parseQuery(queryStr);
 
-        auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+        const auto *listenQuery =
+            dynamic_cast<const ListenQuery *>(query.get());
         if (listenQuery != nullptr) {
           fileQueue.push(listenQuery->getFileName());
         }
@@ -293,7 +294,8 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         std::string const queryStr = extractQueryString(input_stream);
         Query::Ptr query = parser.parseQuery(queryStr);
 
-        auto *listenQuery = dynamic_cast<ListenQuery *>(query.get());
+        const auto *listenQuery =
+            dynamic_cast<const ListenQuery *>(query.get());
         if (listenQuery != nullptr) {
           fileQueue.push(listenQuery->getFileName());
         }
