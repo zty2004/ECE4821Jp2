@@ -15,7 +15,8 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <thread>  // NOLINT(build/c++11)
+#include <thread>
+#include <utility>
 #include <vector>
 
 #include "query/Query.h"
