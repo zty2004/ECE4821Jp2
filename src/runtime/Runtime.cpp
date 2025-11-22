@@ -59,7 +59,7 @@ void Runtime::submitQuery(Query::Ptr query, std::size_t orderIndex) {
 
   // Store future for later retrieval
   {
-    std::lock_guard lock(futuresMtx_);
+    std::lock_guard lock(futuresMtx_);  // NOLINT(misc-const-correctness)
     futures_[orderIndex] = std::move(future);
   }
 }
@@ -68,7 +68,7 @@ void Runtime::startExecution() { taskQueue_->setReady(); }
 
 void Runtime::waitAll() {
   // Wait for all futures to complete
-  std::lock_guard lock(futuresMtx_);
+  std::lock_guard lock(futuresMtx_);  // NOLINT(misc-const-correctness)
   for (auto &[idx, future] : futures_) {
     if (future.valid()) {
       future.wait();
@@ -80,7 +80,7 @@ auto Runtime::getResultsInOrder() -> std::vector<QueryResult::Ptr> {
   std::vector<QueryResult::Ptr> results;
   results.reserve(totalSubmitted_);
 
-  std::lock_guard lock(futuresMtx_);
+  std::lock_guard lock(futuresMtx_);  // NOLINT(misc-const-correctness)
 
   // Extract results from futures in submission order
   for (std::size_t i = 1; i <= totalSubmitted_; ++i) {
