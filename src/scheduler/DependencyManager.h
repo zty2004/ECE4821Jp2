@@ -67,6 +67,10 @@ private:
 
   auto markScheduledTable(const std::string &tableId, std::uint64_t seq,
                           QueryType tag) -> std::pair<QueryType, std::uint64_t>;
+
+  auto static notifyCompleteBreakHelper(const DependencyType &type,
+                                        const uint64_t &completedSeq,
+                                        const ScheduledItem &waitItem) -> bool;
 };
 
 #endif  // SRC_SCHEDULER_DEPENDENCYMANAGER_H_

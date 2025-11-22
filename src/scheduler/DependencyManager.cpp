@@ -144,45 +144,15 @@ void DependencyManager::notifyCompleted(
     const auto &topPtr = heap.top();
     const ScheduledItem &waitItem = *topPtr;
 
-    bool shouldBreak = false;
-
-    if (waitItem.type == QueryType::Load) {
-      const auto &loadDeps = std::get<LoadDeps>(waitItem.depends);
-      if ((type == DependencyType::File &&
-           loadDeps.fileDependsOn > completedSeq) ||
-          (type == DependencyType::Table &&
-           loadDeps.tableDependsOn > completedSeq)) {
-        shouldBreak = true;  // dependency not satisfied
-      }
-    } else if (waitItem.type == QueryType::Dump &&
-               type == DependencyType::File &&
-               std::get<DumpDeps>(waitItem.depends).fileDependsOn >
-                   completedSeq) {
-      shouldBreak = true;  // dependency not satisfied
-    } else if (waitItem.type == QueryType::Drop &&
-               type == DependencyType::Table &&
-               std::get<DropDeps>(waitItem.depends).tableDependsOn >
-                   completedSeq) {
-      shouldBreak = true;  // dependency not satisfied
-    } else if (waitItem.type == QueryType::CopyTable &&
-               type == DependencyType::Table) {
-      const auto &copyDeps = std::get<CopyTableDeps>(waitItem.depends);
-      if (copyDeps.srcTableDependsOn > completedSeq &&
-          copyDeps.dstTableDependsOn > completedSeq) {
-        shouldBreak = true;
-        // any of which statisfied, poped out, then will judge which not
-        // satisfied (if exist) in fetchNext
-      }
-    }
-
-    if (shouldBreak) {
+    if (notifyCompleteBreakHelper(type, completedSeq, waitItem)) {
       break;
     }
 
     // Move item from heap - need to use const_cast since priority_queue doesn't
     // provide mutable access
-    temp.push_back(std::move(const_cast<std::unique_ptr<ScheduledItem> &>(
-        const_cast<WaitingHeap &>(heap).top())));
+    temp.push_back(
+        std::move(const_cast<std::unique_ptr<ScheduledItem> &>(  // NOLINT
+            const_cast<WaitingHeap &>(heap).top())));
     heap.pop();
   }
 
@@ -193,6 +163,40 @@ void DependencyManager::notifyCompleted(
   if (heap.empty()) {
     waitingMap.erase(waitingIter);
   }
+}
+
+auto DependencyManager::notifyCompleteBreakHelper(const DependencyType &type,
+                                                  const uint64_t &completedSeq,
+                                                  const ScheduledItem &waitItem)
+    -> bool {
+  if (waitItem.type == QueryType::Load) {
+    const auto &loadDeps = std::get<LoadDeps>(waitItem.depends);
+    if ((type == DependencyType::File &&
+         loadDeps.fileDependsOn > completedSeq) ||
+        (type == DependencyType::Table &&
+         loadDeps.tableDependsOn > completedSeq)) {
+      return true;  // dependency not satisfied
+    }
+  } else if ((waitItem.type == QueryType::Dump &&
+              type == DependencyType::File &&
+              std::get<DumpDeps>(waitItem.depends).fileDependsOn >
+                  completedSeq) ||
+             (waitItem.type == QueryType::Drop &&
+              type == DependencyType::Table &&
+              std::get<DropDeps>(waitItem.depends).tableDependsOn >
+                  completedSeq)) {
+    return true;  // dependency not satisfied
+  } else if (waitItem.type == QueryType::CopyTable &&
+             type == DependencyType::Table) {
+    const auto &copyDeps = std::get<CopyTableDeps>(waitItem.depends);
+    if (copyDeps.srcTableDependsOn > completedSeq &&
+        copyDeps.dstTableDependsOn > completedSeq) {
+      return true;
+      // any of which statisfied, poped out, then will judge which not
+      // satisfied (if exist) in fetchNext
+    }
+  }
+  return false;
 }
 
 auto DependencyManager::lastCompletedFor(const DependencyType &type,
