@@ -166,10 +166,9 @@ void DependencyManager::notifyCompleted(
   }
 }
 
-auto DependencyManager::notifyCompleteBreakHelper(const DependencyType &type,
-                                                  const uint64_t &completedSeq,
-                                                  const ScheduledItem &waitItem)
-    -> bool {
+auto DependencyManager::notifyCompleteBreakHelper(
+    const DependencyType &type, const uint64_t &completedSeq,
+    const ScheduledItem &waitItem) -> bool {
   if (waitItem.type == QueryType::Load) {
     const auto &loadDeps = std::get<LoadDeps>(waitItem.depends);
     if ((type == DependencyType::File &&
@@ -200,9 +199,8 @@ auto DependencyManager::notifyCompleteBreakHelper(const DependencyType &type,
   return false;
 }
 
-auto DependencyManager::lastCompletedFor(const DependencyType &type,
-                                         const std::string &key) const
-    -> std::uint64_t {
+auto DependencyManager::lastCompletedFor(
+    const DependencyType &type, const std::string &key) const -> std::uint64_t {
   const auto &lastCompletedMap =
       type == DependencyType::File ? lastCompletedFile : lastCompletedTable;
   auto iter = lastCompletedMap.find(key);

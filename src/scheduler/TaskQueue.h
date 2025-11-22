@@ -23,8 +23,8 @@
 struct ParsedQuery {
   std::uint64_t seq = 0;  // global sequence of the query
   std::string tableName;  // name of the corresponding table
-  QueryType type;
-  QueryPriority priority;
+  QueryType type{QueryType::Nop};
+  QueryPriority priority{QueryPriority::Low};
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;
 };
@@ -125,8 +125,8 @@ private:
                   ScheduledItem *&tableCand, TableQueue *&tableCandQ);
   auto fetchBarrier(ExecutableTask &out) -> bool;
   auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand) -> bool;
-  auto judgeNormalDeps(ScheduledItem *&tableCand, TableQueue *&tableCandQ)
-      -> bool;
+  auto judgeNormalDeps(ScheduledItem *&tableCand,
+                       TableQueue *&tableCandQ) -> bool;
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_

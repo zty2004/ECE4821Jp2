@@ -47,9 +47,9 @@ public:
                        std::uint64_t seq,
                        std::vector<std::unique_ptr<ScheduledItem>> &ready);
 
-  [[nodiscard]] auto lastCompletedFor(const DependencyType &type,
-                                      const std::string &key) const
-      -> std::uint64_t;
+  [[nodiscard]] auto
+  lastCompletedFor(const DependencyType &type,
+                   const std::string &key) const -> std::uint64_t;
 
 private:
   std::unordered_map<std::string, std::pair<QueryType, std::uint64_t>>
