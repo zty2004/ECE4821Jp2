@@ -119,6 +119,11 @@ private:
 
   auto classifyActions(const ScheduledItem &item) -> ActionList;
   void applyActions(const ActionList &actions, const ScheduledItem &item);
+
+  void applyRegisterTable(const ScheduledItem &item);
+  void applyUpdateDeps(const ScheduledItem &item);
+
+  void registerTableQueue(TableQueue &tbl, const ScheduledItem &item);
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_

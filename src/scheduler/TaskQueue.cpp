@@ -167,54 +167,7 @@ void TaskQueue::applyActions(const ActionList &actions,
   for (auto act : actions) {
     switch (act) {
     case CompletionAction::RegisterTable: {
-      // Register the main table (item.tableId)
-      auto &tblPtr = tables[item.tableId];
-      if (!tblPtr) {
-        tblPtr = std::make_unique<TableQueue>();
-      }
-      TableQueue &tbl = *tblPtr;
-      if (!tbl.registered) {
-        tbl.registered = true;
-        tbl.registerSeq = item.seq;
-        if (!tbl.queue.empty()) {
-          for (auto &pending : tbl.queue) {
-            if (pending.seq < item.seq) {
-              pending.droppedFlag =
-                  true;  // mark the queries before registered as dropped
-            }
-          }
-          const ScheduledItem &head = tbl.queue.front();
-          globalIndex.upsert(tblPtr.get(), head.priority,
-                             fetchTick.load(std::memory_order_relaxed),
-                             head.seq);
-        }
-      }
-
-      // For COPYTABLE, also register the new table
-      if (item.type == QueryType::CopyTable) {
-        const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
-        const std::string &newTable = copyDeps.newTable;
-        auto &newTblPtr = tables[newTable];
-        if (!newTblPtr) {
-          newTblPtr = std::make_unique<TableQueue>();
-        }
-        TableQueue &newTbl = *newTblPtr;
-        if (!newTbl.registered) {
-          newTbl.registered = true;
-          newTbl.registerSeq = item.seq;
-          if (!newTbl.queue.empty()) {
-            for (auto &pending : newTbl.queue) {
-              if (pending.seq < item.seq) {
-                pending.droppedFlag = true;
-              }
-            }
-            const ScheduledItem &newHead = newTbl.queue.front();
-            globalIndex.upsert(newTblPtr.get(), newHead.priority,
-                               fetchTick.load(std::memory_order_relaxed),
-                               newHead.seq);
-          }
-        }
-      }
+      applyRegisterTable(item);
       break;
     }
     case CompletionAction::UpdateDeps: {
@@ -347,6 +300,46 @@ void TaskQueue::applyActions(const ActionList &actions,
       }  // TODO: redundant function, can be optimized
       break;
     }
+    }
+  }
+}
+
+void TaskQueue::applyRegisterTable(const ScheduledItem &item) {
+  // Register the main table (item.tableId)
+  auto &tblPtr = tables[item.tableId];
+  if (!tblPtr) {
+    tblPtr = std::make_unique<TableQueue>();
+  }
+  TableQueue &tbl = *tblPtr;
+  registerTableQueue(tbl, item);
+
+  // For COPYTABLE, also register the new table
+  if (item.type == QueryType::CopyTable) {
+    const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
+    const std::string &newTable = copyDeps.newTable;
+    auto &newTblPtr = tables[newTable];
+    if (!newTblPtr) {
+      newTblPtr = std::make_unique<TableQueue>();
+    }
+    TableQueue &newTbl = *newTblPtr;
+    registerTableQueue(newTbl, item);
+  }
+}
+
+void TaskQueue::registerTableQueue(TableQueue &tbl, const ScheduledItem &item) {
+  if (!tbl.registered) {
+    tbl.registered = true;
+    tbl.registerSeq = item.seq;
+    if (!tbl.queue.empty()) {
+      for (auto &pending : tbl.queue) {
+        if (pending.seq < item.seq) {
+          pending.droppedFlag =
+              true;  // mark the queries before registered as dropped
+        }
+      }
+      const ScheduledItem &head = tbl.queue.front();
+      globalIndex.upsert(tblPtr.get(), head.priority,
+                         fetchTick.load(std::memory_order_relaxed), head.seq);
     }
   }
 }
