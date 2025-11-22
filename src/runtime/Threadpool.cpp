@@ -10,10 +10,13 @@
 #include <exception>
 #include <memory>
 #include <mutex>
-#include <stop_token>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#ifdef __cpp_lib_jthread
+#include <stop_token>
+#endif
 
 #include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
@@ -27,7 +30,7 @@ Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
   for (std::size_t i = 0; i < numThreads; ++i) {
 #ifdef __cpp_lib_jthread
     threads_.emplace_back(
-        [this](std::stop_token st) { this->worker_loop(st); });
+        [this](const std::stop_token &st) { this->worker_loop(st); });
 #else
     threads_.emplace_back([this] { this->worker_loop(); });
 #endif
@@ -145,10 +148,10 @@ void Threadpool::executeTask(ExecutableTask &task) {
 
   try {
     if (kind == QueryKind::Write) {
-      WriteGuard guard(lock_manager_, tid);
+      const WriteGuard guard(lock_manager_, tid);
       executeWrite(task);
     } else if (kind == QueryKind::Read) {
-      ReadGuard guard(lock_manager_, tid);
+      const ReadGuard guard(lock_manager_, tid);
       executeRead(task);
     } else {
       executeNull(task);
@@ -195,10 +198,14 @@ void run_logic(ExecutableTask &task, const char * /*type*/) {
 }
 }  // namespace
 
-void Threadpool::executeWrite(ExecutableTask &task) {
+auto Threadpool::executeWrite(ExecutableTask &task) -> void {
   run_logic(task, "WRITE");
 }
 
-void Threadpool::executeRead(ExecutableTask &task) { run_logic(task, "READ"); }
+auto Threadpool::executeRead(ExecutableTask &task) -> void {
+  run_logic(task, "READ");
+}
 
-void Threadpool::executeNull(ExecutableTask &task) { run_logic(task, "NULL"); }
+auto Threadpool::executeNull(ExecutableTask &task) -> void {
+  run_logic(task, "NULL");
+}

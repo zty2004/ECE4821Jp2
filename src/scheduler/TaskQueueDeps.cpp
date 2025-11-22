@@ -4,6 +4,7 @@
 
 #include "TaskQueue.h"
 
+#include <atomic>
 #include <memory>
 #include <stdexcept>
 #include <string>

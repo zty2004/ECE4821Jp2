@@ -4,6 +4,8 @@
 
 #include "QueryExecutor.h"
 
+#include <cstddef>
+#include <cstdio>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -15,9 +17,11 @@
 #include <vector>
 
 #include "../query/Query.h"
+#include "../query/QueryParser.h"
 #include "../query/QueryResult.h"
 #include "../query/management/ListenQuery.h"
 #include "../utils/uexception.h"
+#include "Runtime.h"
 
 auto extractQueryString(std::istream &input_stream) -> std::string {
   std::string buf;

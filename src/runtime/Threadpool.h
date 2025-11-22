@@ -92,9 +92,9 @@ private:
 
   void executeTask(ExecutableTask &task);
 
-  void executeWrite(ExecutableTask &task);
-  void executeRead(ExecutableTask &task);
-  void executeNull(ExecutableTask &task);
+  static void executeWrite(ExecutableTask &task);
+  static void executeRead(ExecutableTask &task);
+  static void executeNull(ExecutableTask &task);
 
   // void run_logic(ExecutableTask &task, const char *type);
 };

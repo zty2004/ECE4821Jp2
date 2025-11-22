@@ -8,9 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
-#include "../db/Database.h"
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
@@ -98,24 +96,29 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   }
   dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
                      capturedDeps, capturedTableQ]() noexcept -> void {
-    {
-      std::scoped_lock const callbackLock(mu);
-      ScheduledItem meta;  // placeholder
-      meta.tableId = capturedTable;
-      meta.type = capturedType;
-      meta.seq = capturedSeq;
-      meta.depends = capturedDeps;
-      applyActions(actions, meta);
-      // Upsert next task from the same table queue (if any)
-      if (capturedTableQ != nullptr && !capturedTableQ->queue.empty()) {
-        const ScheduledItem &newHead = capturedTableQ->queue.front();
-        globalIndex.upsert(capturedTableQ, newHead.priority,
-                           fetchTick.load(std::memory_order_relaxed),
-                           newHead.seq);
+    try {
+      {
+        std::scoped_lock const callbackLock(mu);
+        ScheduledItem meta;  // placeholder
+        meta.tableId = capturedTable;
+        meta.type = capturedType;
+        meta.seq = capturedSeq;
+        meta.depends = capturedDeps;
+        applyActions(actions, meta);
+        // Upsert next task from the same table queue (if any)
+        if (capturedTableQ != nullptr && !capturedTableQ->queue.empty()) {
+          const ScheduledItem &newHead = capturedTableQ->queue.front();
+          globalIndex.upsert(capturedTableQ, newHead.priority,
+                             fetchTick.load(std::memory_order_relaxed),
+                             newHead.seq);
+        }
       }
+      running.fetch_sub(1, std::memory_order_relaxed);
+      completed.fetch_add(1, std::memory_order_relaxed);
+    } catch (...) {  // NOLINT(bugprone-empty-catch)
+      // Must not throw from noexcept callback
+      // Errors in completion handling are critical but can't propagate
     }
-    running.fetch_sub(1, std::memory_order_relaxed);
-    completed.fetch_add(1, std::memory_order_relaxed);
   };
 }
 

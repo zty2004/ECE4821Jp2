@@ -5,9 +5,15 @@
 #include "ArgParser.h"
 
 #include <charconv>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <optional>
+#include <span>
+#include <string>
 #include <string_view>
+#include <system_error>
 
 namespace {
 const int dec = 10;

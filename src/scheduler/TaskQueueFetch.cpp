@@ -4,9 +4,12 @@
 
 #include "TaskQueue.h"
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "../query/Query.h"
 #include "ScheduledItem.h"
 #include "TableQueue.h"
 
