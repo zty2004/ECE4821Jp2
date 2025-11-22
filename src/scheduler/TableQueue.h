@@ -7,9 +7,9 @@
 #include "./ScheduledItem.h"
 
 struct TableQueue {
-  bool registered{false};        // LOAD or not
-  std::uint64_t registerSeq{0};  // seq of LOAD
-  std::deque<ScheduledItem> queue;
+  bool registered{false};           // LOAD or not //NOLINT
+  std::uint64_t registerSeq{0};     // seq of LOAD //NOLINT
+  std::deque<ScheduledItem> queue;  // NOLINT
 
   [[nodiscard]] auto size() const -> std::size_t { return queue.size(); }
   [[nodiscard]] auto empty() const -> bool { return queue.empty(); }

@@ -29,13 +29,13 @@ struct ParsedQuery {
 
 // Executable task given to workers
 struct ExecutableTask {
-  std::uint64_t seq = 0;
-  QueryType type;
-  std::unique_ptr<Query> query;
-  std::promise<std::unique_ptr<QueryResult>> promise;
+  std::uint64_t seq = 0;                               // NOLINT
+  QueryType type{QueryType::Nop};                      // NOLINT
+  std::unique_ptr<Query> query;                        // NOLINT
+  std::promise<std::unique_ptr<QueryResult>> promise;  // NOLINT
   std::function<std::unique_ptr<QueryResult>()>
-      execOverride;                   // preset function
-  std::function<void()> onCompleted;  // callback closure
+      execOverride;                   // preset function //NOLINT
+  std::function<void()> onCompleted;  // callback closure //NOLINT
 
   ExecutableTask() = default;
   ~ExecutableTask() = default;

@@ -29,10 +29,9 @@ public:
   DependencyManager() = default;
   ~DependencyManager() = default;
   DependencyManager(const DependencyManager &) = delete;
-  DependencyManager &operator=(const DependencyManager &) = delete;  // NOLINT
+  auto operator=(const DependencyManager &) -> DependencyManager & = delete;
   DependencyManager(DependencyManager &&) noexcept = delete;
-  DependencyManager &
-  operator=(DependencyManager &&) noexcept = delete;  // NOLINT
+  auto operator=(DependencyManager &&) noexcept -> DependencyManager & = delete;
 
   enum class DependencyType : std::uint8_t {
     File,

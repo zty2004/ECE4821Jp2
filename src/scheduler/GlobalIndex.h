@@ -19,9 +19,9 @@ public:
   GlobalIndex() = default;
   ~GlobalIndex() = default;
   GlobalIndex(const GlobalIndex &) = delete;
-  GlobalIndex &operator=(const GlobalIndex &) = delete;  // NOLINT
+  auto operator=(const GlobalIndex &) -> GlobalIndex & = delete;
   GlobalIndex(GlobalIndex &&) noexcept = delete;
-  GlobalIndex &operator=(GlobalIndex &&) noexcept = delete;  // NOLINT
+  auto operator=(GlobalIndex &&) noexcept -> GlobalIndex & = delete;
 
   // Fairness constants (quantization)
   static constexpr std::uint64_t kFairnessQuantum = 64;  // can be modified

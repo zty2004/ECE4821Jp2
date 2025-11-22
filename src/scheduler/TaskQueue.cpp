@@ -1,9 +1,7 @@
 #include "TaskQueue.h"
 
 #include <atomic>
-#include <csignal>
 #include <future>
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -12,7 +10,6 @@
 
 #include "../db/Database.h"
 #include "../query/Query.h"
-#include "../query/QueryHelpers.h"
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
 #include "ScheduledItem.h"
@@ -78,9 +75,10 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   dst.type = src.type;
   dst.query = std::move(src.query);
   dst.promise = std::move(src.promise);
-  dst.execOverride = src.droppedFlag
-                         ? []() { return std::make_unique<NullQueryResult>(); }
-                         : nullptr;
+  dst.execOverride = src.droppedFlag ? []() -> std::unique_ptr<QueryResult> {
+    return std::make_unique<NullQueryResult>();
+  }
+  : nullptr;
   const ActionList actions = classifyActions(src);
   const std::string capturedTable =
       src.tableId;  // src.tableId still valid post-move of query & promise
@@ -96,7 +94,7 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
     }
   }
   dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
-                     capturedDeps, capturedTableQ]() {
+                     capturedDeps, capturedTableQ]() -> void {
     {
       std::lock_guard<std::mutex> callbackLock(mu);
       ScheduledItem meta;  // placeholder
@@ -461,7 +459,8 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
       running.fetch_add(1, std::memory_order_relaxed);
       fetchTick.fetch_add(1, std::memory_order_relaxed);
       return true;
-    } else if (tableCandQ != nullptr) {
+    }
+    if (tableCandQ != nullptr) {
       if (tableCand->type == QueryType::Dump) {
         const auto &dumpDeps = std::get<DumpDeps>(tableCand->depends);
         const std::string filePath = dumpDeps.filePath;  // Copy before move!
