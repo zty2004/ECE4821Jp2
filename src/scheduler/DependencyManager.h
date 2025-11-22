@@ -2,6 +2,7 @@
 #define SRC_SCHEDULER_DEPENDENCYMANAGER_H_
 
 #include <cstdint>
+#include <memory>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -20,7 +21,8 @@ private:
   };
 
   using WaitingHeap =
-      std::priority_queue<ScheduledItem *, std::vector<ScheduledItem *>, Cmp>;
+      std::priority_queue<std::unique_ptr<ScheduledItem>,
+                          std::vector<std::unique_ptr<ScheduledItem>>, Cmp>;
 
 public:
   DependencyManager() = default;
@@ -39,10 +41,11 @@ public:
   void markScheduled(ScheduledItem &item, QueryType tag);
 
   void addWait(const DependencyType &type, const std::string &key,
-               ScheduledItem *item);
+               std::unique_ptr<ScheduledItem> item);
 
   void notifyCompleted(const DependencyType &type, const std::string &key,
-                       std::uint64_t seq, std::vector<ScheduledItem *> ready);
+                       std::uint64_t seq,
+                       std::vector<std::unique_ptr<ScheduledItem>> &ready);
 
   [[nodiscard]] auto
   lastCompletedFor(const DependencyType &type,

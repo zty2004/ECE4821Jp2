@@ -67,7 +67,8 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
     auto newTableId = extractNewTable(*item.query);
     res = markScheduledTable(newTableId, seq, tag);
     auto dstTableDependsOn = res.second;
-    item.depends = CopyTableDeps(srcTableDependsOn, dstTableDependsOn);
+    item.depends =
+        CopyTableDeps(srcTableDependsOn, dstTableDependsOn, newTableId);
     return;
   }
 }
@@ -97,15 +98,15 @@ auto DependencyManager::markScheduledTable(const std::string &tableId,
 }
 
 void DependencyManager::addWait(const DependencyType &type,
-                                const std::string &key, ScheduledItem *item) {
+                                const std::string &key,
+                                std::unique_ptr<ScheduledItem> item) {
   auto &waitingMap = type == DependencyType::File ? waitingFile : waitingTable;
   waitingMap[key].push(item);
 }
 
-void DependencyManager::notifyCompleted(const DependencyType &type,
-                                        const std::string &key,
-                                        std::uint64_t seq,
-                                        std::vector<ScheduledItem *> ready) {
+void DependencyManager::notifyCompleted(
+    const DependencyType &type, const std::string &key, std::uint64_t seq,
+    std::vector<std::unique_ptr<ScheduledItem>> &ready) {
   auto &completedSeq = type == DependencyType::File ? lastCompletedFile[key]
                                                     : lastCompletedTable[key];
   if (seq < completedSeq) {
@@ -124,7 +125,8 @@ void DependencyManager::notifyCompleted(const DependencyType &type,
         std::get<LoadDeps>(waitItem.depends).fileDependsOn < completedSeq) {
       break;
     }
-    ready.emplace_back(heap.top());
+    ready.emplace_back(
+        std::move(const_cast<std::unique_ptr<ScheduledItem> &>(heap.top())));
     heap.pop();
   }
   if (heap.empty()) {
