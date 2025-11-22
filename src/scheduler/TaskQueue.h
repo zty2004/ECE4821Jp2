@@ -101,6 +101,10 @@ private:
   // Internal helper to materialize ExecutableTask from a ScheduledItem
   void buildExecutableFromScheduled(ScheduledItem &src, ExecutableTask &dst);
 
+  // Override functions
+  auto classifyOverrides(const ScheduledItem &item)
+      -> std::function<std::unique_ptr<QueryResult>()>;
+
   // Completion actions
   enum class CompletionAction : std::uint8_t { RegisterTable, UpdateDeps };
   using ActionList = std::vector<CompletionAction>;

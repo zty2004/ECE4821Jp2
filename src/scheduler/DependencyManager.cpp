@@ -21,6 +21,9 @@ void DependencyManager::markScheduled(ScheduledItem &item, QueryType tag) {
     std::uint64_t const fileCompleted =
         completedIter == lastCompletedFile.end() ? 0 : completedIter->second;
 
+    item.droppedFlag = (prevFileTag == QueryType::Load &&
+                        lastScheduledTable[tableId].first != QueryType::Drop);
+
     bool const pending =
         (prevFileTag == QueryType::Dump && fileCompleted < prevFileSeq);
 
