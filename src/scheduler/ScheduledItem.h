@@ -38,9 +38,9 @@ using DependencyPayload =
 struct ScheduledItem {
   std::uint64_t seq = 0;  // global submission sequence
   QueryPriority priority = QueryPriority::NORMAL;
-  std::string tableId;             // table name or "__control__"
-  QueryType type = QueryType::Nop; // type of the query
-  DependencyPayload depends{};     // default is std::monostate (no deps)
+  std::string tableId;              // table name or "__control__"
+  QueryType type = QueryType::Nop;  // type of the query
+  DependencyPayload depends{};      // default is std::monostate (no deps)
   std::unique_ptr<Query> query;
   std::promise<std::unique_ptr<QueryResult>> promise;  // result promise
   bool droppedFlag = false;                            // dropped mark

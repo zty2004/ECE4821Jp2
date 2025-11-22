@@ -78,7 +78,7 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
                          : nullptr;
   const ActionList actions = classifyActions(src);
   const std::string capturedTable =
-      src.tableId; // src.tableId still valid post-move of query & promise
+      src.tableId;  // src.tableId still valid post-move of query & promise
   const QueryType capturedType = src.type;
   const std::uint64_t capturedSeq = src.seq;
   const DependencyPayload capturedDeps = src.depends;
@@ -86,7 +86,7 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
                      capturedDeps]() {
     {
       std::lock_guard<std::mutex> callbackLock(mu);
-      ScheduledItem meta; // placeholder
+      ScheduledItem meta;  // placeholder
       meta.tableId = capturedTable;
       meta.type = capturedType;
       meta.seq = capturedSeq;
@@ -126,7 +126,7 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
     break;
   }
   default:
-    break; // no action for other types
+    break;  // no action for other types
   }
   return actions;
 }
@@ -148,7 +148,7 @@ void TaskQueue::applyActions(const ActionList &actions,
         for (auto &pending : tbl.queue) {
           if (pending.seq < item.seq) {
             pending.droppedFlag =
-                true; // mark the queries before registered as dropped
+                true;  // mark the queries before registered as dropped
           }
         }
         const ScheduledItem &head = tbl.queue.front();
@@ -269,7 +269,7 @@ void TaskQueue::applyActions(const ActionList &actions,
         globalIndex.upsert(pendingTablePtr.get(), head.priority,
                            fetchTick.load(std::memory_order_relaxed), head.seq);
 
-      } // TODO: redundant function, can be optimized
+      }  // TODO: redundant function, can be optimized
       break;
     }
     }

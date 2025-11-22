@@ -130,16 +130,16 @@ void DependencyManager::notifyCompleted(
            loadDeps.fileDependsOn > completedSeq) ||
           (type == DependencyType::Table &&
            loadDeps.tableDependsOn > completedSeq)) {
-        break; // dependency not satisfied
+        break;  // dependency not satisfied
       }
     }
     if (waitItem.type == QueryType::Dump && type == DependencyType::File &&
         std::get<DumpDeps>(waitItem.depends).fileDependsOn > completedSeq) {
-      break; // dependency not satisfied
+      break;  // dependency not satisfied
     }
     if (waitItem.type == QueryType::Drop && type == DependencyType::Table &&
         std::get<DropDeps>(waitItem.depends).tableDependsOn > completedSeq) {
-      break; // dependency not satisfied
+      break;  // dependency not satisfied
     }
     if (waitItem.type == QueryType::CopyTable &&
         type == DependencyType::Table) {
