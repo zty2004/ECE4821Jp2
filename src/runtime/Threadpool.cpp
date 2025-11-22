@@ -6,6 +6,9 @@
 
 #include "Threadpool.h"
 #include "../query/QueryHelpers.h"
+#include <memory>
+#include <utility>
+#include <vector>
 
 Threadpool::Threadpool(std::size_t numThreads, LockManager &lm, TaskQueue &tq)
     : thread_count_(numThreads), lock_manager_(lm), task_queue_(tq) {
