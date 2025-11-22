@@ -90,14 +90,22 @@ void Threadpool::work() {
         for (auto &tmp : batch) {
           local_queue_.emplace(std::move(tmp));
         }
+        // Keep lock held to check and extract task
+      } else {
+        // Reacquire lock to safely check queue
+        lock.lock();
       }
+    } else {
+      // lock is already held from line 70
     }
 
+    // At this point, lock is always held
     if (!local_queue_.empty()) {
       task = std::move(local_queue_.front());
       local_queue_.pop();
       has_task = true;
     }
+    // lock released when going out of scope
   }
 
   if (has_task) {
