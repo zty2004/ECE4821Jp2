@@ -218,7 +218,7 @@ void TaskQueue::applyActions(const ActionList &actions,
                                readyTableId, std::move(readyItem));
             continue;
           }
-          loadQueue.push_front(std::move(readyItem));
+          loadQueue.emplace_front(std::move(readyItem));
         } else {
           auto &pendingTablePtr = tables[readyItem->tableId];
           if (!pendingTablePtr) {
@@ -235,7 +235,7 @@ void TaskQueue::applyActions(const ActionList &actions,
       }
       for (auto &&readyItem : readyTableItems) {
         if (readyItem->type == QueryType::Load) {
-          loadQueue.push_front(std::move(readyItem));
+          loadQueue.emplace_front(std::move(readyItem));
           continue;
         }
 
@@ -286,9 +286,10 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     if (!loadQueue.empty() && !loadBlocked) {
       if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
         loadBlocked = true;
+      } else {
+        loadCand = std::move(loadQueue.front());
+        loadQueue.pop_front();
       }
-      loadCand = std::move(loadQueue.front());
-      loadQueue.pop_front();
     }
 
     // Acquire table candidate via GlobalIndex

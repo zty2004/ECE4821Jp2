@@ -14,8 +14,8 @@
 class DependencyManager {
 private:
   struct Cmp {
-    auto operator()(const std::unique_ptr<ScheduledItem> itema,
-                    const std::unique_ptr<ScheduledItem> itemb) -> bool {
+    auto operator()(const std::unique_ptr<ScheduledItem> &itema,
+                    const std::unique_ptr<ScheduledItem> &itemb) const -> bool {
       return itema->seq > itemb->seq;
     }
   };
