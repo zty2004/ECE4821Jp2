@@ -14,7 +14,7 @@ enum class QueryPriority : std::uint8_t {
 };
 
 // Classify a query type to a priority
-inline auto classifyPriority(QueryType qtype) -> QueryPriority {
+inline auto classifyPriority(const QueryType qtype) -> QueryPriority {
   switch (qtype) {
   case QueryType::Quit:
   case QueryType::List:
