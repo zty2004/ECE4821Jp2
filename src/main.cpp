@@ -419,6 +419,9 @@ auto run(std::span<char *> argv, int argc) -> int {
 auto main(int argc, char *argv[]) -> int {
   try {
     return run({argv, static_cast<size_t>(argc)}, argc);
+  } catch (const QuitException &) {
+    // Normal exit via QUIT command - allow clean shutdown
+    return EXIT_SUCCESS;
   } catch (const std::exception &e) {
     std::cerr << "lemondb: fatal: " << e.what() << '\n';
     return EXIT_FAILURE;

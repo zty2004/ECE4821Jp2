@@ -182,7 +182,7 @@ auto Database::loadTableFromStream(std::istream &input_stream,
 }
 
 void Database::exit() {
-  // We are being lazy here ...
-  // Might cause problem ...
-  std::exit(0);
+  // Throw exception to allow proper cleanup of resources
+  // This allows RAII destructors to run properly
+  throw QuitException();
 }

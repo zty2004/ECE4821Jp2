@@ -57,4 +57,8 @@ public:
                               qString) {}
 };
 
+struct QuitException : public std::runtime_error {
+  QuitException() : std::runtime_error("QUIT command received") {}
+};
+
 #endif  // SRC_UTILS_UEXCEPTION_H_

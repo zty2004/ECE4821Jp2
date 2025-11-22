@@ -13,10 +13,9 @@
 auto QuitQuery::toString() -> std::string { return "QUERY = Quit"; }
 
 auto QuitQuery::execute() -> QueryResult::Ptr {
-  // auto &database = Database::getInstance();
-  // The reason of removing this line is that loadTableFromStream is a static
-  // method.
+  // Database::exit() will throw QuitException
+  // This exception will propagate up to main() for clean shutdown
   Database::exit();
-  // might not reach here, but we want to keep the consistency of queries
+  // This line will never be reached due to exception
   return std::make_unique<SuccessMsgResult>(qname);
 }
