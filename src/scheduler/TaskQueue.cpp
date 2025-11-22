@@ -2,14 +2,15 @@
 
 #include <atomic>
 #include <csignal>
-#include <exception>
 #include <format>
 #include <future>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
+#include "../db/Database.h"
 #include "../query/Query.h"
 #include "../query/QueryResult.h"
 #include "DependencyManager.h"
@@ -45,14 +46,14 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
   }
 
   if (item.type == QueryType::Load) {
-    DepManager.markScheduled(item, item.type);
-    loadQueue.emplace_back(std::move(item));
+    depManager.markScheduled(item, item.type);
+    loadQueue.emplace_back(std::make_unique<ScheduledItem>(std::move(item)));
     return fut;
   }
 
   if (item.type == QueryType::Dump || item.type == QueryType::Drop ||
       item.type == QueryType::CopyTable) {
-    DepManager.markScheduled(item, item.type);
+    depManager.markScheduled(item, item.type);
   }
 
   auto &tbl = tables[item.tableId];
@@ -72,14 +73,16 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
       src.tableId; // src.tableId still valid post-move of query & promise
   const QueryType capturedType = src.type;
   const std::uint64_t capturedSeq = src.seq;
-  dst.onCompleted = [this, actions, capturedTable, capturedType,
-                     capturedSeq]() {
+  const DependencyPayload capturedDeps = src.depends;
+  dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
+                     capturedDeps]() {
     {
       std::lock_guard<std::mutex> callbackLock(mu);
       ScheduledItem meta; // placeholder
       meta.tableId = capturedTable;
       meta.type = capturedType;
       meta.seq = capturedSeq;
+      meta.depends = capturedDeps;
       applyActions(actions, meta);
     }
     running.fetch_sub(1, std::memory_order_relaxed);
@@ -141,7 +144,48 @@ void TaskQueue::applyActions(const ActionList &actions,
       break;
     }
     case CompletionAction::UpdateDeps: {
-      // TODO: integrate DM completion (notifyCompleted for file/table)
+      std::vector<std::unique_ptr<ScheduledItem>> readyFileItems;
+      std::vector<std::unique_ptr<ScheduledItem>> readyTableItems;
+      switch (item.type) {
+      case QueryType::Load: {
+        const auto &loadDeps = std::get<LoadDeps>(item.depends);
+        depManager.notifyCompleted(DependencyManager::DependencyType::File,
+                                   loadDeps.filePath, item.seq, readyFileItems);
+        if (!loadDeps.pendingTable.empty()) {
+          for (const auto &ptableId : loadDeps.pendingTable) {
+            depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                       ptableId, item.seq, readyTableItems);
+          }
+        } else {
+          depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                     item.tableId, item.seq, readyTableItems);
+        }
+        break;
+      }
+      case QueryType::Dump: {
+        const auto &dumpDeps = std::get<DumpDeps>(item.depends);
+        depManager.notifyCompleted(DependencyManager::DependencyType::File,
+                                   dumpDeps.filePath, item.seq, readyFileItems);
+        break;
+      }
+      case QueryType::Drop: {
+        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                   item.tableId, item.seq, readyTableItems);
+        break;
+      }
+      case QueryType::CopyTable: {
+        const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
+        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                   item.tableId, item.seq, readyTableItems);
+        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                   copyDeps.newTable, item.seq,
+                                   readyTableItems);
+        break;
+      }
+      default:
+        break;
+      }
+
       break;
     }
     }
@@ -157,12 +201,12 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   }
 
   // Acquire LOAD candidate considering barrier
-  ScheduledItem *loadCand = nullptr;
+  std::unique_ptr<ScheduledItem> loadCand = nullptr;
   if (!loadQueue.empty() && !loadBlocked) {
-    if (!barriers.empty() && loadQueue.front().seq > barriers.front().seq) {
+    if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
       loadBlocked = true;
     }
-    loadCand = &loadQueue.front();
+    loadCand = std::move(loadQueue.front());
   }
 
   // Acquire table candidate via GlobalIndex
@@ -211,33 +255,25 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   }
 
   // choose higher priority, then smaller seq
-  ScheduledItem *chosen = nullptr;
-  TableQueue *chosenTableQ = nullptr;
+  bool preferLoad = true;
   if (loadCand != nullptr && tableCand != nullptr) {
-    const bool preferLoad = (loadCand->priority < tableCand->priority) ||
-                            (loadCand->priority == tableCand->priority &&
-                             loadCand->seq < tableCand->seq);
-    chosen = preferLoad ? loadCand : tableCand;
-    if (!preferLoad) {
-      chosenTableQ = tableCandQ;
-    }
-  } else if (loadCand != nullptr) {
-    chosen = loadCand;
+    preferLoad = (loadCand->priority < tableCand->priority) ||
+                 (loadCand->priority == tableCand->priority &&
+                  loadCand->seq < tableCand->seq);
   } else {
-    chosen = tableCand;
-    chosenTableQ = tableCandQ;
+    preferLoad = tableCand == nullptr;
   }
 
   // Materialize and update structures
-  if (chosen == loadCand) {
-    buildExecutableFromScheduled(*chosen, out);
+  if (preferLoad) {
+    buildExecutableFromScheduled(*loadCand, out);
     loadQueue.pop_front();
-  } else if (chosenTableQ != nullptr) {
-    buildExecutableFromScheduled(*chosen, out);
-    chosenTableQ->queue.pop_front();
-    if (!chosenTableQ->queue.empty()) {
-      const ScheduledItem &newHead = chosenTableQ->queue.front();
-      globalIndex.upsert(chosenTableQ, newHead.priority,
+  } else if (tableCandQ != nullptr) {
+    buildExecutableFromScheduled(*tableCand, out);
+    tableCandQ->queue.pop_front();
+    if (!tableCandQ->queue.empty()) {
+      const ScheduledItem &newHead = tableCandQ->queue.front();
+      globalIndex.upsert(tableCandQ, newHead.priority,
                          fetchTick.load(std::memory_order_relaxed),
                          newHead.seq);
     }
