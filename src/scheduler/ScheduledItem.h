@@ -22,6 +22,7 @@ struct LoadDeps {
 struct DumpDeps {
   std::uint64_t fileDependsOn{0};
   std::string filePath;
+  std::uint64_t tableDependsOn{0};
 };
 struct DropDeps {
   std::uint64_t tableDependsOn{0};
