@@ -234,90 +234,74 @@ void TaskQueue::applyActions(const ActionList &actions,
 auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
   std::lock_guard<std::mutex> lock(mu);
 
-  if (quitFlag) {
-    return false;
-  }
-
-  // Acquire LOAD candidate considering barrier
-  std::unique_ptr<ScheduledItem> loadCand = nullptr;
-  if (!loadQueue.empty() && !loadBlocked) {
-    if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
-      loadBlocked = true;
-    }
-    loadCand = std::move(loadQueue.front());
-  }
-
-  // Acquire table candidate via GlobalIndex
-  ScheduledItem *tableCand = nullptr;
-  TableQueue *tableCandQ = nullptr;
-  TableQueue *picked = nullptr;
-  while (globalIndex.pickBest(picked)) {
-    if (picked == nullptr || picked->queue.empty()) {
-      continue;
-    }
-    ScheduledItem &head = picked->queue.front();
-    if (!barriers.empty() && head.seq > barriers.front().seq) {
-      waitingTables.push_back(picked);
-      continue;
-    }
-    tableCand = &head;
-    tableCandQ = picked;
-    break;
-  }
-
-  // No candidate case
-  if (tableCand == nullptr && loadCand == nullptr) {
-    if (!barriers.empty()) {
-      ScheduledItem barrierItem = std::move(barriers.front());
-      barriers.pop_front();
-      if (barrierItem.type == QueryType::Quit) {
-        quitFlag = true;
+  while (!quitFlag) {
+    // Acquire LOAD candidate considering barrier
+    std::unique_ptr<ScheduledItem> loadCand = nullptr;
+    if (!loadQueue.empty() && !loadBlocked) {
+      if (!barriers.empty() && loadQueue.front()->seq > barriers.front().seq) {
+        loadBlocked = true;
       }
-      buildExecutableFromScheduled(barrierItem, out);
-      running.fetch_add(1, std::memory_order_relaxed);
-      fetchTick.fetch_add(1, std::memory_order_relaxed);
-      // Reinsert stashed tables
-      for (auto *blocked : waitingTables) {
-        if (blocked != nullptr && !blocked->queue.empty()) {
-          const ScheduledItem &blockedHead = blocked->queue.front();
-          globalIndex.upsert(blocked, blockedHead.priority,
-                             fetchTick.load(std::memory_order_relaxed),
-                             blockedHead.seq);
+      loadCand = std::move(loadQueue.front());
+    }
+
+    // Acquire table candidate via GlobalIndex
+    ScheduledItem *tableCand = nullptr;
+    TableQueue *tableCandQ = nullptr;
+    TableQueue *picked = nullptr;
+    while (globalIndex.pickBest(picked)) {
+      if (picked == nullptr || picked->queue.empty()) {
+        continue;
+      }
+      ScheduledItem &head = picked->queue.front();
+      if (!barriers.empty() && head.seq > barriers.front().seq) {
+        waitingTables.push_back(picked);
+        continue;
+      }
+      tableCand = &head;
+      tableCandQ = picked;
+      break;
+    }
+
+    // No candidate case
+    if (tableCand == nullptr && loadCand == nullptr) {
+      if (!barriers.empty()) {
+        ScheduledItem barrierItem = std::move(barriers.front());
+        barriers.pop_front();
+        if (barrierItem.type == QueryType::Quit) {
+          quitFlag = true;
         }
+        buildExecutableFromScheduled(barrierItem, out);
+        running.fetch_add(1, std::memory_order_relaxed);
+        fetchTick.fetch_add(1, std::memory_order_relaxed);
+        // Reinsert stashed tables
+        for (auto *blocked : waitingTables) {
+          if (blocked != nullptr && !blocked->queue.empty()) {
+            const ScheduledItem &blockedHead = blocked->queue.front();
+            globalIndex.upsert(blocked, blockedHead.priority,
+                               fetchTick.load(std::memory_order_relaxed),
+                               blockedHead.seq);
+          }
+        }
+        waitingTables.clear();
+        loadBlocked = false;
+        return true;
       }
-      waitingTables.clear();
-      loadBlocked = false;
-      return true;
+      return false;
     }
-    return false;
-  }
 
-  // choose higher priority, then smaller seq
-  bool preferLoad = true;
-  if (loadCand != nullptr && tableCand != nullptr) {
-    preferLoad = (loadCand->priority < tableCand->priority) ||
-                 (loadCand->priority == tableCand->priority &&
-                  loadCand->seq < tableCand->seq);
-  } else {
-    preferLoad = tableCand == nullptr;
-  }
-
-  // Materialize and update structures
-  if (preferLoad) {
-    buildExecutableFromScheduled(*loadCand, out);
-    loadQueue.pop_front();
-  } else if (tableCandQ != nullptr) {
-    buildExecutableFromScheduled(*tableCand, out);
-    tableCandQ->queue.pop_front();
-    if (!tableCandQ->queue.empty()) {
-      const ScheduledItem &newHead = tableCandQ->queue.front();
-      globalIndex.upsert(tableCandQ, newHead.priority,
-                         fetchTick.load(std::memory_order_relaxed),
-                         newHead.seq);
+    // choose higher priority, then smaller seq
+    bool preferLoad = true;
+    if (loadCand != nullptr && tableCand != nullptr) {
+      preferLoad = (loadCand->priority < tableCand->priority) ||
+                   (loadCand->priority == tableCand->priority &&
+                    loadCand->seq < tableCand->seq);
+    } else {
+      preferLoad = tableCand == nullptr;
     }
-  }
 
-  running.fetch_add(1, std::memory_order_relaxed);
-  fetchTick.fetch_add(1, std::memory_order_relaxed);
-  return true;
+    running.fetch_add(1, std::memory_order_relaxed);
+    fetchTick.fetch_add(1, std::memory_order_relaxed);
+    return true;
+  }
+  return false;
 }
