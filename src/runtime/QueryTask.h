@@ -15,13 +15,12 @@ using TableId = std::string;
 
 enum class OpKind : std::uint8_t { Read, Write };
 
-// NOLINTBEGIN(misc-non-private-member-variables-in-classes)
 struct QueryTask {
-  TableId table;
-  OpKind kind = OpKind::Read;
-  Query::Ptr query;
-  std::uint32_t attempts = 0;
-  std::size_t orderIndex = 0;
+  TableId table;               // NOLINT
+  OpKind kind = OpKind::Read;  // NOLINT
+  Query::Ptr query;            // NOLINT
+  std::uint32_t attempts = 0;  // NOLINT
+  std::size_t orderIndex = 0;  // NOLINT
 
   QueryTask() = default;
   ~QueryTask() = default;
@@ -37,6 +36,5 @@ struct QueryTask {
   QueryTask(const QueryTask &) = delete;
   auto operator=(const QueryTask &) -> QueryTask & = delete;
 };
-// NOLINTEND(misc-non-private-member-variables-in-classes)
 
 #endif  // SRC_RUNTIME_QUERYTASK_H_
