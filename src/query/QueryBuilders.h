@@ -13,7 +13,7 @@
 #include "../db/Table.h"
 #include "QueryParser.h"
 
-// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+// NOLINTBEGIN(cppcoreguidelines-macro-usage, bugprone-macro-parentheses)
 #define QueryBuilder(name) name##QueryBuilder
 
 #define QueryBuilderClass(name)                                                \
@@ -32,7 +32,7 @@
   }
 
 // NOLINTNEXTLINE(readability/nolint)
-// NOLINTEND(cppcoreguidelines-macro-usage)
+// NOLINTEND(cppcoreguidelines-macro-usage, bugprone-macro-parentheses)
 
 // NOLINTBEGIN(cppcoreguidelines-special-member-functions,
 //             modernize-use-trailing-return-type)
