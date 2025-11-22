@@ -86,11 +86,11 @@ private:
   GlobalIndex globalIndex;
 
   // loadQueue: FIFO of ready LOAD items
-  std::deque<ScheduledItem> loadQueue;
+  std::deque<std::unique_ptr<ScheduledItem>> loadQueue;
   bool loadBlocked = false; // whether LoadQueue blocked by barrier
 
   // DM instance for dependency management
-  DependencyManager DepManager;
+  DependencyManager depManager;
 
   // Barrier structures for QUIT/LIST queries
   std::deque<ScheduledItem> barriers;

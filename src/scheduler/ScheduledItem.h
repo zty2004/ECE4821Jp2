@@ -29,6 +29,7 @@ struct DropDeps {
 struct CopyTableDeps {
   std::uint64_t srcTableDependsOn{0};
   std::uint64_t dstTableDependsOn{0};
+  std::string newTable;
 };
 using DependencyPayload =
     std::variant<std::monostate, LoadDeps, DumpDeps, DropDeps, CopyTableDeps>;
