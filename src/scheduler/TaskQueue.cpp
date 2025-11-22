@@ -87,8 +87,16 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
   const QueryType capturedType = src.type;
   const std::uint64_t capturedSeq = src.seq;
   const DependencyPayload capturedDeps = src.depends;
+  // Find the TableQueue for this task (if it's a table-based query)
+  TableQueue *capturedTableQ = nullptr;
+  if (!capturedTable.empty() && capturedTable != "__control__") {
+    auto tblIt = tables.find(capturedTable);
+    if (tblIt != tables.end()) {
+      capturedTableQ = tblIt->second.get();
+    }
+  }
   dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
-                     capturedDeps]() {
+                     capturedDeps, capturedTableQ]() {
     {
       std::lock_guard<std::mutex> callbackLock(mu);
       ScheduledItem meta;  // placeholder
@@ -97,6 +105,13 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
       meta.seq = capturedSeq;
       meta.depends = capturedDeps;
       applyActions(actions, meta);
+      // Upsert next task from the same table queue (if any)
+      if (capturedTableQ != nullptr && !capturedTableQ->queue.empty()) {
+        const ScheduledItem &newHead = capturedTableQ->queue.front();
+        globalIndex.upsert(capturedTableQ, newHead.priority,
+                           fetchTick.load(std::memory_order_relaxed),
+                           newHead.seq);
+      }
     }
     running.fetch_sub(1, std::memory_order_relaxed);
     completed.fetch_add(1, std::memory_order_relaxed);
@@ -108,17 +123,26 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
   switch (item.type) {
   case QueryType::Load:
   case QueryType::CopyTable: {
-    auto tblIt = tables.find(item.tableId);
-    bool needRegister = true;
-    if (tblIt != tables.end() && tblIt->second && tblIt->second->registered) {
-      if (tblIt->second->registerSeq > item.seq) {
-        throw std::invalid_argument("Wrongly execute a later Load " +
-                                    std::to_string(tblIt->second->registerSeq) +
-                                    " before an earlier Load " +
-                                    std::to_string(item.seq));
+    bool needRegister = false;
+
+    if (item.type == QueryType::CopyTable) {
+      // For COPYTABLE, always need RegisterTable to register the new table
+      needRegister = true;
+    } else {
+      // For LOAD, check if the table is already registered
+      auto tblIt = tables.find(item.tableId);
+      needRegister = true;
+      if (tblIt != tables.end() && tblIt->second && tblIt->second->registered) {
+        if (tblIt->second->registerSeq > item.seq) {
+          throw std::invalid_argument(
+              "Wrongly execute a later Load " +
+              std::to_string(tblIt->second->registerSeq) +
+              " before an earlier Load " + std::to_string(item.seq));
+        }
+        needRegister = false;
       }
-      needRegister = false;
     }
+
     if (needRegister) {
       actions.push_back(CompletionAction::RegisterTable);
     }
@@ -131,7 +155,11 @@ auto TaskQueue::classifyActions(const ScheduledItem &item) -> ActionList {
     break;
   }
   default:
-    break;  // no action for other types
+    // All other table queries should also update dependencies
+    if (!item.tableId.empty()) {
+      actions.push_back(CompletionAction::UpdateDeps);
+    }
+    break;
   }
   return actions;
 }
@@ -141,24 +169,53 @@ void TaskQueue::applyActions(const ActionList &actions,
   for (auto act : actions) {
     switch (act) {
     case CompletionAction::RegisterTable: {
+      // Register the main table (item.tableId)
       auto &tblPtr = tables[item.tableId];
       if (!tblPtr) {
         tblPtr = std::make_unique<TableQueue>();
       }
       TableQueue &tbl = *tblPtr;
-      if (!tbl.registered && !tbl.queue.empty()) {
-        // might have prolem if require non-empty, but low possiblity, ignore
+      if (!tbl.registered) {
         tbl.registered = true;
         tbl.registerSeq = item.seq;
-        for (auto &pending : tbl.queue) {
-          if (pending.seq < item.seq) {
-            pending.droppedFlag =
-                true;  // mark the queries before registered as dropped
+        if (!tbl.queue.empty()) {
+          for (auto &pending : tbl.queue) {
+            if (pending.seq < item.seq) {
+              pending.droppedFlag =
+                  true;  // mark the queries before registered as dropped
+            }
+          }
+          const ScheduledItem &head = tbl.queue.front();
+          globalIndex.upsert(tblPtr.get(), head.priority,
+                             fetchTick.load(std::memory_order_relaxed),
+                             head.seq);
+        }
+      }
+
+      // For COPYTABLE, also register the new table
+      if (item.type == QueryType::CopyTable) {
+        const auto &copyDeps = std::get<CopyTableDeps>(item.depends);
+        const std::string &newTable = copyDeps.newTable;
+        auto &newTblPtr = tables[newTable];
+        if (!newTblPtr) {
+          newTblPtr = std::make_unique<TableQueue>();
+        }
+        TableQueue &newTbl = *newTblPtr;
+        if (!newTbl.registered) {
+          newTbl.registered = true;
+          newTbl.registerSeq = item.seq;
+          if (!newTbl.queue.empty()) {
+            for (auto &pending : newTbl.queue) {
+              if (pending.seq < item.seq) {
+                pending.droppedFlag = true;
+              }
+            }
+            const ScheduledItem &newHead = newTbl.queue.front();
+            globalIndex.upsert(newTblPtr.get(), newHead.priority,
+                               fetchTick.load(std::memory_order_relaxed),
+                               newHead.seq);
           }
         }
-        const ScheduledItem &head = tbl.queue.front();
-        globalIndex.upsert(tblPtr.get(), head.priority,
-                           fetchTick.load(std::memory_order_relaxed), head.seq);
       }
       break;
     }
@@ -185,11 +242,20 @@ void TaskQueue::applyActions(const ActionList &actions,
         const auto &dumpDeps = std::get<DumpDeps>(item.depends);
         depManager.notifyCompleted(DependencyManager::DependencyType::File,
                                    dumpDeps.filePath, item.seq, readyFileItems);
+        // Also notify table dependency completion
+        depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                   item.tableId, item.seq, readyTableItems);
         break;
       }
       case QueryType::Drop: {
         depManager.notifyCompleted(DependencyManager::DependencyType::Table,
                                    item.tableId, item.seq, readyTableItems);
+        // Clear the registered flag so that future LOADs can re-register the
+        // table
+        auto tblIt = tables.find(item.tableId);
+        if (tblIt != tables.end() && tblIt->second) {
+          tblIt->second->registered = false;
+        }
         break;
       }
       case QueryType::CopyTable: {
@@ -202,6 +268,12 @@ void TaskQueue::applyActions(const ActionList &actions,
         break;
       }
       default:
+        // For other query types (INSERT, SELECT, DELETE, UPDATE, etc.),
+        // update table dependency
+        if (!item.tableId.empty()) {
+          depManager.notifyCompleted(DependencyManager::DependencyType::Table,
+                                     item.tableId, item.seq, readyTableItems);
+        }
         break;
       }
       for (auto &&readyItem : readyFileItems) {
@@ -323,6 +395,15 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     // No candidate case
     if (tableCand == nullptr && loadCand == nullptr) {
       if (!barriers.empty()) {
+        // Barrier must wait for:
+        // 1. All running tasks to complete
+        // 2. All loads in loadQueue to be processed (or we'd return before
+        // this)
+        auto runningCount = running.load(std::memory_order_relaxed);
+        if (runningCount > 0) {
+          return false;  // Cannot process barrier yet, tasks still running
+        }
+
         ScheduledItem barrierItem = std::move(barriers.front());
         barriers.pop_front();
         if (barrierItem.type == QueryType::Quit) {
@@ -383,63 +464,73 @@ auto TaskQueue::fetchNext(ExecutableTask &out) -> bool {
     } else if (tableCandQ != nullptr) {
       if (tableCand->type == QueryType::Dump) {
         const auto &dumpDeps = std::get<DumpDeps>(tableCand->depends);
+        const std::string filePath = dumpDeps.filePath;  // Copy before move!
+        const std::string tableId = tableCand->tableId;  // Copy before move!
         if (dumpDeps.fileDependsOn >
             depManager.lastCompletedFor(DependencyManager::DependencyType::File,
-                                        dumpDeps.filePath)) {
+                                        filePath)) {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File,
-                             dumpDeps.filePath, std::move(waitingP));
+          depManager.addWait(DependencyManager::DependencyType::File, filePath,
+                             std::move(waitingP));
           continue;
         }
-      }
-      if (tableCand->type == QueryType::Drop) {
-        const auto &dropDeps = std::get<DropDeps>(tableCand->depends);
-        const auto &tableId = tableCand->tableId;
-        if (dropDeps.tableDependsOn >
+        // Also check table dependency
+        if (dumpDeps.tableDependsOn >
             depManager.lastCompletedFor(
                 DependencyManager::DependencyType::Table, tableId)) {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File, tableId,
+          depManager.addWait(DependencyManager::DependencyType::Table, tableId,
+                             std::move(waitingP));
+          continue;
+        }
+      }
+      if (tableCand->type == QueryType::Drop) {
+        const auto &dropDeps = std::get<DropDeps>(tableCand->depends);
+        const std::string tableId = tableCand->tableId;  // Copy before move!
+        auto lastCompleted = depManager.lastCompletedFor(
+            DependencyManager::DependencyType::Table, tableId);
+        if (dropDeps.tableDependsOn > lastCompleted) {
+          auto waitingP = std::make_unique<ScheduledItem>(
+              std::move(tableCandQ->queue.front()));
+          tableCandQ->queue.pop_front();
+          depManager.addWait(DependencyManager::DependencyType::Table, tableId,
                              std::move(waitingP));
           continue;
         }
       }
       if (tableCand->type == QueryType::CopyTable) {
         const auto &copyDeps = std::get<CopyTableDeps>(tableCand->depends);
-        const auto &srcTableId = tableCand->tableId;
+        const std::string srcTableId = tableCand->tableId;  // Copy before move!
+        const std::string newTable = copyDeps.newTable;     // Copy before move!
         if (copyDeps.srcTableDependsOn >
             depManager.lastCompletedFor(
                 DependencyManager::DependencyType::Table, srcTableId)) {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File,
+          depManager.addWait(DependencyManager::DependencyType::Table,
                              srcTableId, std::move(waitingP));
           continue;
         }
         if (copyDeps.dstTableDependsOn >
             depManager.lastCompletedFor(
-                DependencyManager::DependencyType::Table, copyDeps.newTable)) {
+                DependencyManager::DependencyType::Table, newTable)) {
           auto waitingP = std::make_unique<ScheduledItem>(
               std::move(tableCandQ->queue.front()));
           tableCandQ->queue.pop_front();
-          depManager.addWait(DependencyManager::DependencyType::File,
-                             copyDeps.newTable, std::move(waitingP));
+          depManager.addWait(DependencyManager::DependencyType::Table, newTable,
+                             std::move(waitingP));
           continue;
         }
       }
       buildExecutableFromScheduled(*tableCand, out);
       tableCandQ->queue.pop_front();
-      if (!tableCandQ->queue.empty()) {
-        const ScheduledItem &newHead = tableCandQ->queue.front();
-        globalIndex.upsert(tableCandQ, newHead.priority,
-                           fetchTick.load(std::memory_order_relaxed),
-                           newHead.seq);
-      }
+      // Don't upsert next task here - will be done in onCompleted to prevent
+      // concurrent execution
     }
 
     running.fetch_add(1, std::memory_order_relaxed);
