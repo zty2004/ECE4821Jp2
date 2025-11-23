@@ -82,9 +82,7 @@ auto run(std::span<char *> argv, int argc) -> int {
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(ManageTable)>());
   parser.registerQueryBuilder(std::make_unique<QueryBuilder(Complex)>());
 
-  Runtime runtime(numThreads);
-
-  executeQueries(input_stream, fin, parser, runtime, numThreads);
+  executeQueries(input_stream, fin, parser, numThreads);
 
   return 0;
 }
