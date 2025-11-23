@@ -95,7 +95,7 @@ auto processFile(const std::string &filename,
 }
 }  // namespace
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity, runtime/references)
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
                     QueryParser &parser, Runtime &runtime, size_t numThreads) {
   size_t counter = 0;
