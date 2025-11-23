@@ -4,7 +4,6 @@
 // focues on thread management and synchronization.
 //
 
-#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <exception>
@@ -16,6 +15,8 @@
 
 #ifdef __cpp_lib_jthread
 #include <stop_token>
+#else
+#include <atomic>
 #endif
 
 #include "../query/QueryHelpers.h"

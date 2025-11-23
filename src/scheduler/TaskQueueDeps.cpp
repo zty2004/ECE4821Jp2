@@ -6,12 +6,12 @@
 
 #include <atomic>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "../db/Database.h"
+#include "../query/Query.h"
 #include "ScheduledItem.h"
 
 void TaskQueue::applyUpdateDeps(const ScheduledItem &item) {

@@ -94,6 +94,7 @@ void TaskQueue::buildExecutableFromScheduled(ScheduledItem &src,
       capturedTableQ = tblIt->second.get();
     }
   }
+  // NOLINTNEXTLINE(bugprone-exception-escape)
   dst.onCompleted = [this, actions, capturedTable, capturedType, capturedSeq,
                      capturedDeps, capturedTableQ]() noexcept -> void {
     try {
