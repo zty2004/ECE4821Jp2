@@ -95,10 +95,10 @@ auto processFile(const std::string &filename,
 
 // Helper: Collect queries from input stream
 namespace {
-void collectQueriesFromStream(std::istream &input_stream,
-                              QueryParser &parser,  // NOLINT
-                              std::vector<Query::Ptr> &allQueries,
-                              std::queue<std::string> &fileQueue) {
+void collectQueriesFromStream(std::istream &input_stream,            // NOLINT
+                              QueryParser &parser,                   // NOLINT
+                              std::vector<Query::Ptr> &allQueries,   // NOLINT
+                              std::queue<std::string> &fileQueue) {  // NOLINT
   while (input_stream) {
     try {
       std::string const queryStr = extractQueryString(input_stream);
