@@ -31,6 +31,7 @@
 #include "management/DropTableQuery.h"
 #include "management/DumpTableQuery.h"
 #include "management/ListTableQuery.h"
+#include "management/ListenQuery.h"
 #include "management/LoadTableQuery.h"
 #include "management/PrintTableQuery.h"
 #include "management/QuitQuery.h"
@@ -100,6 +101,13 @@ auto DebugQueryBuilder::tryExtractQuery(const TokenizedQueryString &query)
   if (query.token.size() == 2) {
     if (query.token.front() == "SHOWTABLE") {
       return std::make_unique<PrintTableQuery>(query.token[1]);
+    }
+  }
+  // LISTEN ( filename )
+  if (query.token.size() == 4) {
+    if (query.token.front() == "LISTEN" && query.token[1] == "(" &&
+        query.token[3] == ")") {
+      return std::make_unique<ListenQuery>(query.token[2]);
     }
   }
   return BasicQueryBuilder::tryExtractQuery(query);
