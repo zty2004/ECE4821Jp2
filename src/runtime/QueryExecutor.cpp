@@ -43,10 +43,8 @@ void outputQueryResult(size_t queryNum, const QueryResult::Ptr &result) {
     if (result->display()) {
       std::cout << *result;
     } else {
-#ifndef NDEBUG
       std::cout.flush();
       std::cerr << *result;
-#endif
     }
   } else {
     std::cout.flush();
@@ -95,9 +93,11 @@ auto processFile(const std::string &filename,
 }
 }  // namespace
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity, runtime/references)
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
-                    QueryParser &parser, Runtime &runtime, size_t numThreads) {
+                    QueryParser &parser,  // NOLINT(runtime/references)
+                    Runtime &runtime,     // NOLINT(runtime/references)
+                    size_t numThreads) {
   size_t counter = 0;
   std::queue<std::string> fileQueue;
   std::vector<Query::Ptr> allQueries;

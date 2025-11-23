@@ -34,7 +34,8 @@ public:
 private:
   // NOLINTBEGIN(codequality-no-public-member-variables)
   struct Entry {
-    mutable std::shared_mutex rw_;
+    mutable std::shared_mutex
+        rw_;  // NOLINT(codequality-no-public-member-variables)
   };
   // NOLINTEND(codequality-no-public-member-variables)
 

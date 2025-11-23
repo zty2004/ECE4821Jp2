@@ -37,7 +37,6 @@ auto run(std::span<char *> argv, int argc) -> int {
   }
   std::istream input_stream(fin.rdbuf());
 
-#ifdef NDEBUG
   // In production mode, listen argument must be defined
   if (parsedArgs.listen.empty()) {
     std::cerr << "lemondb: error: --listen argument not found, not allowed in "
@@ -45,15 +44,6 @@ auto run(std::span<char *> argv, int argc) -> int {
               << '\n';
     exit(-1);
   }
-#else
-  // In debug mode, use stdin as input if no listen file is found
-  if (parsedArgs.listen.empty()) {
-    std::cerr << "lemondb: warning: --listen argument not found, use stdin "
-                 "instead in debug mode"
-              << '\n';
-    input_stream.rdbuf(std::cin.rdbuf());
-  }
-#endif
 
   if (parsedArgs.threads < 0) {
     std::cerr << "lemondb: error: threads num can not be negative value "

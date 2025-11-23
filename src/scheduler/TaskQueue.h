@@ -126,9 +126,10 @@ private:
       std::unique_ptr<ScheduledItem> &readyItem);  // NOLINT(runtime/references)
 
   // FetchNext helpers
-  void getFetched(std::unique_ptr<ScheduledItem> &loadCand,  // NOLINT
-                  ScheduledItem *&tableCand,       // NOLINT(runtime/references)
-                  TableQueue *&tableCandQ);        // NOLINT(runtime/references)
+  void getFetched(
+      std::unique_ptr<ScheduledItem> &loadCand,    // NOLINT(runtime/references)
+      ScheduledItem *&tableCand,                   // NOLINT(runtime/references)
+      TableQueue *&tableCandQ);                    // NOLINT(runtime/references)
   auto fetchBarrier(ExecutableTask &out) -> bool;  // NOLINT(runtime/references)
   auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand)
       -> bool;                                     // NOLINT(runtime/references)
