@@ -80,7 +80,6 @@ auto processFile(const std::string &filename,
       if (listenQuery != nullptr) {
         result.listenFiles.push_back(listenQuery->getFileName());
       }
-
       result.queries.push_back(std::move(query));
     } catch (const std::ios_base::failure &) {
       break;
@@ -95,8 +94,7 @@ auto processFile(const std::string &filename,
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
-                    QueryParser &parser,  // NOLINT(runtime/references)
-                    Runtime &runtime,     // NOLINT(runtime/references)
+                    QueryParser &parser, Runtime &runtime,  // NOLINT
                     size_t numThreads) {
   size_t counter = 0;
   std::queue<std::string> fileQueue;
@@ -115,7 +113,6 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         if (listenQuery != nullptr) {
           fileQueue.push(listenQuery->getFileName());
         }
-
         allQueries.push_back(std::move(query));
       } catch (const std::ios_base::failure &) {
         break;
@@ -135,7 +132,6 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
         if (listenQuery != nullptr) {
           fileQueue.push(listenQuery->getFileName());
         }
-
         allQueries.push_back(std::move(query));
       } catch (const std::ios_base::failure &) {
         break;

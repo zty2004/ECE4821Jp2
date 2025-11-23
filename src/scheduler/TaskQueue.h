@@ -131,11 +131,12 @@ private:
       ScheduledItem *&tableCand,                   // NOLINT(runtime/references)
       TableQueue *&tableCandQ);                    // NOLINT(runtime/references)
   auto fetchBarrier(ExecutableTask &out) -> bool;  // NOLINT(runtime/references)
-  auto judgeLoadDeps(std::unique_ptr<ScheduledItem> &loadCand)
-      -> bool;                                     // NOLINT(runtime/references)
+  auto judgeLoadDeps(
+      std::unique_ptr<ScheduledItem> &loadCand)  // NOLINT(runtime/references)
+      -> bool;
   auto judgeNormalDeps(ScheduledItem *&tableCand,  // NOLINT(runtime/references)
-                       TableQueue *&tableCandQ)
-      -> bool;  // NOLINT(runtime/references)
+                       TableQueue *&tableCandQ)    // NOLINT(runtime/references)
+      -> bool;
 };
 
 #endif  // SRC_SCHEDULER_TASKQUEUE_H_
