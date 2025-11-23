@@ -46,7 +46,8 @@ auto TaskQueue::registerTask(ParsedQuery &&parsedQuery)
 
   submitted.fetch_add(1, std::memory_order_relaxed);
 
-  if (item.type == QueryType::Quit || item.type == QueryType::List) {
+  if (item.type == QueryType::Quit || item.type == QueryType::List ||
+      item.type == QueryType::Listen) {
     barriers.emplace_back(std::move(item));
     return fut;
   }

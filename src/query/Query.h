@@ -36,6 +36,7 @@ enum class QueryType : std::uint8_t {
   Add,         // WRITE
   Sub,         // WRITE
   Swap,        // WRITE
+  Listen,      // NULL - file listening command
   Nop,         // NULL
 };
 

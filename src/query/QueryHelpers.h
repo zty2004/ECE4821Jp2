@@ -34,6 +34,7 @@ enum class QueryKind : std::uint8_t { Read, Write, Null };
     return QueryKind::Write;
 
   case QueryType::Quit:
+  case QueryType::Listen:
   case QueryType::Nop:
   default:
     return QueryKind::Null;

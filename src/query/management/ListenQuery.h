@@ -21,6 +21,10 @@ public:
 
   auto toString() -> std::string override;
 
+  [[nodiscard]] auto type() const noexcept -> QueryType override {
+    return QueryType::Listen;
+  }
+
   [[nodiscard]] auto getFileName() const -> const std::string & {
     return fileName;
   }
