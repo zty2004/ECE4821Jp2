@@ -93,55 +93,43 @@ auto processFile(const std::string &filename,
 }
 }  // namespace
 
+// Helper: Collect queries from input stream
+namespace {
+void collectQueriesFromStream(std::istream &input_stream,
+                              QueryParser &parser,  // NOLINT
+                              std::vector<Query::Ptr> &allQueries,
+                              std::queue<std::string> &fileQueue) {
+  while (input_stream) {
+    try {
+      std::string const queryStr = extractQueryString(input_stream);
+      Query::Ptr query = parser.parseQuery(queryStr);
+
+      const auto *listenQuery = dynamic_cast<const ListenQuery *>(query.get());
+      if (listenQuery != nullptr) {
+        fileQueue.push(listenQuery->getFileName());
+      }
+      allQueries.push_back(std::move(query));
+    } catch (const std::ios_base::failure &) {
+      break;
+    } catch (const std::exception &exception_obj) {
+      std::cout.flush();
+      std::cerr << exception_obj.what() << '\n';
+    }
+  }
+}
+}  // namespace
+
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-void executeQueries(std::istream &input_stream, std::ifstream &fin,
+void executeQueries(std::istream &input_stream,
+                    [[maybe_unused]] std::ifstream &fin,
                     QueryParser &parser,  // NOLINT
                     size_t numThreads) {
   size_t counter = 0;
   std::queue<std::string> fileQueue;
   std::vector<Query::Ptr> allQueries;
 
-  const bool isInitialFile = !fin.is_open();
-
-  if (isInitialFile) {
-    while (input_stream) {
-      try {
-        std::string const queryStr = extractQueryString(input_stream);
-        Query::Ptr query = parser.parseQuery(queryStr);
-
-        const auto *listenQuery =
-            dynamic_cast<const ListenQuery *>(query.get());
-        if (listenQuery != nullptr) {
-          fileQueue.push(listenQuery->getFileName());
-        }
-        allQueries.push_back(std::move(query));
-      } catch (const std::ios_base::failure &) {
-        break;
-      } catch (const std::exception &exception_obj) {
-        std::cout.flush();
-        std::cerr << exception_obj.what() << '\n';
-      }
-    }
-  } else {
-    while (input_stream) {
-      try {
-        std::string const queryStr = extractQueryString(input_stream);
-        Query::Ptr query = parser.parseQuery(queryStr);
-
-        const auto *listenQuery =
-            dynamic_cast<const ListenQuery *>(query.get());
-        if (listenQuery != nullptr) {
-          fileQueue.push(listenQuery->getFileName());
-        }
-        allQueries.push_back(std::move(query));
-      } catch (const std::ios_base::failure &) {
-        break;
-      } catch (const std::exception &exception_obj) {
-        std::cout.flush();
-        std::cerr << exception_obj.what() << '\n';
-      }
-    }
-  }
+  // Collect queries from initial stream
+  collectQueriesFromStream(input_stream, parser, allQueries, fileQueue);
 
   while (!fileQueue.empty()) {
     const std::string filename = fileQueue.front();
@@ -161,8 +149,8 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
   // Analyze workload and decide fallback
   size_t effectiveThreads = numThreads;
   if (numThreads > 1) {
-    WorkloadStats stats = analyzeWorkload(allQueries);
-    FallbackThresholds thresholds;  // Use default thresholds
+    const WorkloadStats stats = analyzeWorkload(allQueries);
+    const FallbackThresholds thresholds;  // Use default thresholds
 
     if (shouldFallback(numThreads, stats, thresholds)) {
       effectiveThreads = 1;

@@ -13,8 +13,11 @@
 
 // Thresholds for fallback decision
 struct FallbackThresholds {
-  size_t minQueries = 1000;  // Minimum query count for multi-threading
-  size_t minTables = 3;      // Minimum table count for multi-threading
+  static constexpr size_t kDefaultMinQueries = 1000;
+
+  size_t minQueries =
+      kDefaultMinQueries;  // Minimum query count for multi-threading
+  size_t minTables = 3;    // Minimum table count for multi-threading
   // size_t minThreads = 4;  // Disabled: Minimum thread count for
   // multi-threading
 };

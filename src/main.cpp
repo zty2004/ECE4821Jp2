@@ -14,7 +14,6 @@
 #include "query/QueryBuilders.h"
 #include "query/QueryParser.h"
 #include "runtime/QueryExecutor.h"
-#include "runtime/Runtime.h"
 #include "utils/ArgParser.h"
 #include "utils/uexception.h"
 

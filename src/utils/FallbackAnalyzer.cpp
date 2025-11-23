@@ -12,6 +12,14 @@
 
 #include "../query/Query.h"
 
+// Complexity weights for different query types
+namespace {
+constexpr size_t kSimpleOpComplexity = 1;
+constexpr size_t kScanOpComplexity = 2;
+constexpr size_t kTableOpComplexity = 5;
+constexpr size_t kFileIOComplexity = 10;
+}  // namespace
+
 // Estimate complexity based on query type
 auto estimateQueryComplexity(const Query &query) -> size_t {
   switch (query.type()) {
@@ -20,32 +28,29 @@ auto estimateQueryComplexity(const Query &query) -> size_t {
   case QueryType::Select:
   case QueryType::Delete:
   case QueryType::Update:
-    return 1;
+    return kSimpleOpComplexity;
 
-  // Table scan operations
+  // Table scan operations and multi-row operations
   case QueryType::Count:
   case QueryType::Sum:
   case QueryType::Min:
   case QueryType::Max:
   case QueryType::Add:
   case QueryType::Sub:
-  case QueryType::CopyTable:
-    return 2;
-
-  // Multi-row operations
   case QueryType::Duplicate:
   case QueryType::Swap:
-    return 2;
+    return kScanOpComplexity;
 
-  // Table-level operations
+  // Table-level operations (including CopyTable)
   case QueryType::Truncate:
   case QueryType::Drop:
-    return 5;
+  case QueryType::CopyTable:
+    return kTableOpComplexity;
 
   // File I/O operations (heavy)
   case QueryType::Dump:
   case QueryType::Load:
-    return 10;
+    return kFileIOComplexity;
 
   // Management commands (no computation)
   case QueryType::Listen:
