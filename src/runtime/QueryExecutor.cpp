@@ -95,7 +95,7 @@ auto processFile(const std::string &filename,
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void executeQueries(std::istream &input_stream, std::ifstream &fin,
-                    QueryParser &parser, Runtime &runtime,  // NOLINT
+                    QueryParser &parser,  // NOLINT
                     size_t numThreads) {
   size_t counter = 0;
   std::queue<std::string> fileQueue;
@@ -164,7 +164,7 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     WorkloadStats stats = analyzeWorkload(allQueries);
     FallbackThresholds thresholds;  // Use default thresholds
 
-    if (shouldFallbackToSingleThread(numThreads, stats, thresholds)) {
+    if (shouldFallback(numThreads, stats, thresholds)) {
       effectiveThreads = 1;
       std::cerr << "Falling back to single-threaded mode (low workload: "
                 << stats.queryCount << " queries, " << stats.tableCount
@@ -172,18 +172,23 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     }
   }
 
-  for (auto &query : allQueries) {
-    ++counter;
-
-    if (effectiveThreads == 1) {
+  // Execute queries based on effective thread count
+  if (effectiveThreads == 1) {
+    // Single-threaded execution
+    for (auto &query : allQueries) {
+      ++counter;
       auto result = query->execute();
       outputQueryResult(counter, result);
-    } else {
+    }
+  } else {
+    // Multi-threaded execution - create Runtime with effective threads
+    Runtime runtime(effectiveThreads);
+
+    for (auto &query : allQueries) {
+      ++counter;
       runtime.submitQuery(std::move(query), counter);
     }
-  }
 
-  if (effectiveThreads > 1) {
     runtime.startExecution();
     runtime.waitAll();
     auto results = runtime.getResultsInOrder();
