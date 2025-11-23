@@ -54,10 +54,12 @@ auto run(std::span<char *> argv, int argc) -> int {
   // Determine thread count (default to 1 for single-threaded mode)
   size_t numThreads = 0;
   if (parsedArgs.threads > 0) {
-    numThreads = static_cast<size_t>(parsedArgs.threads);
+    // numThreads = static_cast<size_t>(parsedArgs.threads);
+    numThreads = 1;
   } else {
     // Auto-detect available hardware threads (threads == 0)
-    numThreads = std::thread::hardware_concurrency();
+    // numThreads = std::thread::hardware_concurrency();
+    numThreads = 1;
     if (numThreads == 0) {
       // hardware_concurrency() may return 0 if unable to detect
       std::cerr << "lemondb: warning: unable to detect hardware threads, "
