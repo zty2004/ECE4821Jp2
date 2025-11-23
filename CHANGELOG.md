@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. The format 
 - support priority queue for task distribution complexity
 - comprehensive wiki documentation (architecture, multi-threading, performance)
 - README with complete build and usage instructions
+- heuristic analyzer to judge mode
 
 ### Changed
 
