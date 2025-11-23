@@ -11,7 +11,7 @@
 
 auto ListenQuery::execute() -> QueryResult::Ptr {
   // Use the full path as provided in the query
-  std::string displayName = this->fileName;
+  const std::string displayName = this->fileName;
 
   // Return success result with the full path
   // The actual file opening will be handled in main.cpp
