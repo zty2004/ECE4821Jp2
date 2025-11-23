@@ -32,8 +32,7 @@ auto estimateQueryComplexity(const Query &query) -> size_t;
 auto analyzeWorkload(const std::vector<Query::Ptr> &queries) -> WorkloadStats;
 
 // Decide whether to fallback to single-threaded mode
-auto shouldFallbackToSingleThread(size_t threadCount,
-                                  const WorkloadStats &stats,
-                                  const FallbackThresholds &thresholds) -> bool;
+auto shouldFallback(size_t threadCount, const WorkloadStats &stats,
+                    const FallbackThresholds &thresholds) -> bool;
 
 #endif  // SRC_UTILS_FALLBACKANALYZER_H_

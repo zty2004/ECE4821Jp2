@@ -79,9 +79,9 @@ auto analyzeWorkload(const std::vector<Query::Ptr> &queries) -> WorkloadStats {
 }
 
 // Decide whether to fallback to single-threaded mode
-auto shouldFallbackToSingleThread(
-    [[maybe_unused]] size_t threadCount, const WorkloadStats &stats,
-    const FallbackThresholds &thresholds) -> bool {
+auto shouldFallback([[maybe_unused]] size_t threadCount,
+                    const WorkloadStats &stats,
+                    const FallbackThresholds &thresholds) -> bool {
   // Fallback if any dimension is below threshold
   if (stats.queryCount < thresholds.minQueries) {
     return true;
