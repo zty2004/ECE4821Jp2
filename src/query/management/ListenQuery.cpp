@@ -10,14 +10,10 @@
 #include "../../query/QueryResult.h"
 
 auto ListenQuery::execute() -> QueryResult::Ptr {
-  // Extract just the filename (without path) for the success message
+  // Use the full path as provided in the query
   std::string displayName = this->fileName;
-  auto lastSlash = displayName.find_last_of("/\\");
-  if (lastSlash != std::string::npos) {
-    displayName = displayName.substr(lastSlash + 1);
-  }
 
-  // Return success result with the filename
+  // Return success result with the full path
   // The actual file opening will be handled in main.cpp
   return std::make_unique<SuccessMsgResult>("ANSWER = ( listening from " +
                                             displayName + " )");
