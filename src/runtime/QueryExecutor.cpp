@@ -20,6 +20,7 @@
 #include "../query/QueryParser.h"
 #include "../query/QueryResult.h"
 #include "../query/management/ListenQuery.h"
+#include "../utils/FallbackAnalyzer.h"
 #include "../utils/uexception.h"
 #include "Runtime.h"
 
@@ -157,10 +158,24 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     }
   }
 
+  // Analyze workload and decide fallback
+  size_t effectiveThreads = numThreads;
+  if (numThreads > 1) {
+    WorkloadStats stats = analyzeWorkload(allQueries);
+    FallbackThresholds thresholds;  // Use default thresholds
+
+    if (shouldFallbackToSingleThread(numThreads, stats, thresholds)) {
+      effectiveThreads = 1;
+      std::cerr << "Falling back to single-threaded mode (low workload: "
+                << stats.queryCount << " queries, " << stats.tableCount
+                << " tables)\n";
+    }
+  }
+
   for (auto &query : allQueries) {
     ++counter;
 
-    if (numThreads == 1) {
+    if (effectiveThreads == 1) {
       auto result = query->execute();
       outputQueryResult(counter, result);
     } else {
@@ -168,7 +183,7 @@ void executeQueries(std::istream &input_stream, std::ifstream &fin,
     }
   }
 
-  if (numThreads > 1) {
+  if (effectiveThreads > 1) {
     runtime.startExecution();
     runtime.waitAll();
     auto results = runtime.getResultsInOrder();
