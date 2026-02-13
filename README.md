@@ -2,8 +2,6 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=plastic)](LICENSE)
 [![C++](https://img.shields.io/badge/C++-20-00599C.svg?style=plastic&logo=cplusplus)](https://en.cppreference.com/w/cpp/20)
-![push status](https://focs.ji.sjtu.edu.cn/git/ece482/p2team03/actions/workflows/push.yaml/badge.svg)
-![p2m1 release status](https://focs.ji.sjtu.edu.cn/git/ece482/p2team03/actions/workflows/release.yaml/badge.svg?tag=p2m3-1)
 
 A high-performance, multi-threaded in-memory relational database with dependency-aware task scheduling, designed to achieve near-linear scalability for concurrent query execution.
 
@@ -208,10 +206,10 @@ Comprehensive documentation available in the [***project wiki***](https://focs.j
 
 **p2team03**
 
-- Jiang Ruiyu
-- Yao Yunxiang
-- Zheng Letian
-- Zuo Tianyou
+- [Jiang Ruiyu](https://github.com/YUcxovo)
+- [Yao Yunxiang](https://github.com/EggHeadYao)
+- [Zheng Letian](https://github.com/zlt-0503)
+- [Zuo Tianyou](https://github.com/zty2004)
 
 ## License
 
